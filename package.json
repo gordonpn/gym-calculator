@@ -1,0 +1,23 @@
+{
+  "name": "gym-calculator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^6.0.9"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "alpinejs": "^3.14.8",
+    "bootstrap": "^5.3.3"
+  }
+}
