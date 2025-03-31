@@ -9,8 +9,8 @@
 
 <nav class="navbar navbar-expand-lg bg-body-tertiary fixed-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">Calculator</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
+        <a class="navbar-brand" href="#">Warm-up calculator</a>
+        <!-- <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
         >
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -42,16 +42,20 @@
                     </li>
                 </ul>
             </div>
-        </div>
+        </div> -->
     </div>
 </nav>
 
 <div class="container-fluid pt-5 mt-5">
     <div x-data="calculator" x-init="init">
-        <h1>Warm-up calculator</h1>
+        <div class="d-flex justify-content-between mb-3">
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#plateSettingsModal">
+                <i class="bi bi-gear"></i> Weights Available
+            </button>
+        </div>
         
         <div class="mb-3">
-            <label for="formula-select" class="form-label">Warm-up Formula</label>
+            <label for="formula-select" class="form-label">Formula</label>
             <select id="formula-select" class="form-select" x-model="selectedFormula" @change="debouncedCalculate">
                 <template x-for="option in formulaOptions" :key="option.id">
                     <option :value="option.id" x-text="option.name"></option>
@@ -72,6 +76,7 @@
                         <th>Set</th>
                         <th>Percentage</th>
                         <th>Weight (lbs)</th>
+                        <th>Plates (each side)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,12 +84,77 @@
                         <tr>
                             <td x-text="index + 1"></td>
                             <td x-text="set.percentage + '%'"></td>
-                            <td x-text="set.weight + ' lbs'"></td>
+                            <td>
+                                <template x-if="set.plates.remaining > 0">
+                                    <div>
+                                        <span x-text="set.plates.actualWeight + ' lbs'"></span>
+                                        <small class="text-muted" x-text="` (target: ${set.weight})`"></small>
+                                    </div>
+                                </template>
+                                <template x-if="set.plates.remaining === 0">
+                                    <span x-text="set.weight + ' lbs'"></span>
+                                </template>
+                            </td>
+                            <td>
+                                <template x-if="set.weight <= barWeight">
+                                    <span>Empty bar</span>
+                                </template>
+                                <template x-if="set.weight > barWeight">
+                                    <div class="d-flex gap-1 flex-wrap">
+                                        <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
+                                            <span class="badge text-bg-secondary" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
+                                        </template>
+                                        <template x-if="set.plates.remaining > 0">
+                                            <span class="badge text-bg-warning" x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"></span>
+                                        </template>
+                                    </div>
+                                </template>
+                            </td>
                         </tr>
                     </template>
                 </tbody>
             </table>
             <p class="text-muted" x-show="warmupSets.length === 0">Enter a target weight to see your warm-up sets.</p>
+        </div>
+        
+        <div class="modal fade" id="plateSettingsModal" tabindex="-1" aria-labelledby="plateSettingsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="plateSettingsModalLabel">Gym Equipment Settings</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="barWeight" class="form-label">Bar Weight (lbs)</label>
+                            <input type="number" class="form-control" id="barWeight" x-model="barWeight">
+                        </div>
+                        
+                        <h6 class="mb-3">Available Plates</h6>
+                        <div class="row g-3">
+                            <template x-for="(plate, index) in availablePlates" :key="plate.weight">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       :id="`plate-${plate.weight}`" 
+                                                       x-model="plate.available">
+                                                <label class="form-check-label" :for="`plate-${plate.weight}`" 
+                                                       x-text="`${plate.weight} lbs plates`"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" @click="savePlateSettings()" data-bs-dismiss="modal">Save Settings</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

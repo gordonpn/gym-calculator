@@ -8,20 +8,101 @@ export default () => ({
   warmupSets: [],
   formulaOptions,
 
+  barWeight: 45,
+  availablePlates: [
+    { weight: 45, available: true },
+    { weight: 35, available: true },
+    { weight: 25, available: true },
+    { weight: 10, available: true },
+    { weight: 5, available: true },
+    { weight: 2.5, available: true },
+  ],
+
   calculate() {
     const weight = parseFloat(this.targetWeight);
 
     if (!isNaN(weight) && weight > 0) {
       const formula = getFormula(this.selectedFormula);
       this.warmupSets = formula(weight);
+
+      this.warmupSets.forEach((set) => {
+        set.plates = this.calculatePlatesNeeded(set.weight);
+      });
     } else {
       this.warmupSets = [];
     }
   },
 
+  calculatePlatesNeeded(targetWeight) {
+    if (targetWeight <= this.barWeight) {
+      return {
+        plateConfig: [],
+        remaining: 0,
+        actualWeight: this.barWeight,
+      };
+    }
+
+    const weightToAdd = (targetWeight - this.barWeight) / 2;
+
+    const sortedPlates = [...this.availablePlates]
+      .filter((plate) => plate.available)
+      .sort((a, b) => b.weight - a.weight);
+
+    let remaining = weightToAdd;
+    const plateConfig = [];
+
+    sortedPlates.forEach((plate) => {
+      const count = Math.floor(remaining / plate.weight);
+
+      if (count > 0) {
+        plateConfig.push({
+          weight: plate.weight,
+          count: count,
+        });
+        remaining -= count * plate.weight;
+      }
+    });
+
+    const actualPlateWeight =
+      plateConfig.reduce((sum, plate) => sum + plate.weight * plate.count, 0) *
+      2;
+
+    const actualWeight = parseFloat(this.barWeight) + actualPlateWeight;
+
+    return {
+      plateConfig,
+      remaining,
+      actualWeight,
+    };
+  },
+
+  savePlateSettings() {
+    localStorage.setItem(
+      "plateSettings",
+      JSON.stringify({
+        barWeight: parseFloat(this.barWeight),
+        availablePlates: this.availablePlates,
+      })
+    );
+
+    this.calculate();
+  },
+
   init() {
     this.debouncedCalculate = debounce(this.calculate.bind(this), 300);
-    // Set default formula
     this.selectedFormula = "percentageBased";
+
+    const savedSettings = localStorage.getItem("plateSettings");
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      this.barWeight = parseFloat(settings.barWeight);
+
+      if (settings.availablePlates && Array.isArray(settings.availablePlates)) {
+        this.availablePlates = settings.availablePlates.map((plate) => ({
+          weight: plate.weight,
+          available: plate.available,
+        }));
+      }
+    }
   },
 });
