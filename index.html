@@ -46,23 +46,45 @@
     </div>
 </nav>
 
-<div class="container-fluid pt-5 mt-5" x-data="{ numWarmupSets: '', targetWeight: '' }">
+<div class="container-fluid pt-5 mt-5">
     <div x-data="calculator" x-init="init">
         <h1>Warm-up calculator</h1>
+        
+        <div class="mb-3">
+            <label for="formula-select" class="form-label">Warm-up Formula</label>
+            <select id="formula-select" class="form-select" x-model="selectedFormula" @change="debouncedCalculate">
+                <template x-for="option in formulaOptions" :key="option.id">
+                    <option :value="option.id" x-text="option.name"></option>
+                </template>
+            </select>
+        </div>
+        
         <div class="input-group mb-3">
-            <input type="text" class="form-control" x-model="numWarmupSets" @input="debouncedCalculate">
-            <span class="input-group-text" id="num-warmup-sets">Num. of warm-up sets</span>
+            <input type="number" class="form-control" x-model="targetWeight" @input="debouncedCalculate">
+            <span class="input-group-text">Target weight (lbs)</span>
         </div>
-        <div class="input-group mb-3">
-            <input type="text" class="form-control" x-model="targetWeight" @input="debouncedCalculate">
-            <span class="input-group-text" id="target-weight">Target weight (lbs)</span>
-        </div>
-        <div>
-            <p>Number of warm-up sets: <span x-text="numWarmupSets"></span></p>
-            <p>Target weight: <span x-text="targetWeight"></span></p>
-        </div>
-        <div>
-            <p x-text="result"></p>
+        
+        <div class="mt-4">
+            <h4>Your Warm-up Sets:</h4>
+            <table class="table table-striped" x-show="warmupSets.length > 0">
+                <thead>
+                    <tr>
+                        <th>Set</th>
+                        <th>Percentage</th>
+                        <th>Weight (lbs)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(set, index) in warmupSets" :key="index">
+                        <tr>
+                            <td x-text="index + 1"></td>
+                            <td x-text="set.percentage + '%'"></td>
+                            <td x-text="set.weight + ' lbs'"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+            <p class="text-muted" x-show="warmupSets.length === 0">Enter a target weight to see your warm-up sets.</p>
         </div>
     </div>
 </div>

@@ -1,18 +1,27 @@
-import { debounce } from './util.js';
+import { debounce } from "./util.js";
+import { formulaOptions, getFormula } from "./warmup-formulas.js";
+
 export default () => ({
-  numWarmupSets: '',
-  targetWeight: '',
-  result: '',
+  numWarmupSets: "",
+  targetWeight: "",
+  selectedFormula: "percentageBased",
+  warmupSets: [],
+  formulaOptions,
+
   calculate() {
-    const numSets = parseInt(this.numWarmupSets, 10);
     const weight = parseFloat(this.targetWeight);
-    if (!isNaN(numSets) && !isNaN(weight)) {
-      this.result = `You need to lift ${weight / numSets} lbs per set.`;
+
+    if (!isNaN(weight) && weight > 0) {
+      const formula = getFormula(this.selectedFormula);
+      this.warmupSets = formula(weight);
     } else {
-      this.result = 'Please enter valid numbers.';
+      this.warmupSets = [];
     }
   },
+
   init() {
     this.debouncedCalculate = debounce(this.calculate.bind(this), 300);
-  }
+    // Set default formula
+    this.selectedFormula = "percentageBased";
+  },
 });

@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "bun --bun run vite --host=0.0.0.0",
+    "build": "bun --bun run vite build",
+    "preview": "bun --bun run vite preview",
+    "bun-dev": "bun run dev"
   },
   "keywords": [],
   "author": "",
