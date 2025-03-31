@@ -2,16 +2,17 @@
   "name": "gym-calculator",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
     "dev": "bun --bun run vite --host=0.0.0.0",
-    "build": "bun --bun run vite build",
+    "build": "vite build",
+    "bun-build": "bun --bun run vite build",
     "preview": "bun --bun run vite preview",
     "bun-dev": "bun run dev"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "vite": "^6.0.9"
   },
