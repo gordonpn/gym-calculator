@@ -7,6 +7,7 @@ export default () => ({
   selectedFormula: "percentageBased",
   warmupSets: [],
   formulaOptions,
+  barOnlyFirstSet: false,
 
   barWeight: 45,
   availablePlates: [
@@ -24,6 +25,17 @@ export default () => ({
     if (!isNaN(weight) && weight > 0) {
       const formula = getFormula(this.selectedFormula);
       this.warmupSets = formula(weight);
+
+      if (
+        this.barOnlyFirstSet &&
+        this.warmupSets.length > 0 &&
+        this.warmupSets[0].weight > this.barWeight
+      ) {
+        this.warmupSets.unshift({
+          percentage: Math.round((this.barWeight / weight) * 100),
+          weight: this.barWeight,
+        });
+      }
 
       this.warmupSets.forEach((set) => {
         set.plates = this.calculatePlatesNeeded(set.weight);
@@ -82,6 +94,7 @@ export default () => ({
       JSON.stringify({
         barWeight: parseFloat(this.barWeight),
         availablePlates: this.availablePlates,
+        barOnlyFirstSet: this.barOnlyFirstSet,
       })
     );
 
@@ -102,6 +115,10 @@ export default () => ({
           weight: plate.weight,
           available: plate.available,
         }));
+      }
+
+      if (settings.hasOwnProperty("barOnlyFirstSet")) {
+        this.barOnlyFirstSet = settings.barOnlyFirstSet;
       }
     }
   },
