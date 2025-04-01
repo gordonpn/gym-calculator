@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="auto">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,11 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary fixed-top">
     <div class="container-fluid">
         <a class="navbar-brand" href="#">Warm-up calculator</a>
+        <div class="ms-auto">
+            <button class="btn theme-toggle" x-data @click="$dispatch('toggle-theme')">
+                <i class="bi" :class="document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
+            </button>
+        </div>
     </div>
 </nav>
 

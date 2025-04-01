@@ -16,4 +16,4 @@ bun run bun-dev
 
 - [x] Improve warm-up table to include reps
 - [ ] Improve on formulas
-- [ ] Implement dark mode
+- [x] Implement dark mode
