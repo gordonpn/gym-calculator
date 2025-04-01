@@ -11,8 +11,8 @@
     <div class="container-fluid">
         <a class="navbar-brand" href="#">Warm-up calculator</a>
         <div class="ms-auto">
-            <button class="btn theme-toggle" x-data @click="$dispatch('toggle-theme')">
-                <i class="bi" :class="document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
+            <button class="btn theme-toggle" x-data="themeToggle" @click="toggleTheme">
+                <i class="bi" :class="isDarkTheme ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
             </button>
         </div>
     </div>

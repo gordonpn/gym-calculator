@@ -20,6 +20,7 @@ const getPreferredTheme = () => {
 const setTheme = (theme) => {
   document.documentElement.setAttribute("data-bs-theme", theme);
   localStorage.setItem("theme", theme);
+  window.dispatchEvent(new CustomEvent("theme-changed", { detail: { theme } }));
 };
 
 setTheme(getPreferredTheme());
@@ -37,6 +38,20 @@ window
       setTheme(e.matches ? "dark" : "light");
     }
   });
+
+Alpine.data("themeToggle", () => ({
+  isDarkTheme: getPreferredTheme() === "dark",
+
+  init() {
+    window.addEventListener("theme-changed", (e) => {
+      this.isDarkTheme = e.detail.theme === "dark";
+    });
+  },
+
+  toggleTheme() {
+    document.dispatchEvent(new CustomEvent("toggle-theme"));
+  },
+}));
 
 Alpine.data("calculator", calculator);
 
