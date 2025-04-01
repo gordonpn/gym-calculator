@@ -122,5 +122,11 @@ export default () => ({
         this.barOnlyFirstSet = settings.barOnlyFirstSet;
       }
     }
+
+    document
+      .getElementById("plateSettingsModal")
+      .addEventListener("hidden.bs.modal", () => {
+        this.calculate();
+      });
   },
 });

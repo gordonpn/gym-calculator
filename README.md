@@ -2,6 +2,8 @@
 
 ## Description
 
+A simple web application for calculating gym warm-up sets and plate configurations based on your target weight.
+
 ## Development
 
 ### Run local server
@@ -12,5 +14,6 @@ bun run bun-dev
 
 ### Todo
 
-- [ ] Improve warm-up table to include reps
+- [x] Improve warm-up table to include reps
 - [ ] Improve on formulas
+- [ ] Implement dark mode
