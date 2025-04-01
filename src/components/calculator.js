@@ -34,6 +34,7 @@ export default () => ({
         this.warmupSets.unshift({
           percentage: Math.round((this.barWeight / weight) * 100),
           weight: this.barWeight,
+          reps: 12,
         });
       }
 
