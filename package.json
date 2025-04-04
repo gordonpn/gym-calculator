@@ -14,7 +14,7 @@
   "author": "gordonpn",
   "license": "MIT",
   "devDependencies": {
-    "vite": "^6.0.13"
+    "vite": "^6.0.14"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
