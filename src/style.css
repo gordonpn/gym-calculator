@@ -1,3 +1,17 @@
+html, body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.container-fluid {
+  flex: 1 0 auto;
+}
+
 .theme-toggle {
   display: flex;
   align-items: center;
@@ -26,4 +40,19 @@
 
 .bi-moon-fill {
   color: #6c757d;
+}
+
+.footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.footer a:hover {
+  opacity: 0.8;
+}
+
+.footer .bi-github {
+  font-size: 1.2rem;
+  margin-right: 0.25rem;
+  vertical-align: -0.125em;
 }
