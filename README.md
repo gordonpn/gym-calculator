@@ -15,5 +15,6 @@ bun run bun-dev
 ### Todo
 
 - [x] Improve warm-up table to include reps
-- [ ] Improve on formulas
+- [x] Improve on formulas: allow a custom formula where the user can specify how many warm-up sets they want
 - [x] Implement dark mode
+- [ ] Add footer information

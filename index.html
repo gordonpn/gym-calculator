@@ -28,10 +28,23 @@
         
         <div class="mb-3">
             <label for="formula-select" class="form-label">Formula</label>
-            <select id="formula-select" class="form-select" x-model="selectedFormula" @change="debouncedCalculate">
+            <select id="formula-select" class="form-select" x-model="selectedFormula" @change="onFormulaChange()">
                 <template x-for="option in formulaOptions" :key="option.id">
                     <option :value="option.id" x-text="option.name"></option>
                 </template>
+            </select>
+        </div>
+
+        <div class="mb-3" x-show="showSetsSelector">
+            <label for="sets-select" class="form-label">Number of Warm-up Sets</label>
+            <select id="sets-select" class="form-select" x-model.number="numWarmupSets" @change="debouncedCalculate">
+                <option value="2">2 Sets</option>
+                <option value="3">3 Sets</option>
+                <option value="4">4 Sets</option>
+                <option value="5">5 Sets</option>
+                <option value="6">6 Sets</option>
+                <option value="7">7 Sets</option>
+                <option value="8">8 Sets</option>
             </select>
         </div>
         

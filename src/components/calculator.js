@@ -1,13 +1,19 @@
 import { debounce } from "./util.js";
-import { formulaOptions, getFormula } from "./warmup-formulas.js";
+import {
+  formulaOptions,
+  getFormula,
+  isConfigurableFormula,
+  getDefaultSets,
+} from "./warmup-formulas.js";
 
 export default () => ({
-  numWarmupSets: "",
+  numWarmupSets: 6,
   targetWeight: "",
   selectedFormula: "percentageBased",
   warmupSets: [],
   formulaOptions,
   barOnlyFirstSet: false,
+  showSetsSelector: true,
 
   barWeight: 45,
   availablePlates: [
@@ -24,7 +30,11 @@ export default () => ({
 
     if (!isNaN(weight) && weight > 0) {
       const formula = getFormula(this.selectedFormula);
-      this.warmupSets = formula(weight);
+      if (isConfigurableFormula(this.selectedFormula)) {
+        this.warmupSets = formula(weight, this.numWarmupSets);
+      } else {
+        this.warmupSets = formula(weight);
+      }
 
       if (
         this.barOnlyFirstSet &&
@@ -44,6 +54,16 @@ export default () => ({
     } else {
       this.warmupSets = [];
     }
+  },
+
+  onFormulaChange() {
+    if (isConfigurableFormula(this.selectedFormula)) {
+      this.numWarmupSets = getDefaultSets(this.selectedFormula);
+      this.showSetsSelector = true;
+    } else {
+      this.showSetsSelector = false;
+    }
+    this.debouncedCalculate();
   },
 
   calculatePlatesNeeded(targetWeight) {
@@ -105,6 +125,8 @@ export default () => ({
   init() {
     this.debouncedCalculate = debounce(this.calculate.bind(this), 300);
     this.selectedFormula = "percentageBased";
+    this.numWarmupSets = getDefaultSets(this.selectedFormula);
+    this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
 
     const savedSettings = localStorage.getItem("plateSettings");
     if (savedSettings) {
