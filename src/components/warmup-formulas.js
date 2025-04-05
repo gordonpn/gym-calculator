@@ -58,7 +58,7 @@ export function fiveThreeOne(targetWeight) {
 }
 
 export const formulaOptions = [
-  { id: "percentageBased", name: "Standard Warm-up" },
+  { id: "percentageBased", name: "Percentage Based" },
   { id: "fixedIncrements", name: "Fixed Increments" },
   { id: "fiveThreeOne", name: "5/3/1 Style (3 Sets)" },
 ];
