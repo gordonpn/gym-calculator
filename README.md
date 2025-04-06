@@ -33,3 +33,4 @@ pnpm run bun-dev
 * [ ] Add Biome for linting and formatting
 * [ ] Add lefthook for pre-commit hooks
 * [ ] Add PostCSS for CSS optimizations
+* [x] Add section to display the working set plate configuration

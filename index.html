@@ -54,7 +54,7 @@
         </div>
         
         <div class="mt-4">
-            <h4>Your Warm-up Sets:</h4>
+            <h4>Warm-up Sets:</h4>
             <table class="table table-striped" x-show="warmupSets.length > 0">
                 <thead>
                     <tr>
@@ -100,6 +100,35 @@
                 </tbody>
             </table>
             <p class="text-muted" x-show="warmupSets.length === 0">Enter a target weight to see your warm-up sets.</p>
+        </div>
+        
+        <div class="card mt-4 mb-4" x-show="targetWeight > 0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Working Set</h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h3 class="mb-0" x-text="targetWeight + ' lbs'"></h3>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Plates (each side):</h6>
+                        <template x-if="targetWeight <= barWeight">
+                            <span>Empty bar</span>
+                        </template>
+                        <template x-if="targetWeight > barWeight">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <template x-for="plate in calculatePlatesNeeded(targetWeight).plateConfig" :key="plate.weight">
+                                    <span class="badge text-bg-primary fs-5" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
+                                </template>
+                                <template x-if="calculatePlatesNeeded(targetWeight).remaining > 0">
+                                    <span class="badge text-bg-warning fs-5" x-text="`Missing: ${calculatePlatesNeeded(targetWeight).remaining.toFixed(1)} lbs`"></span>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="modal fade" id="plateSettingsModal" tabindex="-1" aria-labelledby="plateSettingsModalLabel" aria-hidden="true">
