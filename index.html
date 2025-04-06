@@ -87,7 +87,7 @@
                                 <template x-if="set.weight > barWeight">
                                     <div class="d-flex gap-1 flex-wrap">
                                         <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
-                                            <span class="badge text-bg-secondary" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
+                                            <span class="badge" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
                                         </template>
                                         <template x-if="set.plates.remaining > 0">
                                             <span class="badge text-bg-warning" x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"></span>
@@ -119,7 +119,7 @@
                         <template x-if="targetWeight > barWeight">
                             <div class="d-flex gap-2 flex-wrap">
                                 <template x-for="plate in calculatePlatesNeeded(targetWeight).plateConfig" :key="plate.weight">
-                                    <span class="badge text-bg-primary fs-5" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
+                                    <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
                                 </template>
                                 <template x-if="calculatePlatesNeeded(targetWeight).remaining > 0">
                                     <span class="badge text-bg-warning fs-5" x-text="`Missing: ${calculatePlatesNeeded(targetWeight).remaining.toFixed(1)} lbs`"></span>

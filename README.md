@@ -34,3 +34,4 @@ pnpm run bun-dev
 * [ ] Add lefthook for pre-commit hooks
 * [ ] Add PostCSS for CSS optimizations
 * [x] Add section to display the working set plate configuration
+* [x] Add colours to the plate badges to make it easily distinguishable

@@ -18,10 +18,12 @@ export default () => ({
 
   barWeight: 45,
   availablePlates: [
+    { weight: 55, available: false },
     { weight: 45, available: true },
     { weight: 35, available: true },
     { weight: 25, available: true },
     { weight: 10, available: true },
+    { weight: 15, available: true },
     { weight: 5, available: true },
     { weight: 2.5, available: true },
   ],
@@ -134,6 +136,29 @@ export default () => ({
     );
 
     this.calculate();
+  },
+
+  getPlateColor(weight) {
+    switch (parseFloat(weight)) {
+      case 55:
+        return "danger";
+      case 45:
+        return "primary";
+      case 35:
+        return "warning";
+      case 25:
+        return "success";
+      case 15:
+        return "info";
+      case 10:
+        return "light";
+      case 5:
+        return "danger";
+      case 2.5:
+        return "light";
+      default:
+        return "secondary";
+    }
   },
 
   init() {
