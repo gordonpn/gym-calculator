@@ -151,7 +151,7 @@ export default () => ({
       case 15:
         return "info";
       case 10:
-        return "teal";
+        return "burgundy";
       case 5:
         return "secondary";
       case 2.5:
