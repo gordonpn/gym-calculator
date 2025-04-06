@@ -14,6 +14,7 @@ export default () => ({
   formulaOptions,
   barOnlyFirstSet: false,
   showSetsSelector: true,
+  minimizePlateChanges: false,
 
   barWeight: 45,
   availablePlates: [
@@ -31,9 +32,21 @@ export default () => ({
     if (!isNaN(weight) && weight > 0) {
       const formula = getFormula(this.selectedFormula);
       if (isConfigurableFormula(this.selectedFormula)) {
-        this.warmupSets = formula(weight, this.numWarmupSets);
+        this.warmupSets = formula(
+          weight,
+          this.numWarmupSets,
+          this.barWeight,
+          this.availablePlates,
+          this.minimizePlateChanges
+        );
       } else {
-        this.warmupSets = formula(weight);
+        this.warmupSets = formula(
+          weight,
+          null,
+          this.barWeight,
+          this.availablePlates,
+          this.minimizePlateChanges
+        );
       }
 
       if (
@@ -116,6 +129,7 @@ export default () => ({
         barWeight: parseFloat(this.barWeight),
         availablePlates: this.availablePlates,
         barOnlyFirstSet: this.barOnlyFirstSet,
+        minimizePlateChanges: this.minimizePlateChanges,
       })
     );
 
@@ -142,6 +156,10 @@ export default () => ({
 
       if (settings.hasOwnProperty("barOnlyFirstSet")) {
         this.barOnlyFirstSet = settings.barOnlyFirstSet;
+      }
+
+      if (settings.hasOwnProperty("minimizePlateChanges")) {
+        this.minimizePlateChanges = settings.minimizePlateChanges;
       }
     }
 

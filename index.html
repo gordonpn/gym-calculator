@@ -122,6 +122,14 @@
                             </div>
                         </div>
                         
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="minimizePlateChanges" x-model="minimizePlateChanges">
+                                <label class="form-check-label" for="minimizePlateChanges">Minimize plate changes between sets</label>
+                            </div>
+                            <small class="text-muted">Optimizes warm-up weights to reduce the number of plate changes needed.</small>
+                        </div>
+                        
                         <h6 class="mb-3">Available Plates</h6>
                         <div class="row g-3">
                             <template x-for="(plate, index) in availablePlates" :key="plate.weight">
