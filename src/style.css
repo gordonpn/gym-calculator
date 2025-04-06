@@ -56,3 +56,8 @@ body {
   margin-right: 0.25rem;
   vertical-align: -0.125em;
 }
+
+.text-bg-purple {
+  background-color: #6f42c1 !important;
+  color: #fff !important;
+}

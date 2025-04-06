@@ -22,8 +22,8 @@ export default () => ({
     { weight: 45, available: true },
     { weight: 35, available: true },
     { weight: 25, available: true },
-    { weight: 10, available: true },
     { weight: 15, available: true },
+    { weight: 10, available: true },
     { weight: 5, available: true },
     { weight: 2.5, available: true },
   ],
@@ -151,11 +151,11 @@ export default () => ({
       case 15:
         return "info";
       case 10:
-        return "light";
+        return "dark";
       case 5:
-        return "danger";
+        return "secondary";
       case 2.5:
-        return "light";
+        return "purple";
       default:
         return "secondary";
     }
