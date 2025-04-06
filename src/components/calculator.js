@@ -173,9 +173,20 @@ export default () => ({
       this.barWeight = parseFloat(settings.barWeight);
 
       if (settings.availablePlates && Array.isArray(settings.availablePlates)) {
-        this.availablePlates = settings.availablePlates.map((plate) => ({
-          weight: plate.weight,
-          available: plate.available,
+        const expectedWeights = [55, 45, 35, 25, 15, 10, 5, 2.5];
+
+        const plateMap = new Map();
+        settings.availablePlates.forEach((plate) => {
+          plateMap.set(plate.weight, plate.available);
+        });
+
+        this.availablePlates = expectedWeights.map((weight) => ({
+          weight: weight,
+          available: plateMap.has(weight)
+            ? plateMap.get(weight)
+            : weight === 55
+            ? false
+            : true,
         }));
       }
 
