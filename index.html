@@ -193,36 +193,61 @@
 
         <!-- Rep Max Calculator Modal -->
         <div class="modal fade" id="repMaxCalculatorModal" tabindex="-1" aria-labelledby="repMaxCalculatorModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content" x-data="repMaxCalculator">
                     <div class="modal-header">
                         <h5 class="modal-title" id="repMaxCalculatorModalLabel">Rep Max Calculator</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p class="text-muted">Calculate your one-rep max (1RM) based on your weight and reps.</p>
+                        <p class="text-muted">Calculate your one-rep max (1RM) and rep ranges based on your weight and reps.</p>
 
-                        <div class="mb-3">
-                            <label for="weight-input" class="form-label">Weight lifted (lbs)</label>
-                            <input type="number" class="form-control" id="weight-input" x-model="weight" @input="calculateRepMax()">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="reps-input" class="form-label">Number of reps completed</label>
-                            <input type="number" class="form-control" id="reps-input" x-model="reps" @input="calculateRepMax()">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="weight-input" class="form-label">Weight lifted (lbs)</label>
+                                <input type="number" class="form-control" id="weight-input" x-model="weight" @input="calculateRepMax()">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="reps-input" class="form-label">Number of reps completed</label>
+                                <input type="number" class="form-control" id="reps-input" x-model="reps" @input="calculateRepMax()">
+                            </div>
                         </div>
 
                         <template x-if="errorMessage">
                             <div class="alert alert-warning" role="alert" x-text="errorMessage"></div>
                         </template>
 
-                        <div class="card mt-4" x-show="estimatedMax > 0">
-                            <div class="card-header bg-success text-white">
-                                <h5 class="mb-0">Estimated 1 Rep Max</h5>
+                        <div x-show="estimatedMax > 0">
+                            <div class="card mb-4">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0">Estimated 1 Rep Max</h5>
+                                </div>
+                                <div class="card-body">
+                                    <h2 class="text-center" x-text="estimatedMax + ' lbs'"></h2>
+                                    <p class="text-muted text-center">Based on the Epley formula</p>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <h2 class="text-center" x-text="estimatedMax + ' lbs'"></h2>
-                                <p class="text-muted text-center">Based on the Epley formula</p>
+                            
+                            <h5>Estimated weights for rep ranges:</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Reps</th>
+                                            <th>Weight (lbs)</th>
+                                            <th>% of 1RM</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="data in repRangeData" :key="data.reps">
+                                            <tr>
+                                                <td x-text="data.reps"></td>
+                                                <td x-text="data.weight + ' lbs'"></td>
+                                                <td x-text="data.percentage + '%'"></td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
