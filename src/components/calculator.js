@@ -29,9 +29,9 @@ export default () => ({
   ],
 
   calculate() {
-    const weight = parseFloat(this.targetWeight);
+    const weight = Number.parseFloat(this.targetWeight);
 
-    if (!isNaN(weight) && weight > 0) {
+    if (!Number.isNaN(weight) && weight > 0) {
       const formula = getFormula(this.selectedFormula);
       if (isConfigurableFormula(this.selectedFormula)) {
         this.warmupSets = formula(
@@ -63,9 +63,9 @@ export default () => ({
         });
       }
 
-      this.warmupSets.forEach((set) => {
+      for (const set of this.warmupSets) {
         set.plates = this.calculatePlatesNeeded(set.weight);
-      });
+      }
     } else {
       this.warmupSets = [];
     }
@@ -99,7 +99,7 @@ export default () => ({
     let remaining = weightToAdd;
     const plateConfig = [];
 
-    sortedPlates.forEach((plate) => {
+    for (const plate of sortedPlates) {
       const count = Math.floor(remaining / plate.weight);
 
       if (count > 0) {
@@ -109,13 +109,13 @@ export default () => ({
         });
         remaining -= count * plate.weight;
       }
-    });
+    }
 
     const actualPlateWeight =
       plateConfig.reduce((sum, plate) => sum + plate.weight * plate.count, 0) *
       2;
 
-    const actualWeight = parseFloat(this.barWeight) + actualPlateWeight;
+    const actualWeight = Number.parseFloat(this.barWeight) + actualPlateWeight;
 
     return {
       plateConfig,
@@ -128,7 +128,7 @@ export default () => ({
     localStorage.setItem(
       "plateSettings",
       JSON.stringify({
-        barWeight: parseFloat(this.barWeight),
+        barWeight: Number.parseFloat(this.barWeight),
         availablePlates: this.availablePlates,
         barOnlyFirstSet: this.barOnlyFirstSet,
         minimizePlateChanges: this.minimizePlateChanges,
@@ -139,7 +139,7 @@ export default () => ({
   },
 
   getPlateColor(weight) {
-    switch (parseFloat(weight)) {
+    switch (Number.parseFloat(weight)) {
       case 55:
         return "danger";
       case 45:
@@ -170,31 +170,29 @@ export default () => ({
     const savedSettings = localStorage.getItem("plateSettings");
     if (savedSettings) {
       const settings = JSON.parse(savedSettings);
-      this.barWeight = parseFloat(settings.barWeight);
+      this.barWeight = Number.parseFloat(settings.barWeight);
 
       if (settings.availablePlates && Array.isArray(settings.availablePlates)) {
         const expectedWeights = [55, 45, 35, 25, 15, 10, 5, 2.5];
 
         const plateMap = new Map();
-        settings.availablePlates.forEach((plate) => {
+        for (const plate of settings.availablePlates) {
           plateMap.set(plate.weight, plate.available);
-        });
+        }
 
         this.availablePlates = expectedWeights.map((weight) => ({
           weight: weight,
           available: plateMap.has(weight)
             ? plateMap.get(weight)
-            : weight === 55
-            ? false
-            : true,
+            : weight !==55,
         }));
       }
 
-      if (settings.hasOwnProperty("barOnlyFirstSet")) {
+      if (Object.prototype.hasOwnProperty.call(settings, "barOnlyFirstSet")) {
         this.barOnlyFirstSet = settings.barOnlyFirstSet;
       }
 
-      if (settings.hasOwnProperty("minimizePlateChanges")) {
+      if (Object.prototype.hasOwnProperty.call(settings, "minimizePlateChanges")) {
         this.minimizePlateChanges = settings.minimizePlateChanges;
       }
     }

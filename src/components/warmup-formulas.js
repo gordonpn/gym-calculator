@@ -47,7 +47,7 @@ export function percentageBased(
     }
 
     return optimizePlateChanges(sets, barWeight, availablePlates);
-  } else {
+  }
     for (let i = 0; i < numSets; i++) {
       const { percentage, idealWeight } = idealWeights[i];
 
@@ -67,7 +67,6 @@ export function percentageBased(
     }
 
     return sets.sort((a, b) => a.weight - b.weight);
-  }
 }
 
 export function fixedIncrements(
@@ -115,7 +114,7 @@ export function fixedIncrements(
     }
 
     return optimizePlateChanges(sets, barWeight, availablePlates);
-  } else {
+  }
     const sets = [];
     for (let i = 0; i < idealWeights.length; i++) {
       const { percentage, idealWeight } = idealWeights[i];
@@ -134,7 +133,6 @@ export function fixedIncrements(
     }
 
     return sets.sort((a, b) => a.weight - b.weight);
-  }
 }
 
 export function fiveThreeOne(
@@ -176,7 +174,7 @@ export function fiveThreeOne(
     }
 
     return optimizePlateChanges(sets, barWeight, availablePlates);
-  } else {
+  }
     const sets = [];
     for (let i = 0; i < idealWeights.length; i++) {
       const { percentage, idealWeight } = idealWeights[i];
@@ -194,7 +192,6 @@ export function fiveThreeOne(
     }
 
     return sets.sort((a, b) => a.weight - b.weight);
-  }
 }
 
 function generatePossibleWeights(barWeight, targetWeight, availablePlates) {
@@ -205,7 +202,7 @@ function generatePossibleWeights(barWeight, targetWeight, availablePlates) {
     .map((plate) => plate.weight)
     .sort((a, b) => a - b);
 
-  let queue = [barWeight];
+  const queue = [barWeight];
   const seen = new Set([barWeight]);
 
   while (queue.length > 0) {
@@ -260,17 +257,21 @@ function countPlateChanges(config1, config2) {
   const plateMap1 = new Map();
   const plateMap2 = new Map();
 
-  config1.forEach((plate) => plateMap1.set(plate.weight, plate.count));
-  config2.forEach((plate) => plateMap2.set(plate.weight, plate.count));
+  for (const plate of config1) {
+    plateMap1.set(plate.weight, plate.count);
+  }
+  for (const plate of config2) {
+    plateMap2.set(plate.weight, plate.count);
+  }
 
   let changes = 0;
   const allPlateWeights = new Set([...plateMap1.keys(), ...plateMap2.keys()]);
 
-  allPlateWeights.forEach((weight) => {
+  for (const weight of allPlateWeights) {
     const count1 = plateMap1.get(weight) || 0;
     const count2 = plateMap2.get(weight) || 0;
     changes += Math.abs(count2 - count1);
-  });
+  }
 
   return changes;
 }
@@ -339,9 +340,9 @@ function calculateProgressivePlateConfig(
 
   // Convert previous plate config to a map for easy manipulation
   const plateMap = new Map();
-  prevPlateConfig.forEach((plate) => {
+  for (const plate of prevPlateConfig) {
     plateMap.set(plate.weight, plate.count);
-  });
+  }
 
   // Get available plates sorted by weight (descending)
   const sortedAvailablePlates = [...availablePlates]
