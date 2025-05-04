@@ -65,6 +65,12 @@ export default () => ({
 
       for (const set of this.warmupSets) {
         set.plates = this.calculatePlatesNeeded(set.weight);
+
+        // If not using minimize plate changes and there's an adjusted weight,
+        // update the set's weight to the actual achievable weight for cleaner display
+        if (!this.minimizePlateChanges && set.plates.adjustedTargetWeight) {
+          set.weight = set.plates.adjustedTargetWeight;
+        }
       }
     } else {
       this.warmupSets = [];
@@ -116,6 +122,18 @@ export default () => ({
       2;
 
     const actualWeight = Number.parseFloat(this.barWeight) + actualPlateWeight;
+
+    // If not using minimize plate changes, we don't want to show "missing" weights
+    // and instead just use the actual achievable weight
+    if (!this.minimizePlateChanges && remaining > 0) {
+      return {
+        plateConfig,
+        remaining: 0, // Set to 0 to hide "missing" weight indication
+        actualWeight: actualWeight,
+        // Update the set's weight to the actual achievable weight for display
+        adjustedTargetWeight: actualWeight,
+      };
+    }
 
     return {
       plateConfig,
@@ -184,7 +202,7 @@ export default () => ({
           weight: weight,
           available: plateMap.has(weight)
             ? plateMap.get(weight)
-            : weight !==55,
+            : weight !== 55,
         }));
       }
 
@@ -192,7 +210,9 @@ export default () => ({
         this.barOnlyFirstSet = settings.barOnlyFirstSet;
       }
 
-      if (Object.prototype.hasOwnProperty.call(settings, "minimizePlateChanges")) {
+      if (
+        Object.prototype.hasOwnProperty.call(settings, "minimizePlateChanges")
+      ) {
         this.minimizePlateChanges = settings.minimizePlateChanges;
       }
     }

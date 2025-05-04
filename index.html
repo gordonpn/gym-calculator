@@ -75,13 +75,13 @@
                             <td x-text="index + 1"></td>
                             <td x-text="set.reps"></td>
                             <td>
-                                <template x-if="set.plates.remaining > 0">
+                                <template x-if="set.plates.remaining > 0 && minimizePlateChanges">
                                     <div>
                                         <span x-text="set.plates.actualWeight + ' lbs'"></span>
                                         <small class="text-muted" x-text="` (target: ${set.weight})`"></small>
                                     </div>
                                 </template>
-                                <template x-if="set.plates.remaining === 0">
+                                <template x-if="set.plates.remaining === 0 || !minimizePlateChanges">
                                     <span x-text="set.weight + ' lbs'"></span>
                                 </template>
                             </td>
@@ -94,7 +94,7 @@
                                         <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
                                             <span class="badge" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
                                         </template>
-                                        <template x-if="set.plates.remaining > 0">
+                                        <template x-if="set.plates.remaining > 0 && minimizePlateChanges">
                                             <span class="badge text-bg-warning" x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"></span>
                                         </template>
                                     </div>
@@ -126,7 +126,7 @@
                                 <template x-for="plate in calculatePlatesNeeded(targetWeight).plateConfig" :key="plate.weight">
                                     <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
                                 </template>
-                                <template x-if="calculatePlatesNeeded(targetWeight).remaining > 0">
+                                <template x-if="calculatePlatesNeeded(targetWeight).remaining > 0 && minimizePlateChanges">
                                     <span class="badge text-bg-warning fs-5" x-text="`Missing: ${calculatePlatesNeeded(targetWeight).remaining.toFixed(1)} lbs`"></span>
                                 </template>
                             </div>
