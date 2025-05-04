@@ -3,8 +3,14 @@ export function percentageBased(
   numSets = 6,
   barWeight = 45,
   availablePlates = [],
-  minimizePlateChanges = false
+  minimizePlateChanges = false,
+  isWeightedBodyweight = false,
+  bodyweight = 0
 ) {
+  const effectiveTargetWeight = isWeightedBodyweight
+    ? targetWeight - bodyweight
+    : targetWeight;
+
   const sets = [];
   const minPercentage = 40;
   const maxPercentage = 90;
@@ -15,7 +21,21 @@ export function percentageBased(
     const percentage = Math.round(
       minPercentage + (percentageRange * i) / (numSets - 1)
     );
-    const idealWeight = Math.round(targetWeight * (percentage / 100));
+    let idealWeight;
+
+    if (isWeightedBodyweight) {
+      // For bodyweight exercises, lower percentages may mean negative added weight (less than bodyweight)
+      idealWeight = Math.round(
+        effectiveTargetWeight * (percentage / 100) + bodyweight
+      );
+      // Ensure we don't go below bodyweight (which would mean assistance rather than added weight)
+      if (idealWeight < bodyweight) {
+        idealWeight = bodyweight;
+      }
+    } else {
+      idealWeight = Math.round(targetWeight * (percentage / 100));
+    }
+
     idealWeights.push({ percentage, idealWeight });
   }
 
@@ -43,30 +63,36 @@ export function percentageBased(
         weight: closestWeight,
         reps,
         idealWeight,
+        addedWeight: isWeightedBodyweight
+          ? Math.max(0, closestWeight - bodyweight)
+          : closestWeight,
       });
     }
 
     return optimizePlateChanges(sets, barWeight, availablePlates);
   }
-    for (let i = 0; i < numSets; i++) {
-      const { percentage, idealWeight } = idealWeights[i];
+  for (let i = 0; i < numSets; i++) {
+    const { percentage, idealWeight } = idealWeights[i];
 
-      let reps;
-      if (percentage <= 50) reps = 10;
-      else if (percentage <= 60) reps = 8;
-      else if (percentage <= 70) reps = 6;
-      else if (percentage <= 80) reps = 5;
-      else if (percentage <= 85) reps = 3;
-      else reps = 2;
+    let reps;
+    if (percentage <= 50) reps = 10;
+    else if (percentage <= 60) reps = 8;
+    else if (percentage <= 70) reps = 6;
+    else if (percentage <= 80) reps = 5;
+    else if (percentage <= 85) reps = 3;
+    else reps = 2;
 
-      sets.push({
-        percentage,
-        weight: idealWeight,
-        reps,
-      });
-    }
+    sets.push({
+      percentage,
+      weight: idealWeight,
+      reps,
+      addedWeight: isWeightedBodyweight
+        ? Math.max(0, idealWeight - bodyweight)
+        : idealWeight,
+    });
+  }
 
-    return sets.sort((a, b) => a.weight - b.weight);
+  return sets.sort((a, b) => a.weight - b.weight);
 }
 
 export function fixedIncrements(
@@ -74,15 +100,30 @@ export function fixedIncrements(
   numSets = 5,
   barWeight = 45,
   availablePlates = [],
-  minimizePlateChanges = false
+  minimizePlateChanges = false,
+  isWeightedBodyweight = false,
+  bodyweight = 0
 ) {
+  // For bodyweight exercises, we work with the added weight
+  const effectiveTargetWeight = isWeightedBodyweight
+    ? targetWeight - bodyweight
+    : targetWeight;
+  const effectiveBarWeight = isWeightedBodyweight ? 0 : barWeight;
+
   const idealWeights = [];
-  const increment = (targetWeight - barWeight) / (numSets + 1);
+  const increment =
+    (effectiveTargetWeight - effectiveBarWeight) / (numSets + 1);
 
   for (let i = 0; i < numSets; i++) {
-    const weight = Math.round(barWeight + increment * (i + 1));
-    if (weight < targetWeight) {
-      const percentage = Math.round((weight / targetWeight) * 100);
+    let weight = Math.round(effectiveBarWeight + increment * (i + 1));
+    if (weight < effectiveTargetWeight) {
+      const percentage = Math.round((weight / effectiveTargetWeight) * 100);
+
+      // For bodyweight exercises, add back the bodyweight
+      if (isWeightedBodyweight) {
+        weight += bodyweight;
+      }
+
       idealWeights.push({ percentage, idealWeight: weight });
     }
   }
@@ -110,29 +151,35 @@ export function fixedIncrements(
         weight: closestWeight,
         reps,
         idealWeight,
+        addedWeight: isWeightedBodyweight
+          ? Math.max(0, closestWeight - bodyweight)
+          : closestWeight,
       });
     }
 
     return optimizePlateChanges(sets, barWeight, availablePlates);
   }
-    const sets = [];
-    for (let i = 0; i < idealWeights.length; i++) {
-      const { percentage, idealWeight } = idealWeights[i];
+  const sets = [];
+  for (let i = 0; i < idealWeights.length; i++) {
+    const { percentage, idealWeight } = idealWeights[i];
 
-      let reps;
-      if (percentage <= 50) reps = 8;
-      else if (percentage <= 70) reps = 5;
-      else if (percentage <= 85) reps = 3;
-      else reps = 2;
+    let reps;
+    if (percentage <= 50) reps = 8;
+    else if (percentage <= 70) reps = 5;
+    else if (percentage <= 85) reps = 3;
+    else reps = 2;
 
-      sets.push({
-        percentage,
-        weight: idealWeight,
-        reps,
-      });
-    }
+    sets.push({
+      percentage,
+      weight: idealWeight,
+      reps,
+      addedWeight: isWeightedBodyweight
+        ? Math.max(0, idealWeight - bodyweight)
+        : idealWeight,
+    });
+  }
 
-    return sets.sort((a, b) => a.weight - b.weight);
+  return sets.sort((a, b) => a.weight - b.weight);
 }
 
 export function fiveThreeOne(
@@ -140,13 +187,35 @@ export function fiveThreeOne(
   _,
   barWeight = 45,
   availablePlates = [],
-  minimizePlateChanges = false
+  minimizePlateChanges = false,
+  isWeightedBodyweight = false,
+  bodyweight = 0
 ) {
-  const idealWeights = [
-    { percentage: 40, idealWeight: Math.round(targetWeight * 0.4) },
-    { percentage: 50, idealWeight: Math.round(targetWeight * 0.5) },
-    { percentage: 60, idealWeight: Math.round(targetWeight * 0.6) },
-  ];
+  // For bodyweight exercises, work with just the added weight component
+  const effectiveTargetWeight = isWeightedBodyweight
+    ? targetWeight - bodyweight
+    : targetWeight;
+
+  const idealWeights = [];
+  const percentages = [40, 50, 60];
+
+  for (const percentage of percentages) {
+    let idealWeight;
+    if (isWeightedBodyweight) {
+      // Calculate the added weight based on percentage, then add bodyweight back
+      idealWeight = Math.round(
+        effectiveTargetWeight * (percentage / 100) + bodyweight
+      );
+      // Don't go below bodyweight
+      if (idealWeight < bodyweight) {
+        idealWeight = bodyweight;
+      }
+    } else {
+      idealWeight = Math.round(targetWeight * (percentage / 100));
+    }
+
+    idealWeights.push({ percentage, idealWeight });
+  }
 
   if (minimizePlateChanges) {
     const possibleWeights = generatePossibleWeights(
@@ -170,28 +239,106 @@ export function fiveThreeOne(
         weight: closestWeight,
         reps,
         idealWeight,
+        addedWeight: isWeightedBodyweight
+          ? Math.max(0, closestWeight - bodyweight)
+          : closestWeight,
       });
     }
 
     return optimizePlateChanges(sets, barWeight, availablePlates);
   }
+  const sets = [];
+  for (let i = 0; i < idealWeights.length; i++) {
+    const { percentage, idealWeight } = idealWeights[i];
+
+    let reps;
+    if (percentage <= 40) reps = 10;
+    else if (percentage <= 50) reps = 5;
+    else reps = 3;
+
+    sets.push({
+      percentage,
+      weight: idealWeight,
+      reps,
+      addedWeight: isWeightedBodyweight
+        ? Math.max(0, idealWeight - bodyweight)
+        : idealWeight,
+    });
+  }
+
+  return sets.sort((a, b) => a.weight - b.weight);
+}
+
+export function weightedBodyweight(
+  targetWeight,
+  numSets = 5,
+  barWeight = 45,
+  availablePlates = [],
+  minimizePlateChanges = false,
+  isWeightedBodyweight = true,
+  bodyweight = 0
+) {
+  if (!isWeightedBodyweight || bodyweight <= 0) {
+    // Fall back to percentage based if not a bodyweight exercise
+    return percentageBased(
+      targetWeight,
+      numSets,
+      barWeight,
+      availablePlates,
+      minimizePlateChanges
+    );
+  }
+
+  const addedWeight = targetWeight - bodyweight;
+  if (addedWeight <= 0) {
+    // If target is just bodyweight or less, use just bodyweight for all warm-ups
     const sets = [];
-    for (let i = 0; i < idealWeights.length; i++) {
-      const { percentage, idealWeight } = idealWeights[i];
-
-      let reps;
-      if (percentage <= 40) reps = 10;
-      else if (percentage <= 50) reps = 5;
-      else reps = 3;
-
+    for (let i = 0; i < numSets; i++) {
+      const percentage =
+        i === numSets - 1 ? 100 : Math.round(50 + (50 * i) / (numSets - 1));
       sets.push({
         percentage,
-        weight: idealWeight,
-        reps,
+        weight: bodyweight,
+        reps: 10 - i,
+        addedWeight: 0,
       });
     }
+    return sets;
+  }
 
-    return sets.sort((a, b) => a.weight - b.weight);
+  const sets = [];
+
+  // Add bodyweight-only sets at the beginning
+  sets.push({
+    percentage: Math.round((bodyweight / targetWeight) * 100),
+    weight: bodyweight,
+    reps: 10,
+    addedWeight: 0,
+  });
+
+  // Add sets with increasing added weight
+  const remainingSets = numSets - 1;
+  for (let i = 0; i < remainingSets; i++) {
+    // Calculate as percentage of the added weight component
+    const percentage = Math.round(30 + (70 * i) / (remainingSets - 1));
+    const setAddedWeight = Math.round((addedWeight * percentage) / 100);
+    const totalWeight = bodyweight + setAddedWeight;
+
+    let reps;
+    if (percentage <= 40) reps = 8;
+    else if (percentage <= 60) reps = 6;
+    else if (percentage <= 80) reps = 4;
+    else reps = 2;
+
+    sets.push({
+      percentage: Math.round((totalWeight / targetWeight) * 100),
+      weight: totalWeight,
+      reps,
+      addedWeight: setAddedWeight,
+    });
+  }
+
+  return sets.sort((a, b) => a.weight - b.weight);
 }
 
 function generatePossibleWeights(barWeight, targetWeight, availablePlates) {
@@ -405,10 +552,15 @@ export const formulaOptions = [
   { id: "percentageBased", name: "Percentage Based" },
   { id: "fixedIncrements", name: "Fixed Increments" },
   { id: "fiveThreeOne", name: "5/3/1 Style (3 Sets)" },
+  { id: "weightedBodyweight", name: "Weighted Bodyweight" },
 ];
 
 export const isConfigurableFormula = (formulaId) => {
-  return formulaId === "percentageBased" || formulaId === "fixedIncrements";
+  return (
+    formulaId === "percentageBased" ||
+    formulaId === "fixedIncrements" ||
+    formulaId === "weightedBodyweight"
+  );
 };
 
 export const getDefaultSets = (formulaId) => {
@@ -416,6 +568,8 @@ export const getDefaultSets = (formulaId) => {
     case "percentageBased":
       return 6;
     case "fixedIncrements":
+      return 5;
+    case "weightedBodyweight":
       return 5;
     default:
       return 0;
@@ -430,6 +584,8 @@ export function getFormula(formulaId) {
       return fixedIncrements;
     case "fiveThreeOne":
       return fiveThreeOne;
+    case "weightedBodyweight":
+      return weightedBodyweight;
     default:
       return percentageBased;
   }

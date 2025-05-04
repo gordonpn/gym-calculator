@@ -40,6 +40,19 @@
             </select>
         </div>
 
+        <div class="mb-3">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="isWeightedBodyweight" x-model="isWeightedBodyweight" @change="debouncedCalculate">
+                <label class="form-check-label" for="isWeightedBodyweight">Weighted Bodyweight Exercise</label>
+            </div>
+            <small class="text-muted" x-show="isWeightedBodyweight">For exercises like pull-ups or dips where your bodyweight plus added weight is the total load.</small>
+        </div>
+        
+        <div class="mb-3" x-show="showBodyweightInput">
+            <label for="bodyweight" class="form-label">Your Bodyweight (lbs)</label>
+            <input type="number" class="form-control" id="bodyweight" x-model="bodyweight" @input="debouncedCalculate">
+        </div>
+
         <div class="mb-3" x-show="showSetsSelector">
             <label for="sets-select" class="form-label">Number of Warm-up Sets</label>
             <select id="sets-select" class="form-select" x-model.number="numWarmupSets" @change="debouncedCalculate">
@@ -55,7 +68,7 @@
         
         <div class="input-group mb-3">
             <input type="number" class="form-control" x-model="targetWeight" @input="debouncedCalculate">
-            <span class="input-group-text">Target weight (lbs)</span>
+            <span class="input-group-text" x-text="isWeightedBodyweight ? 'Additional weight (lbs)' : 'Target weight (lbs)'"></span>
         </div>
         
         <div class="mt-4">
@@ -66,7 +79,7 @@
                         <th>Set</th>
                         <th>Reps</th>
                         <th>Weight (lbs)</th>
-                        <th>Plates (each side)</th>
+                        <th x-show="!isWeightedBodyweight">Plates (each side)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -75,21 +88,40 @@
                             <td x-text="index + 1"></td>
                             <td x-text="set.reps"></td>
                             <td>
-                                <template x-if="set.plates.remaining > 0 && minimizePlateChanges">
+                                <template x-if="set.plates.remaining > 0 && minimizePlateChanges && !isWeightedBodyweight">
                                     <div>
                                         <span x-text="set.plates.actualWeight + ' lbs'"></span>
                                         <small class="text-muted" x-text="` (target: ${set.weight})`"></small>
                                     </div>
                                 </template>
+                                <template x-if="set.plates.remaining > 0 && minimizePlateChanges && isWeightedBodyweight">
+                                    <div>
+                                        <span x-text="set.plates.actualWeight + ' lbs added'"></span>
+                                        <small class="text-muted" x-text="` (total: ${Number(bodyweight) + Number(set.plates.actualWeight)} lbs)`"></small>
+                                    </div>
+                                </template>
                                 <template x-if="set.plates.remaining === 0 || !minimizePlateChanges">
-                                    <span x-text="set.weight + ' lbs'"></span>
+                                    <div>
+                                        <template x-if="isWeightedBodyweight">
+                                            <div>
+                                                <span x-text="set.addedWeight + ' lbs added'"></span>
+                                                <small class="text-muted" x-text="` (total: ${set.weight} lbs)`"></small>
+                                            </div>
+                                        </template>
+                                        <template x-if="!isWeightedBodyweight">
+                                            <span x-text="set.weight + ' lbs'"></span>
+                                        </template>
+                                    </div>
                                 </template>
                             </td>
-                            <td>
-                                <template x-if="set.weight <= barWeight">
+                            <td x-show="!isWeightedBodyweight">
+                                <template x-if="!isWeightedBodyweight && set.weight <= barWeight">
                                     <span>Empty bar</span>
                                 </template>
-                                <template x-if="set.weight > barWeight">
+                                <template x-if="isWeightedBodyweight && set.addedWeight <= 0">
+                                    <span>Bodyweight only</span>
+                                </template>
+                                <template x-if="(!isWeightedBodyweight && set.weight > barWeight) || (isWeightedBodyweight && set.addedWeight > 0)">
                                     <div class="d-flex gap-1 flex-wrap">
                                         <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
                                             <span class="badge" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
@@ -109,14 +141,16 @@
         
         <div class="card mt-4 mb-4" x-show="targetWeight > 0">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Working Set</h5>
+                <h5 class="mb-0" x-text="isWeightedBodyweight ? 'Working Set (Added Weight)' : 'Working Set'"></h5>
             </div>
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-6">
-                        <h3 class="mb-0" x-text="targetWeight + ' lbs'"></h3>
+                        <h3 class="mb-0" x-text="isWeightedBodyweight ? targetWeight + ' lbs added' : targetWeight + ' lbs'"></h3>
+                        <small class="text-muted" x-show="isWeightedBodyweight" x-text="`Total: ${Number(bodyweight) + Number(targetWeight)} lbs`"></small>
                     </div>
-                    <div class="col-md-6">
+                    <!-- For regular exercises, show plates on each side -->
+                    <div class="col-md-6" x-show="!isWeightedBodyweight">
                         <h6>Plates (each side):</h6>
                         <template x-if="targetWeight <= barWeight">
                             <span>Empty bar</span>
@@ -131,6 +165,14 @@
                                 </template>
                             </div>
                         </template>
+                    </div>
+                    <!-- For weighted bodyweight, show plates needed directly under the weight -->
+                    <div class="col-md-6" x-show="isWeightedBodyweight && targetWeight > 0">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <template x-for="plate in calculatePlatesNeeded(targetWeight).plateConfig" :key="plate.weight">
+                                <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>

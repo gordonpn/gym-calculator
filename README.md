@@ -35,5 +35,6 @@ pnpm run bun-dev
 * [ ] Add PostCSS for CSS optimizations
 * [x] Add section to display the working set plate configuration
 * [x] Add colours to the plate badges to make it easily distinguishable
-* [ ] Add option to warm-up to weighted bodyweight exercises
+* [x] Add option to warm-up to weighted bodyweight exercises
 * [x] 1RM calculator
+* [ ] Persist last selected sets and bodyweight

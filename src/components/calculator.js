@@ -15,6 +15,9 @@ export default () => ({
   barOnlyFirstSet: false,
   showSetsSelector: true,
   minimizePlateChanges: false,
+  isWeightedBodyweight: false,
+  bodyweight: "",
+  showBodyweightInput: false,
 
   barWeight: 45,
   availablePlates: [
@@ -30,46 +33,90 @@ export default () => ({
 
   calculate() {
     const weight = Number.parseFloat(this.targetWeight);
+    const bodyweight = this.isWeightedBodyweight
+      ? Number.parseFloat(this.bodyweight)
+      : 0;
 
-    if (!Number.isNaN(weight) && weight > 0) {
+    // For weighted bodyweight, validate that bodyweight is entered
+    if (
+      this.isWeightedBodyweight &&
+      (!bodyweight || isNaN(bodyweight) || bodyweight <= 0)
+    ) {
+      this.warmupSets = [];
+      return;
+    }
+
+    // For weighted bodyweight, we work with added weight, so it can be zero
+    // For regular exercises, weight must be positive
+    const validWeight = this.isWeightedBodyweight
+      ? !isNaN(weight)
+      : !isNaN(weight) && weight > 0;
+
+    if (validWeight) {
       const formula = getFormula(this.selectedFormula);
+      const actualTargetWeight = this.isWeightedBodyweight
+        ? Number(bodyweight) + Number(weight) // For bodyweight exercises, target = bodyweight + added weight
+        : weight; // For regular exercises, target = entered weight
+
       if (isConfigurableFormula(this.selectedFormula)) {
         this.warmupSets = formula(
-          weight,
+          actualTargetWeight,
           this.numWarmupSets,
           this.barWeight,
           this.availablePlates,
-          this.minimizePlateChanges
+          this.minimizePlateChanges,
+          this.isWeightedBodyweight,
+          bodyweight
         );
       } else {
         this.warmupSets = formula(
-          weight,
+          actualTargetWeight,
           null,
           this.barWeight,
           this.availablePlates,
-          this.minimizePlateChanges
+          this.minimizePlateChanges,
+          this.isWeightedBodyweight,
+          bodyweight
         );
       }
 
       if (
         this.barOnlyFirstSet &&
         this.warmupSets.length > 0 &&
-        this.warmupSets[0].weight > this.barWeight
+        this.warmupSets[0].weight > this.barWeight &&
+        !this.isWeightedBodyweight // Don't add bar-only set for bodyweight exercises
       ) {
         this.warmupSets.unshift({
-          percentage: Math.round((this.barWeight / weight) * 100),
+          percentage: Math.round((this.barWeight / actualTargetWeight) * 100),
           weight: this.barWeight,
           reps: 12,
         });
       }
 
       for (const set of this.warmupSets) {
-        set.plates = this.calculatePlatesNeeded(set.weight);
+        // For bodyweight exercises, we need to handle plate calculations differently
+        if (this.isWeightedBodyweight) {
+          // Handle plate calculation for the added weight component only
+          const addedWeight = Math.max(0, set.addedWeight);
+          if (addedWeight > 0) {
+            set.plates = this.calculatePlatesNeeded(addedWeight);
+          } else {
+            set.plates = { plateConfig: [], remaining: 0, actualWeight: 0 };
+          }
+        } else {
+          set.plates = this.calculatePlatesNeeded(set.weight);
+        }
 
         // If not using minimize plate changes and there's an adjusted weight,
         // update the set's weight to the actual achievable weight for cleaner display
         if (!this.minimizePlateChanges && set.plates.adjustedTargetWeight) {
-          set.weight = set.plates.adjustedTargetWeight;
+          if (this.isWeightedBodyweight) {
+            // For bodyweight exercises, update the added weight component
+            set.addedWeight = set.plates.adjustedTargetWeight;
+            set.weight = Number(bodyweight) + Number(set.addedWeight);
+          } else {
+            set.weight = set.plates.adjustedTargetWeight;
+          }
         }
       }
     } else {
@@ -84,6 +131,13 @@ export default () => ({
     } else {
       this.showSetsSelector = false;
     }
+
+    // Auto-set weighted bodyweight toggle for the weighted bodyweight formula
+    if (this.selectedFormula === "weightedBodyweight") {
+      this.isWeightedBodyweight = true;
+      this.showBodyweightInput = true;
+    }
+
     this.debouncedCalculate();
   },
 
@@ -216,6 +270,18 @@ export default () => ({
         this.minimizePlateChanges = settings.minimizePlateChanges;
       }
     }
+
+    // Watch for changes to the weighted bodyweight toggle
+    this.$watch("isWeightedBodyweight", (isWeighted) => {
+      this.showBodyweightInput = isWeighted;
+
+      // If toggling to weighted bodyweight and no bodyweight entered, set a default
+      if (isWeighted && (!this.bodyweight || this.bodyweight <= 0)) {
+        this.bodyweight = "150"; // Default value
+      }
+
+      this.debouncedCalculate();
+    });
 
     document
       .getElementById("plateSettingsModal")
