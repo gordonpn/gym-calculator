@@ -36,3 +36,4 @@ pnpm run bun-dev
 * [x] Add section to display the working set plate configuration
 * [x] Add colours to the plate badges to make it easily distinguishable
 * [ ] Add option to warm-up to weighted bodyweight exercises
+* [x] 1RM calculator

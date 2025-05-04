@@ -3,6 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap";
 import calculator from "./components/calculator";
+import repMaxCalculator from "./components/repMaxCalculator";
 import "./style.css";
 
 window.Alpine = Alpine;
@@ -54,5 +55,6 @@ Alpine.data("themeToggle", () => ({
 }));
 
 Alpine.data("calculator", calculator);
+Alpine.data("repMaxCalculator", repMaxCalculator);
 
 Alpine.start();
