@@ -212,7 +212,7 @@ function generatePossibleWeights(barWeight, targetWeight, availablePlates) {
     const currentWeight = queue.shift();
 
     for (const plate of plates) {
-      const newWeight = currentWeight + plate * 2; 
+      const newWeight = currentWeight + plate * 2;
 
       if (newWeight <= targetWeight && !seen.has(newWeight)) {
         weights.add(newWeight);
@@ -278,33 +278,126 @@ function countPlateChanges(config1, config2) {
 function optimizePlateChanges(sets, barWeight, availablePlates) {
   sets.sort((a, b) => a.weight - b.weight);
 
-  if (sets.length <= 2) return sets;
+  if (sets.length <= 1) return sets;
 
-  for (const set of sets) {
-    set.plateConfig = calculatePlateConfig(
-      set.weight,
+  // First set uses standard plate configuration
+  sets[0].plateConfig = calculatePlateConfig(
+    sets[0].weight,
+    barWeight,
+    availablePlates
+  );
+
+  // For subsequent sets, build on the previous set's plates
+  for (let i = 1; i < sets.length; i++) {
+    const prevSet = sets[i - 1];
+    const currentSet = sets[i];
+
+    // Use smart plate configuration that builds on previous set
+    currentSet.plateConfig = calculateProgressivePlateConfig(
+      currentSet.weight,
+      prevSet.weight,
+      prevSet.plateConfig,
       barWeight,
       availablePlates
     );
-  }
 
-  const hasValidPlateConfigs = sets.some((set) => set.plateConfig.length > 0);
-
-  if (!hasValidPlateConfigs) {
-    sets.forEach((set) => delete set.plateConfig);
-    return sets;
-  }
-
-  let totalChanges = 0;
-  for (let i = 1; i < sets.length; i++) {
-    const prevConfig = sets[i - 1].plateConfig;
-    const currConfig = sets[i].plateConfig;
-    const changes = countPlateChanges(prevConfig, currConfig);
-    sets[i].plateChanges = changes;
-    totalChanges += changes;
+    const changes = countPlateChanges(
+      prevSet.plateConfig,
+      currentSet.plateConfig
+    );
+    currentSet.plateChanges = changes;
   }
 
   return sets;
+}
+
+function calculateProgressivePlateConfig(
+  currentSetWeight,
+  prevSetWeight,
+  prevPlateConfig,
+  barWeight,
+  availablePlates
+) {
+  // If moving to lower weight, or if no previous plates, calculate from scratch
+  if (
+    currentSetWeight <= prevSetWeight ||
+    !prevPlateConfig ||
+    prevPlateConfig.length === 0
+  ) {
+    return calculatePlateConfig(currentSetWeight, barWeight, availablePlates);
+  }
+
+  // Calculate how much weight per side we need to add
+  const prevWeightPerSide = (prevSetWeight - barWeight) / 2;
+  const currentWeightPerSide = (currentSetWeight - barWeight) / 2;
+  const additionalWeightNeeded = currentWeightPerSide - prevWeightPerSide;
+
+  // If no additional weight needed, keep the same config
+  if (additionalWeightNeeded <= 0) {
+    return [...prevPlateConfig];
+  }
+
+  // Convert previous plate config to a map for easy manipulation
+  const plateMap = new Map();
+  prevPlateConfig.forEach((plate) => {
+    plateMap.set(plate.weight, plate.count);
+  });
+
+  // Get available plates sorted by weight (descending)
+  const sortedAvailablePlates = [...availablePlates]
+    .filter((plate) => plate.available)
+    .sort((a, b) => b.weight - a.weight)
+    .map((plate) => plate.weight);
+
+  // Try to add plates to reach the additional weight needed
+  let remainingWeight = additionalWeightNeeded;
+
+  for (const plateWeight of sortedAvailablePlates) {
+    if (plateWeight <= remainingWeight) {
+      const count = Math.floor(remainingWeight / plateWeight);
+      if (count > 0) {
+        // Add to existing plate count or initialize
+        const existingCount = plateMap.get(plateWeight) || 0;
+        plateMap.set(plateWeight, existingCount + count);
+        remainingWeight -= count * plateWeight;
+      }
+    }
+  }
+
+  // If we couldn't add plates efficiently to reach the exact weight,
+  // check if a more efficient configuration exists from scratch
+  if (remainingWeight > 0) {
+    const fromScratchConfig = calculatePlateConfig(
+      currentSetWeight,
+      barWeight,
+      availablePlates
+    );
+    const progressiveChanges = countPlateChanges(
+      prevPlateConfig,
+      plateMapToConfig(plateMap)
+    );
+    const fromScratchChanges = countPlateChanges(
+      prevPlateConfig,
+      fromScratchConfig
+    );
+
+    // Use from-scratch configuration if it requires fewer changes
+    if (fromScratchChanges < progressiveChanges) {
+      return fromScratchConfig;
+    }
+  }
+
+  // Convert the plate map back to array format
+  return plateMapToConfig(plateMap);
+}
+
+function plateMapToConfig(plateMap) {
+  const config = [];
+  plateMap.forEach((count, weight) => {
+    config.push({ weight, count });
+  });
+  // Sort by weight descending to maintain order
+  return config.sort((a, b) => b.weight - a.weight);
 }
 
 export const formulaOptions = [
