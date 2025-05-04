@@ -168,11 +168,20 @@
                     </div>
                     <!-- For weighted bodyweight, show plates needed directly under the weight -->
                     <div class="col-md-6" x-show="isWeightedBodyweight && targetWeight > 0">
-                        <div class="d-flex gap-2 flex-wrap">
-                            <template x-for="plate in calculatePlatesNeeded(targetWeight).plateConfig" :key="plate.weight">
-                                <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
-                            </template>
-                        </div>
+                        <h6>Plates:</h6>
+                        <template x-if="targetWeight <= 0">
+                            <span>Bodyweight only</span>
+                        </template>
+                        <template x-if="targetWeight > 0">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <template x-for="plate in calculatePlatesNeeded(targetWeight).plateConfig" :key="plate.weight">
+                                    <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.count}x ${plate.weight} lbs`"></span>
+                                </template>
+                                <template x-if="calculatePlatesNeeded(targetWeight).remaining > 0 && minimizePlateChanges">
+                                    <span class="badge text-bg-warning fs-5" x-text="`Missing: ${calculatePlatesNeeded(targetWeight).remaining.toFixed(1)} lbs`"></span>
+                                </template>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>

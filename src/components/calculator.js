@@ -40,7 +40,7 @@ export default () => ({
     // For weighted bodyweight, validate that bodyweight is entered
     if (
       this.isWeightedBodyweight &&
-      (!bodyweight || isNaN(bodyweight) || bodyweight <= 0)
+      (!bodyweight || Number.isNaN(bodyweight) || bodyweight <= 0)
     ) {
       this.warmupSets = [];
       return;
@@ -49,8 +49,8 @@ export default () => ({
     // For weighted bodyweight, we work with added weight, so it can be zero
     // For regular exercises, weight must be positive
     const validWeight = this.isWeightedBodyweight
-      ? !isNaN(weight)
-      : !isNaN(weight) && weight > 0;
+      ? !Number.isNaN(weight)
+      : !Number.isNaN(weight) && weight > 0;
 
     if (validWeight) {
       const formula = getFormula(this.selectedFormula);
@@ -138,19 +138,34 @@ export default () => ({
       this.showBodyweightInput = true;
     }
 
+    // Save settings when formula changes
+    this.saveSettings();
+
     this.debouncedCalculate();
   },
 
   calculatePlatesNeeded(targetWeight) {
-    if (targetWeight <= this.barWeight) {
+    // For weighted bodyweight exercises, treat the whole weight as the weight to calculate plates for
+    const isForBodyweightExercise =
+      this.isWeightedBodyweight && targetWeight > 0;
+
+    // For standard barbell exercises, we subtract the bar weight
+    // For weighted bodyweight, we use the full weight (no bar to subtract)
+    const effectiveBarWeight = isForBodyweightExercise ? 0 : this.barWeight;
+
+    if (targetWeight <= effectiveBarWeight) {
       return {
         plateConfig: [],
         remaining: 0,
-        actualWeight: this.barWeight,
+        actualWeight: effectiveBarWeight,
       };
     }
 
-    const weightToAdd = (targetWeight - this.barWeight) / 2;
+    // For standard barbell exercises, divide by 2 for each side
+    // For weighted bodyweight, use the full weight (no need to divide)
+    const weightToAdd = isForBodyweightExercise
+      ? targetWeight
+      : (targetWeight - this.barWeight) / 2;
 
     const sortedPlates = [...this.availablePlates]
       .filter((plate) => plate.available)
@@ -173,9 +188,11 @@ export default () => ({
 
     const actualPlateWeight =
       plateConfig.reduce((sum, plate) => sum + plate.weight * plate.count, 0) *
-      2;
+      (isForBodyweightExercise ? 1 : 2);
 
-    const actualWeight = Number.parseFloat(this.barWeight) + actualPlateWeight;
+    const actualWeight = isForBodyweightExercise
+      ? actualPlateWeight
+      : Number.parseFloat(this.barWeight) + actualPlateWeight;
 
     // If not using minimize plate changes, we don't want to show "missing" weights
     // and instead just use the actual achievable weight
@@ -196,7 +213,7 @@ export default () => ({
     };
   },
 
-  savePlateSettings() {
+  saveSettings() {
     localStorage.setItem(
       "plateSettings",
       JSON.stringify({
@@ -204,9 +221,16 @@ export default () => ({
         availablePlates: this.availablePlates,
         barOnlyFirstSet: this.barOnlyFirstSet,
         minimizePlateChanges: this.minimizePlateChanges,
+        bodyweight: this.bodyweight ? Number.parseFloat(this.bodyweight) : 0,
+        isWeightedBodyweight: this.isWeightedBodyweight,
+        numWarmupSets: this.numWarmupSets,
+        selectedFormula: this.selectedFormula,
       })
     );
+  },
 
+  savePlateSettings() {
+    this.saveSettings();
     this.calculate();
   },
 
@@ -269,6 +293,31 @@ export default () => ({
       ) {
         this.minimizePlateChanges = settings.minimizePlateChanges;
       }
+
+      // Load bodyweight and related settings if available
+      if (
+        Object.prototype.hasOwnProperty.call(settings, "bodyweight") &&
+        settings.bodyweight > 0
+      ) {
+        this.bodyweight = settings.bodyweight.toString();
+      }
+
+      if (
+        Object.prototype.hasOwnProperty.call(settings, "isWeightedBodyweight")
+      ) {
+        this.isWeightedBodyweight = settings.isWeightedBodyweight;
+        this.showBodyweightInput = settings.isWeightedBodyweight;
+      }
+
+      // Load last selected number of sets and formula if available
+      if (Object.prototype.hasOwnProperty.call(settings, "numWarmupSets")) {
+        this.numWarmupSets = settings.numWarmupSets;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(settings, "selectedFormula")) {
+        this.selectedFormula = settings.selectedFormula;
+        this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
+      }
     }
 
     // Watch for changes to the weighted bodyweight toggle
@@ -280,7 +329,22 @@ export default () => ({
         this.bodyweight = "150"; // Default value
       }
 
+      // Save settings when toggle changes
+      this.saveSettings();
+
       this.debouncedCalculate();
+    });
+
+    // Watch for changes to bodyweight and save it
+    this.$watch("bodyweight", (newValue) => {
+      if (newValue && Number.parseFloat(newValue) > 0) {
+        this.saveSettings();
+      }
+    });
+
+    // Watch for changes to the number of warm-up sets
+    this.$watch("numWarmupSets", () => {
+      this.saveSettings();
     });
 
     document
@@ -288,5 +352,10 @@ export default () => ({
       .addEventListener("hidden.bs.modal", () => {
         this.calculate();
       });
+
+    // Save settings before user leaves the page
+    window.addEventListener("beforeunload", () => {
+      this.saveSettings();
+    });
   },
 });

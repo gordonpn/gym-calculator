@@ -37,4 +37,4 @@ pnpm run bun-dev
 * [x] Add colours to the plate badges to make it easily distinguishable
 * [x] Add option to warm-up to weighted bodyweight exercises
 * [x] 1RM calculator
-* [ ] Persist last selected sets and bodyweight
+* [x] Persist last selected sets and bodyweight
