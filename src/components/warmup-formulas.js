@@ -423,40 +423,16 @@ function countPlateChanges(config1, config2) {
   return changes;
 }
 
+/**
+ * Optimize plate changes between sets
+ * @param {Array} sets - The workout sets
+ * @param {number} barWeight - The weight of the bar
+ * @param {Array} availablePlates - Available plate weights
+ * @returns {Array} Sets with optimized plate configurations
+ */
 function optimizePlateChanges(sets, barWeight, availablePlates) {
-  sets.sort((a, b) => a.weight - b.weight);
-
-  if (sets.length <= 1) return sets;
-
-  // First set uses standard plate configuration
-  sets[0].plateConfig = calculatePlateConfig(
-    sets[0].weight,
-    barWeight,
-    availablePlates
-  );
-
-  // For subsequent sets, build on the previous set's plates
-  for (let i = 1; i < sets.length; i++) {
-    const prevSet = sets[i - 1];
-    const currentSet = sets[i];
-
-    // Use smart plate configuration that builds on previous set
-    currentSet.plateConfig = calculateProgressivePlateConfig(
-      currentSet.weight,
-      prevSet.weight,
-      prevSet.plateConfig,
-      barWeight,
-      availablePlates
-    );
-
-    const changes = countPlateChanges(
-      prevSet.plateConfig,
-      currentSet.plateConfig
-    );
-    currentSet.plateChanges = changes;
-  }
-
-  return sets;
+  // Use the new global optimization approach
+  return globalOptimizePlateChanges(sets, barWeight, availablePlates);
 }
 
 function calculateProgressivePlateConfig(
@@ -546,6 +522,286 @@ function plateMapToConfig(plateMap) {
   });
   // Sort by weight descending to maintain order
   return config.sort((a, b) => b.weight - a.weight);
+}
+
+/**
+ * Generate all possible plate configurations for a given weight
+ * @param {number} weight - The weight to create configurations for
+ * @param {number} barWeight - The weight of the bar
+ * @param {Array} availablePlates - Available plate weights
+ * @param {number} maxConfigurations - Maximum configurations to generate for each weight
+ * @returns {Array} Array of possible plate configurations
+ */
+function generateAllPossiblePlateConfigs(
+  weight,
+  barWeight,
+  availablePlates,
+  maxConfigurations = 15
+) {
+  if (weight <= barWeight) {
+    return [[]]; // If weight is less than or equal to bar weight, no plates needed
+  }
+
+  const weightPerSide = (weight - barWeight) / 2;
+  const sortedPlates = [...availablePlates]
+    .filter((plate) => plate.available)
+    .map((plate) => plate.weight)
+    .sort((a, b) => b - a); // Sort descending
+
+  // Start with the standard greedy approach as the first configuration
+  const standardConfig = generateStandardPlateConfig(
+    weightPerSide,
+    sortedPlates
+  );
+  const allConfigs = [standardConfig];
+
+  // Use a recursive approach to find alternative configurations
+  findAlternativeConfigs(
+    weightPerSide,
+    sortedPlates,
+    [],
+    0,
+    allConfigs,
+    maxConfigurations
+  );
+
+  // Convert to the right format and remove duplicates
+  const formattedConfigs = allConfigs.map((config) => {
+    const plateMap = new Map();
+    for (const plate of config) {
+      const count = plateMap.get(plate) || 0;
+      plateMap.set(plate, count + 1);
+    }
+
+    return Array.from(plateMap.entries())
+      .map(([weight, count]) => ({ weight, count }))
+      .sort((a, b) => b.weight - a.weight);
+  });
+
+  // Filter out duplicates and configurations that don't add up to exactly the weight per side
+  // Use a string representation for comparison
+  const uniqueConfigs = [];
+  const seen = new Set();
+
+  for (const config of formattedConfigs) {
+    const configWeight = config.reduce(
+      (sum, plate) => sum + plate.weight * plate.count,
+      0
+    );
+    if (Math.abs(configWeight - weightPerSide) < 0.01) {
+      // Allow for small floating point differences
+      const configStr = JSON.stringify(config);
+      if (!seen.has(configStr)) {
+        seen.add(configStr);
+        uniqueConfigs.push(config);
+      }
+    }
+  }
+
+  return uniqueConfigs;
+}
+
+/**
+ * Generate the standard greedy plate configuration
+ * @param {number} weightPerSide - Weight per side of the bar
+ * @param {Array} plates - Available plate weights (sorted descending)
+ * @returns {Array} Array of plates used (not consolidated by weight)
+ */
+function generateStandardPlateConfig(weightPerSide, plates) {
+  const result = [];
+  let remaining = weightPerSide;
+
+  for (const plateWeight of plates) {
+    while (remaining >= plateWeight) {
+      result.push(plateWeight);
+      remaining -= plateWeight;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Find alternative plate configurations recursively
+ * @param {number} targetWeight - Target weight per side
+ * @param {Array} plates - Available plates
+ * @param {Array} currentConfig - Current configuration being built
+ * @param {number} currentWeight - Current weight of the configuration
+ * @param {Array} allConfigs - Array to store all configurations
+ * @param {number} maxConfigurations - Maximum number of configurations to generate
+ * @param {number} maxDepth - Maximum recursion depth to prevent stack overflow
+ */
+function findAlternativeConfigs(
+  targetWeight,
+  plates,
+  currentConfig,
+  currentWeight,
+  allConfigs,
+  maxConfigurations,
+  maxDepth = 10
+) {
+  // Base case: reached target weight
+  if (Math.abs(currentWeight - targetWeight) < 0.01) {
+    // Add this configuration if it's unique
+    const configCopy = [...currentConfig].sort((a, b) => b - a);
+    const configStr = JSON.stringify(configCopy);
+
+    if (
+      !allConfigs.some(
+        (config) =>
+          JSON.stringify([...config].sort((a, b) => b - a)) === configStr
+      )
+    ) {
+      allConfigs.push(configCopy);
+    }
+    return;
+  }
+
+  // Stop if we've generated enough configurations or exceeded max depth
+  if (
+    allConfigs.length >= maxConfigurations ||
+    currentConfig.length >= maxDepth
+  ) {
+    return;
+  }
+
+  // Stop if we've exceeded the target weight
+  if (currentWeight > targetWeight) {
+    return;
+  }
+
+  // Try adding each plate type
+  for (let i = 0; i < plates.length; i++) {
+    const plate = plates[i];
+
+    // Skip if adding this plate would exceed target weight
+    if (currentWeight + plate > targetWeight + 0.01) {
+      continue;
+    }
+
+    // Add this plate and recurse
+    currentConfig.push(plate);
+    findAlternativeConfigs(
+      targetWeight,
+      plates,
+      currentConfig,
+      currentWeight + plate,
+      allConfigs,
+      maxConfigurations,
+      maxDepth
+    );
+    currentConfig.pop(); // Backtrack
+  }
+}
+
+/**
+ * Find the globally optimized plate configuration for a sequence of sets
+ * @param {Array} sets - The workout sets
+ * @param {number} barWeight - The weight of the bar
+ * @param {Array} availablePlates - Available plate weights
+ * @returns {Array} Sets with optimized plate configurations
+ */
+function globalOptimizePlateChanges(sets, barWeight, availablePlates) {
+  sets.sort((a, b) => a.weight - b.weight);
+  if (sets.length <= 1) {
+    // For a single set, just use the standard plate configuration
+    sets[0].plateConfig = calculatePlateConfig(
+      sets[0].weight,
+      barWeight,
+      availablePlates
+    );
+    return sets;
+  }
+
+  // Generate all possible configurations for each set weight
+  const allPossibleConfigs = [];
+  for (const set of sets) {
+    const configs = generateAllPossiblePlateConfigs(
+      set.weight,
+      barWeight,
+      availablePlates
+    );
+    allPossibleConfigs.push(configs);
+  }
+
+  // For the final set (working set), only use the optimal configuration with minimum plates
+  const lastSetIndex = sets.length - 1;
+  allPossibleConfigs[lastSetIndex] = [
+    calculatePlateConfig(sets[lastSetIndex].weight, barWeight, availablePlates),
+  ];
+
+  // Use dynamic programming to find the optimal path
+  // dp[i][j] = min cost to reach config j of set i
+  // prev[i][j] = config index of set i-1 that leads to min cost
+  const dp = [];
+  const prev = [];
+
+  // Initialize dp for the first set
+  dp[0] = Array(allPossibleConfigs[0].length).fill(0);
+  prev[0] = Array(allPossibleConfigs[0].length).fill(-1);
+
+  // Fill dp table
+  for (let i = 1; i < sets.length; i++) {
+    dp[i] = [];
+    prev[i] = [];
+
+    for (let j = 0; j < allPossibleConfigs[i].length; j++) {
+      let minCost = Number.POSITIVE_INFINITY;
+      let minPrev = -1;
+
+      // Try all configurations from the previous set
+      for (let k = 0; k < allPossibleConfigs[i - 1].length; k++) {
+        const changes = countPlateChanges(
+          allPossibleConfigs[i - 1][k],
+          allPossibleConfigs[i][j]
+        );
+        const totalCost = dp[i - 1][k] + changes;
+
+        if (totalCost < minCost) {
+          minCost = totalCost;
+          minPrev = k;
+        }
+      }
+
+      dp[i][j] = minCost;
+      prev[i][j] = minPrev;
+    }
+  }
+
+  // Find the minimum cost configuration for the last set
+  let minCost = Number.POSITIVE_INFINITY;
+  let minIndex = 0;
+
+  // For the last set, we only have one configuration (the optimal one)
+  minIndex = 0; // Since we've limited the last set to only have the optimal configuration
+  minCost = dp[lastSetIndex][minIndex];
+
+  // Reconstruct the optimal path
+  const optimalConfigIndices = [];
+  for (let i = lastSetIndex; i >= 0; i--) {
+    optimalConfigIndices.unshift(minIndex);
+    if (i > 0) {
+      minIndex = prev[i][minIndex];
+    }
+  }
+
+  // Apply the optimal configurations to the sets
+  for (let i = 0; i < sets.length; i++) {
+    sets[i].plateConfig = allPossibleConfigs[i][optimalConfigIndices[i]];
+
+    // Calculate and store plate changes for each transition
+    if (i > 0) {
+      const changes = countPlateChanges(
+        sets[i - 1].plateConfig,
+        sets[i].plateConfig
+      );
+      sets[i].plateChanges = changes;
+    } else {
+      sets[i].plateChanges = 0; // No changes for the first set
+    }
+  }
+
+  return sets;
 }
 
 export const formulaOptions = [
