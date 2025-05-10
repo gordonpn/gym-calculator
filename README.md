@@ -31,7 +31,7 @@ pnpm run bun-dev
 * [x] Add option to optimize for minimal plate changes
 * [ ] Add TypeScript tooling
 * [x] Add Biome for linting and formatting
-* [ ] Add lefthook for pre-commit hooks
+* [x] Add lefthook for pre-commit hooks
 * [ ] Add PostCSS for CSS optimizations
 * [x] Add section to display the working set plate configuration
 * [x] Add colours to the plate badges to make it easily distinguishable

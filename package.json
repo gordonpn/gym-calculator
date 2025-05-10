@@ -17,6 +17,7 @@
   "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "lefthook": "^1.11.12",
     "vite": "^6.1.6"
   },
   "dependencies": {
