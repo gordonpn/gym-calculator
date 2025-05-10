@@ -30,7 +30,7 @@ pnpm run bun-dev
 * [x] Add footer information
 * [x] Add option to optimize for minimal plate changes
 * [ ] Add TypeScript tooling
-* [ ] Add Biome for linting and formatting
+* [x] Add Biome for linting and formatting
 * [ ] Add lefthook for pre-commit hooks
 * [ ] Add PostCSS for CSS optimizations
 * [x] Add section to display the working set plate configuration

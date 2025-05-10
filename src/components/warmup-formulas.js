@@ -5,7 +5,7 @@ export function percentageBased(
   availablePlates = [],
   minimizePlateChanges = false,
   isWeightedBodyweight = false,
-  bodyweight = 0
+  bodyweight = 0,
 ) {
   const effectiveTargetWeight = isWeightedBodyweight
     ? targetWeight - bodyweight
@@ -19,14 +19,14 @@ export function percentageBased(
   const idealWeights = [];
   for (let i = 0; i < numSets; i++) {
     const percentage = Math.round(
-      minPercentage + (percentageRange * i) / (numSets - 1)
+      minPercentage + (percentageRange * i) / (numSets - 1),
     );
     let idealWeight;
 
     if (isWeightedBodyweight) {
       // For bodyweight exercises, lower percentages may mean negative added weight (less than bodyweight)
       idealWeight = Math.round(
-        effectiveTargetWeight * (percentage / 100) + bodyweight
+        effectiveTargetWeight * (percentage / 100) + bodyweight,
       );
       // Ensure we don't go below bodyweight (which would mean assistance rather than added weight)
       if (idealWeight < bodyweight) {
@@ -43,7 +43,7 @@ export function percentageBased(
     const possibleWeights = generatePossibleWeights(
       barWeight,
       targetWeight,
-      availablePlates
+      availablePlates,
     );
 
     for (let i = 0; i < idealWeights.length; i++) {
@@ -102,7 +102,7 @@ export function fixedIncrements(
   availablePlates = [],
   minimizePlateChanges = false,
   isWeightedBodyweight = false,
-  bodyweight = 0
+  bodyweight = 0,
 ) {
   // For bodyweight exercises, we work with the added weight
   const effectiveTargetWeight = isWeightedBodyweight
@@ -132,7 +132,7 @@ export function fixedIncrements(
     const possibleWeights = generatePossibleWeights(
       barWeight,
       targetWeight,
-      availablePlates
+      availablePlates,
     );
 
     const sets = [];
@@ -189,7 +189,7 @@ export function fiveThreeOne(
   availablePlates = [],
   minimizePlateChanges = false,
   isWeightedBodyweight = false,
-  bodyweight = 0
+  bodyweight = 0,
 ) {
   // For bodyweight exercises, work with just the added weight component
   const effectiveTargetWeight = isWeightedBodyweight
@@ -204,7 +204,7 @@ export function fiveThreeOne(
     if (isWeightedBodyweight) {
       // Calculate the added weight based on percentage, then add bodyweight back
       idealWeight = Math.round(
-        effectiveTargetWeight * (percentage / 100) + bodyweight
+        effectiveTargetWeight * (percentage / 100) + bodyweight,
       );
       // Don't go below bodyweight
       if (idealWeight < bodyweight) {
@@ -221,7 +221,7 @@ export function fiveThreeOne(
     const possibleWeights = generatePossibleWeights(
       barWeight,
       targetWeight,
-      availablePlates
+      availablePlates,
     );
 
     const sets = [];
@@ -276,7 +276,7 @@ export function weightedBodyweight(
   availablePlates = [],
   minimizePlateChanges = false,
   isWeightedBodyweight = true,
-  bodyweight = 0
+  bodyweight = 0,
 ) {
   if (!isWeightedBodyweight || bodyweight <= 0) {
     // Fall back to percentage based if not a bodyweight exercise
@@ -285,7 +285,7 @@ export function weightedBodyweight(
       numSets,
       barWeight,
       availablePlates,
-      minimizePlateChanges
+      minimizePlateChanges,
     );
   }
 
@@ -371,7 +371,7 @@ function generatePossibleWeights(barWeight, targetWeight, availablePlates) {
 
 function findClosestWeight(targetWeight, possibleWeights) {
   return possibleWeights.reduce((prev, curr) =>
-    Math.abs(curr - targetWeight) < Math.abs(prev - targetWeight) ? curr : prev
+    Math.abs(curr - targetWeight) < Math.abs(prev - targetWeight) ? curr : prev,
   );
 }
 
@@ -440,7 +440,7 @@ function calculateProgressivePlateConfig(
   prevSetWeight,
   prevPlateConfig,
   barWeight,
-  availablePlates
+  availablePlates,
 ) {
   // If moving to lower weight, or if no previous plates, calculate from scratch
   if (
@@ -494,15 +494,15 @@ function calculateProgressivePlateConfig(
     const fromScratchConfig = calculatePlateConfig(
       currentSetWeight,
       barWeight,
-      availablePlates
+      availablePlates,
     );
     const progressiveChanges = countPlateChanges(
       prevPlateConfig,
-      plateMapToConfig(plateMap)
+      plateMapToConfig(plateMap),
     );
     const fromScratchChanges = countPlateChanges(
       prevPlateConfig,
-      fromScratchConfig
+      fromScratchConfig,
     );
 
     // Use from-scratch configuration if it requires fewer changes
@@ -536,7 +536,7 @@ function generateAllPossiblePlateConfigs(
   weight,
   barWeight,
   availablePlates,
-  maxConfigurations = 15
+  maxConfigurations = 15,
 ) {
   if (weight <= barWeight) {
     return [[]]; // If weight is less than or equal to bar weight, no plates needed
@@ -551,7 +551,7 @@ function generateAllPossiblePlateConfigs(
   // Start with the standard greedy approach as the first configuration
   const standardConfig = generateStandardPlateConfig(
     weightPerSide,
-    sortedPlates
+    sortedPlates,
   );
   const allConfigs = [standardConfig];
 
@@ -562,7 +562,7 @@ function generateAllPossiblePlateConfigs(
     [],
     0,
     allConfigs,
-    maxConfigurations
+    maxConfigurations,
   );
 
   // Convert to the right format and remove duplicates
@@ -586,7 +586,7 @@ function generateAllPossiblePlateConfigs(
   for (const config of formattedConfigs) {
     const configWeight = config.reduce(
       (sum, plate) => sum + plate.weight * plate.count,
-      0
+      0,
     );
     if (Math.abs(configWeight - weightPerSide) < 0.01) {
       // Allow for small floating point differences
@@ -638,7 +638,7 @@ function findAlternativeConfigs(
   currentWeight,
   allConfigs,
   maxConfigurations,
-  maxDepth = 10
+  maxDepth = 10,
 ) {
   // Base case: reached target weight
   if (Math.abs(currentWeight - targetWeight) < 0.01) {
@@ -649,7 +649,7 @@ function findAlternativeConfigs(
     if (
       !allConfigs.some(
         (config) =>
-          JSON.stringify([...config].sort((a, b) => b - a)) === configStr
+          JSON.stringify([...config].sort((a, b) => b - a)) === configStr,
       )
     ) {
       allConfigs.push(configCopy);
@@ -688,7 +688,7 @@ function findAlternativeConfigs(
       currentWeight + plate,
       allConfigs,
       maxConfigurations,
-      maxDepth
+      maxDepth,
     );
     currentConfig.pop(); // Backtrack
   }
@@ -708,7 +708,7 @@ function globalOptimizePlateChanges(sets, barWeight, availablePlates) {
     sets[0].plateConfig = calculatePlateConfig(
       sets[0].weight,
       barWeight,
-      availablePlates
+      availablePlates,
     );
     return sets;
   }
@@ -719,7 +719,7 @@ function globalOptimizePlateChanges(sets, barWeight, availablePlates) {
     const configs = generateAllPossiblePlateConfigs(
       set.weight,
       barWeight,
-      availablePlates
+      availablePlates,
     );
     allPossibleConfigs.push(configs);
   }
@@ -753,7 +753,7 @@ function globalOptimizePlateChanges(sets, barWeight, availablePlates) {
       for (let k = 0; k < allPossibleConfigs[i - 1].length; k++) {
         const changes = countPlateChanges(
           allPossibleConfigs[i - 1][k],
-          allPossibleConfigs[i][j]
+          allPossibleConfigs[i][j],
         );
         const totalCost = dp[i - 1][k] + changes;
 
@@ -793,7 +793,7 @@ function globalOptimizePlateChanges(sets, barWeight, availablePlates) {
     if (i > 0) {
       const changes = countPlateChanges(
         sets[i - 1].plateConfig,
-        sets[i].plateConfig
+        sets[i].plateConfig,
       );
       sets[i].plateChanges = changes;
     } else {

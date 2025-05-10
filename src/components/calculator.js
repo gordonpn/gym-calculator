@@ -1,9 +1,9 @@
 import { debounce } from "./util.js";
 import {
   formulaOptions,
+  getDefaultSets,
   getFormula,
   isConfigurableFormula,
-  getDefaultSets,
 } from "./warmup-formulas.js";
 
 export default () => ({
@@ -66,7 +66,7 @@ export default () => ({
           this.availablePlates,
           this.minimizePlateChanges,
           this.isWeightedBodyweight,
-          bodyweight
+          bodyweight,
         );
       } else {
         this.warmupSets = formula(
@@ -76,7 +76,7 @@ export default () => ({
           this.availablePlates,
           this.minimizePlateChanges,
           this.isWeightedBodyweight,
-          bodyweight
+          bodyweight,
         );
       }
 
@@ -225,7 +225,7 @@ export default () => ({
         isWeightedBodyweight: this.isWeightedBodyweight,
         numWarmupSets: this.numWarmupSets,
         selectedFormula: this.selectedFormula,
-      })
+      }),
     );
   },
 
