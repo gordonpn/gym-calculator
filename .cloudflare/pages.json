@@ -1,9 +1,0 @@
-{
-  "build": {
-    "command": "npm i -g pnpm@10.8.1 && pnpm install && pnpm run build",
-    "environment": {
-      "NODE_VERSION": "23.11.0"
-    },
-    "output_directory": "dist"
-  }
-}
