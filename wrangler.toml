@@ -1,0 +1,9 @@
+[build]
+command = "npx pnpm@10.8.1 install && npx pnpm@10.8.1 run build"
+output = "dist"
+
+[site]
+bucket = "dist"
+
+[build.environment]
+NODE_VERSION = "23.11.0"
