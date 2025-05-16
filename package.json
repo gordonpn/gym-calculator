@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.html",
+  "packageManager": "pnpm@10.8.1",
   "scripts": {
     "dev": "bun --bun run vite --host=0.0.0.0",
     "build": "vite build",
