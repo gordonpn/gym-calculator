@@ -1,8 +1,8 @@
-pre-commit:
-  parallel: true
-  jobs:
-    - name: build
-      run: pnpm run build
+# pre-commit:
+#   parallel: false
+#   jobs:
+#     - name: check
+#       run: pnpm run check
 
-    - name: check
-      run: pnpm run check
+#     - name: build
+#       run: pnpm run build

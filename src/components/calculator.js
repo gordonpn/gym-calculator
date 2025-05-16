@@ -347,6 +347,14 @@ export default () => ({
       this.saveSettings();
     });
 
+    // Listen for event from Rep Max Calculator to use the calculated max
+    this.$el.addEventListener("use-calculated-max", (e) => {
+      if (e.detail?.weight) {
+        this.targetWeight = e.detail.weight.toString();
+        this.calculate();
+      }
+    });
+
     document
       .getElementById("plateSettingsModal")
       .addEventListener("hidden.bs.modal", () => {

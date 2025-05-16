@@ -10,7 +10,7 @@
     "preview": "bun --bun run vite preview",
     "bun-dev": "bun run dev",
     "preinstall": "npx only-allow pnpm",
-    "check": "biome check --write --unsafe ."
+    "check": "biome check --verbose --write --unsafe ."
   },
   "keywords": [],
   "author": "gordonpn",
