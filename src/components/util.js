@@ -5,3 +5,7 @@ export function debounce(func, wait) {
     timeout = setTimeout(() => func.apply(this, args), wait);
   };
 }
+
+export function roundToNearest5(num) {
+  return Math.round(num / 5) * 5;
+}

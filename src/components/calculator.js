@@ -1,4 +1,4 @@
-import { debounce } from "./util.js";
+import { debounce, roundToNearest5 } from "./util.js";
 import {
   formulaOptions,
   getDefaultSets,
@@ -350,7 +350,8 @@ export default () => ({
     // Listen for event from Rep Max Calculator to use the calculated max
     this.$el.addEventListener("use-calculated-max", (e) => {
       if (e.detail?.weight) {
-        this.targetWeight = e.detail.weight.toString();
+        const roundedWeight = roundToNearest5(e.detail.weight);
+        this.targetWeight = roundedWeight.toString();
         this.calculate();
       }
     });
