@@ -345,9 +345,27 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" @click="$dispatch('use-calculated-max', { weight: estimatedMax })" data-bs-dismiss="modal" x-show="estimatedMax > 0">
-                            Apply as Target Weight
-                        </button>
+                        <div class="dropdown dropup" x-show="estimatedMax > 0">
+                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Apply as Target Weight
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><h6 class="dropdown-header">Choose Rep Max to Apply</h6></li>
+                                <template x-for="data in repRangeData" :key="data.reps">
+                                    <li>
+                                        <a class="dropdown-item d-flex justify-content-between align-items-center" href="#" 
+                                           @click.prevent="$dispatch('use-calculated-max', { weight: data.weight }); $el.closest('.modal').querySelector('.btn-close').click()">
+                                            <div>
+                                                <span class="fw-bold" x-text="data.reps + 'RM'"></span>
+                                                <small class="text-muted d-block" x-text="data.percentage + '% of 1RM'"></small>
+                                            </div>
+                                            <span class="badge bg-primary" x-text="data.weight + ' lbs'"></span>
+                                        </a>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
                     </div>
                 </div>
             </div>
