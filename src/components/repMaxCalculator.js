@@ -10,7 +10,18 @@ export default () => ({
   calculationMethod: "average", // Options: "average", "highest", "lowest", "weighted"
 
   addSet() {
-    this.sets.push({ weight: "", reps: "", estimatedMax: 0 });
+    // Get the last set
+    const lastSet = this.sets[this.sets.length - 1];
+
+    // If the last set has both weight and reps filled, copy those values to the new set
+    const newSet = { weight: "", reps: "", estimatedMax: 0 };
+
+    if (lastSet && lastSet.weight !== "" && lastSet.reps !== "") {
+      newSet.weight = lastSet.weight;
+      newSet.reps = lastSet.reps;
+    }
+
+    this.sets.push(newSet);
   },
 
   removeSet(index) {
