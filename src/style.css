@@ -86,3 +86,13 @@ body {
   background-color: #800020 !important;
   color: white !important;
 }
+
+.text-bg-teal {
+  background-color: #20c997 !important;
+  color: white !important;
+}
+
+.text-bg-orange {
+  background-color: #fd7e14 !important;
+  color: white !important;
+}

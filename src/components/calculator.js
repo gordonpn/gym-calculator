@@ -29,6 +29,10 @@ export default () => ({
     { weight: 10, available: true },
     { weight: 5, available: true },
     { weight: 2.5, available: true },
+    { weight: 1, available: true },
+    { weight: 0.75, available: true },
+    { weight: 0.5, available: true },
+    { weight: 0.25, available: true },
   ],
 
   calculate() {
@@ -66,7 +70,7 @@ export default () => ({
           this.availablePlates,
           this.minimizePlateChanges,
           this.isWeightedBodyweight,
-          bodyweight,
+          bodyweight
         );
       } else {
         this.warmupSets = formula(
@@ -76,7 +80,7 @@ export default () => ({
           this.availablePlates,
           this.minimizePlateChanges,
           this.isWeightedBodyweight,
-          bodyweight,
+          bodyweight
         );
       }
 
@@ -225,7 +229,7 @@ export default () => ({
         isWeightedBodyweight: this.isWeightedBodyweight,
         numWarmupSets: this.numWarmupSets,
         selectedFormula: this.selectedFormula,
-      }),
+      })
     );
   },
 
@@ -237,21 +241,29 @@ export default () => ({
   getPlateColor(weight) {
     switch (Number.parseFloat(weight)) {
       case 55:
-        return "danger";
+        return "danger"; // Red
       case 45:
-        return "primary";
+        return "primary"; // Blue
       case 35:
-        return "warning";
+        return "warning"; // Yellow
       case 25:
-        return "success";
+        return "success"; // Green
       case 15:
-        return "info";
+        return "info"; // Light blue
       case 10:
-        return "burgundy";
+        return "burgundy"; // Dark red (custom)
       case 5:
-        return "secondary";
+        return "secondary"; // Gray
       case 2.5:
-        return "purple";
+        return "purple"; // Purple (custom)
+      case 1:
+        return "dark"; // Dark gray/black
+      case 0.75:
+        return "light"; // Light gray
+      case 0.5:
+        return "teal"; // Teal (custom)
+      case 0.25:
+        return "orange"; // Orange (custom)
       default:
         return "secondary";
     }
@@ -269,7 +281,9 @@ export default () => ({
       this.barWeight = Number.parseFloat(settings.barWeight);
 
       if (settings.availablePlates && Array.isArray(settings.availablePlates)) {
-        const expectedWeights = [55, 45, 35, 25, 15, 10, 5, 2.5];
+        const expectedWeights = [
+          55, 45, 35, 25, 15, 10, 5, 2.5, 1, 0.75, 0.5, 0.25,
+        ];
 
         const plateMap = new Map();
         for (const plate of settings.availablePlates) {
@@ -280,8 +294,17 @@ export default () => ({
           weight: weight,
           available: plateMap.has(weight)
             ? plateMap.get(weight)
-            : weight !== 55,
+            : weight !== 55, // Default new plates to available (except 55 which defaults to false)
         }));
+
+        // If we added new plates that weren't in the saved settings, save the updated configuration
+        const savedWeights = settings.availablePlates.map((p) => p.weight);
+        const newWeights = expectedWeights.filter(
+          (w) => !savedWeights.includes(w)
+        );
+        if (newWeights.length > 0) {
+          this.saveSettings();
+        }
       }
 
       if (Object.prototype.hasOwnProperty.call(settings, "barOnlyFirstSet")) {
