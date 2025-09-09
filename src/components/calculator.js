@@ -202,7 +202,7 @@ export default () => ({
     // and instead just use the actual achievable weight
     if (!this.minimizePlateChanges && remaining > 0) {
       return {
-        plateConfig,
+        plateConfig: plateConfig.reverse(),
         remaining: 0, // Set to 0 to hide "missing" weight indication
         actualWeight: actualWeight,
         // Update the set's weight to the actual achievable weight for display
@@ -211,7 +211,7 @@ export default () => ({
     }
 
     return {
-      plateConfig,
+      plateConfig: plateConfig.reverse(),
       remaining,
       actualWeight,
     };
