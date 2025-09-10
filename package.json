@@ -17,7 +17,7 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "lefthook": "^1.11.12",
-    "vite": "^6.1.6"
+    "vite": "^6.3.6"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
