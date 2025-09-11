@@ -79,7 +79,7 @@
                         <th>Set</th>
                         <th>Reps</th>
                         <th>Weight (lbs)</th>
-                        <th x-show="!isWeightedBodyweight">Plates (each side)</th>
+                        <th x-text="isWeightedBodyweight ? 'Plates' : 'Plates (each side)'"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -114,7 +114,7 @@
                                     </div>
                                 </template>
                             </td>
-                            <td x-show="!isWeightedBodyweight">
+                            <td>
                                 <template x-if="!isWeightedBodyweight && set.weight <= barWeight">
                                     <span>Empty bar</span>
                                 </template>
