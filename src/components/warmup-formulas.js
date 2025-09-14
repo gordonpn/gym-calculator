@@ -109,23 +109,45 @@ export function fixedIncrements(
     ? targetWeight - bodyweight
     : targetWeight;
   const effectiveBarWeight = isWeightedBodyweight ? 0 : barWeight;
-
   const idealWeights = [];
-  const increment =
-    (effectiveTargetWeight - effectiveBarWeight) / (numSets + 1);
+
+  // Original linear scheme (last warm-up = n/(n+1) of target) can make the top set too light (~83% for 5 sets).
+  // We optionally push the last warm-up closer to a desired top percentage while keeping fixed absolute increments.
+  const desiredTopPercent = 0.9; // 90% heuristic (can be tuned later or exposed via settings)
+  const originalTopRatio = numSets / (numSets + 1);
+  // Use the larger of the original ratio or desiredTopPercent (but never reach 100%).
+  const topRatio = Math.min(
+    Math.max(originalTopRatio, desiredTopPercent),
+    0.95 // hard cap so we do not excessively fatigue before the working set
+  );
+
+  // Compute increment so that final warm-up (set numSets) lands at topRatio * effectiveTargetWeight
+  const topWarmupWeight = effectiveTargetWeight * topRatio;
+  const increment = (topWarmupWeight - effectiveBarWeight) / numSets;
 
   for (let i = 0; i < numSets; i++) {
-    let weight = Math.round(effectiveBarWeight + increment * (i + 1));
-    if (weight < effectiveTargetWeight) {
-      const percentage = Math.round((weight / effectiveTargetWeight) * 100);
+    // Raw progressive (added) weight before adding bodyweight (if applicable)
+    let addedComponent = effectiveBarWeight + increment * (i + 1);
 
-      // For bodyweight exercises, add back the bodyweight
-      if (isWeightedBodyweight) {
-        weight += bodyweight;
-      }
-
-      idealWeights.push({ percentage, idealWeight: weight });
+    // Guard against floating point drift exceeding effectiveTargetWeight
+    if (addedComponent >= effectiveTargetWeight) {
+      addedComponent = effectiveTargetWeight * 0.99; // keep a small buffer
     }
+
+    // Percentage reference differs between standard vs weighted bodyweight:
+    //  - Standard: % of target (same as added component % of target since bar included in target)
+    //  - Weighted bodyweight: show % of TOTAL (bodyweight + added) for user clarity.
+    let displayWeight = addedComponent;
+    let percentage;
+    if (isWeightedBodyweight) {
+      const totalWeight = bodyweight + addedComponent; // total system weight
+      percentage = Math.round((totalWeight / targetWeight) * 100);
+      displayWeight = totalWeight;
+    } else {
+      percentage = Math.round((addedComponent / effectiveTargetWeight) * 100);
+    }
+
+    idealWeights.push({ percentage, idealWeight: Math.round(displayWeight) });
   }
 
   if (minimizePlateChanges) {
@@ -174,7 +196,7 @@ export function fixedIncrements(
       weight: idealWeight,
       reps,
       addedWeight: isWeightedBodyweight
-        ? Math.max(0, idealWeight - bodyweight)
+        ? Math.max(0, idealWeight - bodyweight) // added component for display / plate calc
         : idealWeight,
     });
   }
