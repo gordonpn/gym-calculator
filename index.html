@@ -299,12 +299,11 @@
                                                     :id="`weight-input-${index}`"
                                                     x-model="set.weight"
                                                     @input="handleSetInput()"
-                                                    placeholder="e.g. 225"
                                                     :title="set.estimatedMax > 0 ? `Estimated 1RM: ${set.estimatedMax} lbs` : ''"
                                                 >
                                             </td>
                                             <td>
-                                                <input type="number" class="form-control form-control-sm" :id="`reps-input-${index}`" x-model="set.reps" @input="handleSetInput()" placeholder="e.g. 3">
+                                                <input type="number" class="form-control form-control-sm" :id="`reps-input-${index}`" x-model="set.reps" @input="handleSetInput()">
                                             </td>
                                             <td class="d-none d-md-table-cell text-center text-muted">
                                                 <span x-text="set.estimatedMax > 0 ? set.estimatedMax + ' lbs' : '—'"></span>
