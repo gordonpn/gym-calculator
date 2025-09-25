@@ -58,22 +58,15 @@ body {
   vertical-align: -0.125em;
 }
 
-/* Custom styles for Rep Max Calculator */
-.set-card {
-  transition: all 0.3s ease;
-  border: 1px solid var(--bs-border-color);
+/* Compact table styles for Rep Max Calculator */
+.rep-max-table .form-control-sm {
+  min-width: 120px;
 }
 
-.set-card:hover {
-  box-shadow: 0 0.125rem 0.25rem rgba(var(--bs-body-color-rgb), 0.075);
-}
-
-.remove-set-btn {
-  transition: all 0.2s ease;
-}
-
-.remove-set-btn:hover {
-  color: var(--bs-danger);
+@media (max-width: 575.98px) {
+  .rep-max-table .form-control-sm {
+    min-width: 100%;
+  }
 }
 
 /* Colors for weight plates */

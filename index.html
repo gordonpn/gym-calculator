@@ -259,47 +259,65 @@
                     <div class="modal-body">
                         <p class="text-muted">Calculate your one-rep max (1RM) and rep ranges based on your weight and reps. Add multiple sets for a more accurate estimation.</p>
 
-                        <div class="mb-3">
-                            <label for="calculationMethod" class="form-label">Calculation Method</label>
-                            <select id="calculationMethod" class="form-select" x-model="calculationMethod">
-                                <option value="average">Average of all sets</option>
-                                <option value="highest">Highest estimated 1RM</option>
-                                <option value="lowest">Lowest estimated 1RM</option>
-                                <option value="weighted">Weighted average (by weight×reps)</option>
-                            </select>
-                            <small class="text-muted">Choose how to calculate your 1RM from multiple sets.</small>
-                        </div>
-                        
-                        <template x-for="(set, index) in sets" :key="index">
-                            <div class="card mb-3 set-card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0" x-text="`Set ${index + 1}`"></h6>
-                                    <button type="button" class="btn btn-sm btn-link text-danger remove-set-btn" @click="removeSet(index)" x-show="sets.length > 1" title="Remove this set">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label :for="`weight-input-${index}`" class="form-label">Weight lifted (lbs)</label>
-                                            <input type="number" class="form-control" :id="`weight-input-${index}`" x-model="set.weight" @input="handleSetInput()">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label :for="`reps-input-${index}`" class="form-label">Number of reps completed</label>
-                                            <input type="number" class="form-control" :id="`reps-input-${index}`" x-model="set.reps" @input="handleSetInput()">
-                                        </div>
-                                    </div>
-                                    <div class="mt-2" x-show="set.estimatedMax > 0">
-                                        <small class="text-muted">Estimated 1RM for this set: <span class="fw-bold" x-text="set.estimatedMax + ' lbs'"></span></small>
-                                    </div>
-                                </div>
+                        <div class="row g-3 align-items-end mb-3">
+                            <div class="col-md-8 col-lg-9">
+                                <label for="calculationMethod" class="form-label">Calculation Method</label>
+                                <select id="calculationMethod" class="form-select" x-model="calculationMethod">
+                                    <option value="average">Average of all sets</option>
+                                    <option value="highest">Highest estimated 1RM</option>
+                                    <option value="lowest">Lowest estimated 1RM</option>
+                                    <option value="weighted">Weighted average (by weight×reps)</option>
+                                </select>
+                                <small class="text-muted">Choose how to calculate your 1RM from multiple sets.</small>
                             </div>
-                        </template>
-                        
-                        <div class="d-grid mb-4">
-                            <button type="button" class="btn btn-outline-primary" @click="addSet()">
-                                <i class="bi bi-plus-circle"></i> Add Another Set
-                            </button>
+                            <div class="col-md-4 col-lg-3 d-grid">
+                                <button type="button" class="btn btn-outline-primary" @click="addSet()">
+                                    <i class="bi bi-plus-circle"></i> Add Set
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive rep-max-table mb-4">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Set</th>
+                                        <th scope="col" class="w-50">Weight (lbs)</th>
+                                        <th scope="col" class="w-25">Reps</th>
+                                        <th scope="col" class="d-none d-md-table-cell text-center">Est. 1RM</th>
+                                        <th scope="col" class="text-end">&nbsp;</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="(set, index) in sets" :key="index">
+                                        <tr>
+                                            <th scope="row" x-text="index + 1"></th>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    class="form-control form-control-sm"
+                                                    :id="`weight-input-${index}`"
+                                                    x-model="set.weight"
+                                                    @input="handleSetInput()"
+                                                    placeholder="e.g. 225"
+                                                    :title="set.estimatedMax > 0 ? `Estimated 1RM: ${set.estimatedMax} lbs` : ''"
+                                                >
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm" :id="`reps-input-${index}`" x-model="set.reps" @input="handleSetInput()" placeholder="e.g. 3">
+                                            </td>
+                                            <td class="d-none d-md-table-cell text-center text-muted">
+                                                <span x-text="set.estimatedMax > 0 ? set.estimatedMax + ' lbs' : '—'"></span>
+                                            </td>
+                                            <td class="text-end">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" @click="removeSet(index)" :disabled="sets.length === 1" :title="sets.length === 1 ? 'At least one set is required' : 'Remove this set'">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
                         </div>
 
                         <template x-if="errorMessage">
