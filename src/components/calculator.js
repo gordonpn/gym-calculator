@@ -84,17 +84,29 @@ export default () => ({
         );
       }
 
-      if (
-        this.barOnlyFirstSet &&
-        this.warmupSets.length > 0 &&
-        this.warmupSets[0].weight > this.barWeight &&
-        !this.isWeightedBodyweight // Don't add bar-only set for bodyweight exercises
-      ) {
-        this.warmupSets.unshift({
-          percentage: Math.round((this.barWeight / actualTargetWeight) * 100),
-          weight: this.barWeight,
-          reps: 12,
-        });
+      if (this.barOnlyFirstSet && this.warmupSets.length > 0) {
+        if (this.isWeightedBodyweight) {
+          const firstSet = this.warmupSets[0];
+          const hasBodyweightOnlySet =
+            typeof firstSet.addedWeight === "number"
+              ? firstSet.addedWeight <= 0
+              : firstSet.weight <= bodyweight;
+
+          if (!hasBodyweightOnlySet && bodyweight > 0) {
+            this.warmupSets.unshift({
+              percentage: Math.round((bodyweight / actualTargetWeight) * 100),
+              weight: bodyweight,
+              reps: 12,
+              addedWeight: 0,
+            });
+          }
+        } else if (this.warmupSets[0].weight > this.barWeight) {
+          this.warmupSets.unshift({
+            percentage: Math.round((this.barWeight / actualTargetWeight) * 100),
+            weight: this.barWeight,
+            reps: 12,
+          });
+        }
       }
 
       for (const set of this.warmupSets) {
