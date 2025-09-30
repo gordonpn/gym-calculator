@@ -218,16 +218,15 @@ export default () => ({
       ? targetWeight
       : (targetWeight - this.barWeight) / 2;
 
-    const sortedPlates = [...this.availablePlates]
-      .filter(
-        (plate) => plate.available && plate.weight >= Number(minPlateWeight)
-      )
-      .sort((a, b) => b.weight - a.weight);
+    // Respect the configured plate order so the table renders exactly as defined
+    const filteredPlates = this.availablePlates.filter(
+      (plate) => plate.available && plate.weight >= Number(minPlateWeight)
+    );
 
     let remaining = weightToAdd;
     const plateConfig = [];
 
-    for (const plate of sortedPlates) {
+    for (const plate of filteredPlates) {
       const count = Math.floor(remaining / plate.weight);
 
       if (count > 0) {
@@ -247,16 +246,11 @@ export default () => ({
       ? actualPlateWeight
       : Number.parseFloat(this.barWeight) + actualPlateWeight;
 
-    // Preserve descending order so badges render from heaviest to lightest
-    const displayPlateConfig = [...plateConfig].sort(
-      (a, b) => a.weight - b.weight
-    );
-
     // If not using minimize plate changes, we don't want to show "missing" weights
     // and instead just use the actual achievable weight
     if (!this.minimizePlateChanges && remaining > 0) {
       return {
-        plateConfig: displayPlateConfig,
+        plateConfig,
         remaining: 0, // Set to 0 to hide "missing" weight indication
         actualWeight: actualWeight,
         // Update the set's weight to the actual achievable weight for display
@@ -265,7 +259,7 @@ export default () => ({
     }
 
     return {
-      plateConfig: displayPlateConfig,
+      plateConfig,
       remaining,
       actualWeight,
     };
