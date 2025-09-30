@@ -109,18 +109,51 @@ export default () => ({
         }
       }
 
+      const applyWarmupRounding = (set) => {
+        if (this.isWeightedBodyweight) {
+          if (typeof set.addedWeight === "number") {
+            const roundedAdded = Math.max(0, roundToNearest5(set.addedWeight));
+            set.addedWeight = roundedAdded;
+            set.weight = Number(bodyweight) + roundedAdded;
+          } else if (typeof set.weight === "number") {
+            set.weight = Math.max(Number(bodyweight), set.weight);
+          }
+        } else if (typeof set.weight === "number") {
+          if (set.weight <= this.barWeight) {
+            set.weight = this.barWeight;
+          } else {
+            const perSideLoad = (set.weight - this.barWeight) / 2;
+            const roundedPerSide = Math.round(perSideLoad / 5) * 5;
+            const roundedWeight = this.barWeight + roundedPerSide * 2;
+            set.weight = Math.max(this.barWeight, roundedWeight);
+          }
+        }
+
+        if (typeof set.idealWeight === "number") {
+          set.idealWeight = set.weight;
+        }
+
+        return set;
+      };
+
+      this.warmupSets = this.warmupSets.map((set) => applyWarmupRounding(set));
+
       for (const set of this.warmupSets) {
         // For bodyweight exercises, we need to handle plate calculations differently
         if (this.isWeightedBodyweight) {
           // Handle plate calculation for the added weight component only
           const addedWeight = Math.max(0, set.addedWeight);
           if (addedWeight > 0) {
-            set.plates = this.calculatePlatesNeeded(addedWeight);
+            set.plates = this.calculatePlatesNeeded(addedWeight, {
+              minPlateWeight: 5,
+            });
           } else {
             set.plates = { plateConfig: [], remaining: 0, actualWeight: 0 };
           }
         } else {
-          set.plates = this.calculatePlatesNeeded(set.weight);
+          set.plates = this.calculatePlatesNeeded(set.weight, {
+            minPlateWeight: 5,
+          });
         }
 
         // If not using minimize plate changes and there's an adjusted weight,
@@ -160,7 +193,9 @@ export default () => ({
     this.debouncedCalculate();
   },
 
-  calculatePlatesNeeded(targetWeight) {
+  calculatePlatesNeeded(targetWeight, options = {}) {
+    const { minPlateWeight = 0 } = options;
+
     // For weighted bodyweight exercises, treat the whole weight as the weight to calculate plates for
     const isForBodyweightExercise =
       this.isWeightedBodyweight && targetWeight > 0;
@@ -184,7 +219,9 @@ export default () => ({
       : (targetWeight - this.barWeight) / 2;
 
     const sortedPlates = [...this.availablePlates]
-      .filter((plate) => plate.available)
+      .filter(
+        (plate) => plate.available && plate.weight >= Number(minPlateWeight)
+      )
       .sort((a, b) => b.weight - a.weight);
 
     let remaining = weightToAdd;
