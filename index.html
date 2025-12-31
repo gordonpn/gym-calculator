@@ -36,15 +36,6 @@
         </div>
 
         <div class="mb-3">
-            <label for="formula-select" class="form-label">Formula</label>
-            <select id="formula-select" class="form-select" x-model="selectedFormula" @change="onFormulaChange()">
-                <template x-for="option in formulaOptions" :key="option.id">
-                    <option :value="option.id" x-text="option.name"></option>
-                </template>
-            </select>
-        </div>
-
-        <div class="mb-3">
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="isWeightedBodyweight" x-model="isWeightedBodyweight" @change="debouncedCalculate">
                 <label class="form-check-label" for="isWeightedBodyweight">Weighted Bodyweight Exercise</label>
@@ -208,6 +199,15 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="formula-select" class="form-label">Formula</label>
+                            <select id="formula-select" class="form-select" x-model="selectedFormula" @change="onFormulaChange()">
+                                <template x-for="option in formulaOptions" :key="option.id">
+                                    <option :value="option.id" x-text="option.name"></option>
+                                </template>
+                            </select>
+                        </div>
+
                         <div class="mb-3">
                             <label for="barWeight" class="form-label">Bar Weight (lbs)</label>
                             <input type="number" class="form-control" id="barWeight" x-model="barWeight" inputmode="decimal">
