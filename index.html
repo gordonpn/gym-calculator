@@ -34,7 +34,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="mb-3">
             <label for="formula-select" class="form-label">Formula</label>
             <select id="formula-select" class="form-select" x-model="selectedFormula" @change="onFormulaChange()">
@@ -51,10 +51,10 @@
             </div>
             <small class="text-muted" x-show="isWeightedBodyweight">For exercises like pull-ups or dips where your bodyweight plus added weight is the total load.</small>
         </div>
-        
+
         <div class="mb-3" x-show="showBodyweightInput">
             <label for="bodyweight" class="form-label">Your Bodyweight (lbs)</label>
-            <input type="number" class="form-control" id="bodyweight" x-model="bodyweight" @input="debouncedCalculate">
+            <input type="number" class="form-control" id="bodyweight" x-model="bodyweight" @input="debouncedCalculate" inputmode="decimal">
         </div>
 
         <div class="mb-3" x-show="showSetsSelector">
@@ -69,12 +69,12 @@
                 <option value="8">8 Sets</option>
             </select>
         </div>
-        
+
         <div class="input-group mb-3">
-            <input type="number" class="form-control" x-model="targetWeight" @input="debouncedCalculate">
+            <input type="number" class="form-control" x-model="targetWeight" @input="debouncedCalculate" inputmode="decimal">
             <span class="input-group-text" x-text="isWeightedBodyweight ? 'Additional weight (lbs)' : 'Target weight (lbs)'"></span>
         </div>
-        
+
         <div class="mt-4">
             <h4>Warm-up Sets:</h4>
             <table class="table table-striped" x-show="warmupSets.length > 0">
@@ -144,7 +144,7 @@
             </table>
             <p class="text-muted" x-show="warmupSets.length === 0">Enter a target weight to see your warm-up sets.</p>
         </div>
-        
+
         <div class="card mt-4 mb-4" x-show="targetWeight > 0">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0" x-text="isWeightedBodyweight ? 'Working Set (Added Weight)' : 'Working Set'"></h5>
@@ -196,7 +196,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="modal fade" id="plateSettingsModal" tabindex="-1" aria-labelledby="plateSettingsModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -207,16 +207,16 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="barWeight" class="form-label">Bar Weight (lbs)</label>
-                            <input type="number" class="form-control" id="barWeight" x-model="barWeight">
+                            <input type="number" class="form-control" id="barWeight" x-model="barWeight" inputmode="decimal">
                         </div>
-                        
+
                         <div class="mb-3">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="barOnlyFirstSet" x-model="barOnlyFirstSet">
                                 <label class="form-check-label" for="barOnlyFirstSet">Add barbell-only/bodyweight-only set</label>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="minimizePlateChanges" x-model="minimizePlateChanges">
@@ -224,7 +224,7 @@
                             </div>
                             <small class="text-muted">Optimizes warm-up weights to reduce the number of plate changes needed.</small>
                         </div>
-                        
+
                         <h6 class="mb-3">Available Plates</h6>
                         <div class="row g-3">
                             <template x-for="(plate, index) in availablePlates" :key="plate.weight">
@@ -232,10 +232,10 @@
                                     <div class="card">
                                         <div class="card-body">
                                             <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" 
-                                                       :id="`plate-${plate.weight}`" 
+                                                <input class="form-check-input" type="checkbox"
+                                                       :id="`plate-${plate.weight}`"
                                                        x-model="plate.available">
-                                                <label class="form-check-label" :for="`plate-${plate.weight}`" 
+                                                <label class="form-check-label" :for="`plate-${plate.weight}`"
                                                        x-text="`${plate.weight} lbs plates`"></label>
                                             </div>
                                         </div>
@@ -304,10 +304,11 @@
                                                     x-model="set.weight"
                                                     @input="handleSetInput()"
                                                     :title="set.estimatedMax > 0 ? `Estimated 1RM: ${set.estimatedMax} lbs` : ''"
+                                                    inputmode="decimal"
                                                 >
                                             </td>
                                             <td>
-                                                <input type="number" class="form-control form-control-sm" :id="`reps-input-${index}`" x-model="set.reps" @input="handleSetInput()">
+                                                <input type="number" class="form-control form-control-sm" :id="`reps-input-${index}`" x-model="set.reps" @input="handleSetInput()" inputmode="numeric">
                                             </td>
                                             <td class="d-none d-md-table-cell text-center text-muted">
                                                 <span x-text="set.estimatedMax > 0 ? set.estimatedMax + ' lbs' : '—'"></span>
@@ -346,7 +347,7 @@
                                     <p class="text-muted text-center" x-show="sets.length === 1">Based on the Epley formula</p>
                                 </div>
                             </div>
-                            
+
                             <h5>Estimated weights for rep ranges:</h5>
                             <div class="table-responsive">
                                 <table class="table table-striped table-hover">
@@ -380,7 +381,7 @@
                                 <li><h6 class="dropdown-header">Choose Rep Max to Apply</h6></li>
                                 <template x-for="data in repRangeData" :key="data.reps">
                                     <li>
-                                        <a class="dropdown-item d-flex justify-content-between align-items-center" href="#" 
+                                        <a class="dropdown-item d-flex justify-content-between align-items-center" href="#"
                                            @click.prevent="$dispatch('use-calculated-max', { weight: data.weight }); $el.closest('.modal').querySelector('.btn-close').click()">
                                             <div>
                                                 <span class="fw-bold" x-text="data.reps + 'RM'"></span>
