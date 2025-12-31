@@ -1,14 +1,15 @@
-import { debounce, roundToNearest5, roundToSmallestPlate } from "./util.js";
+import { debounce, roundToNearest5, roundToNearestAchievableWeight, roundToSmallestPlate } from "./util.js";
 import {
-  formulaOptions,
-  getDefaultSets,
-  getFormula,
-  isConfigurableFormula,
+    formulaOptions,
+    getDefaultSets,
+    getFormula,
+    isConfigurableFormula,
 } from "./warmup-formulas.js";
 
 export default () => ({
   numWarmupSets: 6,
   targetWeight: "",
+  roundedTargetWeight: 0,
   selectedFormula: "percentageBased",
   warmupSets: [],
   formulaOptions,
@@ -47,6 +48,7 @@ export default () => ({
       (!bodyweight || Number.isNaN(bodyweight) || bodyweight <= 0)
     ) {
       this.warmupSets = [];
+      this.roundedTargetWeight = "";
       return;
     }
 
@@ -57,6 +59,25 @@ export default () => ({
       : !Number.isNaN(weight) && weight > 0;
 
     if (validWeight) {
+      // Calculate the rounded weight for display purposes only
+      let roundedWeight = Number(weight);
+      if (!this.isWeightedBodyweight) {
+        try {
+          const rounded = roundToNearestAchievableWeight(
+            Number(weight),
+            Number(this.barWeight),
+            this.availablePlates,
+            false
+          );
+          roundedWeight = Number(rounded);
+        } catch (e) {
+          // If rounding fails, just use the original weight
+          console.error("Error rounding weight:", e);
+          roundedWeight = Number(weight);
+        }
+      }
+      this.roundedTargetWeight = roundedWeight;
+
       const formula = getFormula(this.selectedFormula);
       const actualTargetWeight = this.isWeightedBodyweight
         ? Number(bodyweight) + Number(weight) // For bodyweight exercises, target = bodyweight + added weight
@@ -170,6 +191,7 @@ export default () => ({
       }
     } else {
       this.warmupSets = [];
+      this.roundedTargetWeight = 0;
     }
   },
 
