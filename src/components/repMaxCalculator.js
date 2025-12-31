@@ -1,6 +1,9 @@
 // Rep Max Calculator component
-// Using the Epley formula: 1RM = w * (1 + r / 30)
-// And reverse: weight for n reps = 1RM / (1 + n / 30)
+// Using the Epley formula for reps ≤ 10: 1RM = w * (1 + r / 30)
+// Using the Brzycki formula for reps > 10: 1RM = w * (36 / (37 - r))
+// Reverse formulas:
+//   Epley: weight = 1RM / (1 + n / 30)
+//   Brzycki: weight = 1RM * (37 - n) / 36
 
 export default () => ({
   sets: [{ weight: "", reps: "", estimatedMax: 0 }],
@@ -46,9 +49,12 @@ export default () => ({
     } else if (r > 30) {
       set.estimatedMax = 0;
       return 0;
-    } else {
-      // Epley formula
+    } else if (r <= 10) {
+      // Epley formula for lower reps (1-10)
       set.estimatedMax = Math.round(w * (1 + r / 30));
+    } else {
+      // Brzycki formula for higher reps (11-30)
+      set.estimatedMax = Math.round(w * (36 / (37 - r)));
     }
 
     return set.estimatedMax;
@@ -132,8 +138,14 @@ export default () => ({
     // Calculate weights for rep ranges 1-15
     this.repRangeData = [];
     for (let reps = 1; reps <= 15; reps++) {
-      // Reverse Epley formula to get weight for given reps
-      const weightForReps = Math.round(this.estimatedMax / (1 + reps / 30));
+      let weightForReps;
+      if (reps <= 10) {
+        // Reverse Epley formula for lower reps
+        weightForReps = Math.round(this.estimatedMax / (1 + reps / 30));
+      } else {
+        // Reverse Brzycki formula for higher reps
+        weightForReps = Math.round(this.estimatedMax * (37 - reps) / 36);
+      }
 
       // Calculate percentage of 1RM
       const percentage = Math.round((weightForReps / this.estimatedMax) * 100);
