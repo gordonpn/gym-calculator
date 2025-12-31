@@ -79,57 +79,59 @@
                 </thead>
                 <tbody>
                     <template x-for="(set, index) in warmupSets" :key="index">
-                        <tr>
-                            <td x-text="index + 1"></td>
-                            <td x-text="set.reps"></td>
-                            <td>
-                                <template x-if="set.plates.remaining > 0 && minimizePlateChanges && !isWeightedBodyweight">
-                                    <div>
-                                        <span x-text="set.plates.actualWeight + ' lbs'"></span>
-                                        <small class="text-muted" x-text="` (target: ${set.weight})`"></small>
-                                    </div>
-                                </template>
-                                <template x-if="set.plates.remaining > 0 && minimizePlateChanges && isWeightedBodyweight">
-                                    <div>
-                                        <span x-text="set.plates.actualWeight + ' lbs added'"></span>
-                                        <small class="text-muted" x-text="` (total: ${Number(bodyweight) + Number(set.plates.actualWeight)} lbs)`"></small>
-                                    </div>
-                                </template>
-                                <template x-if="set.plates.remaining === 0 || !minimizePlateChanges">
-                                    <div>
-                                        <template x-if="isWeightedBodyweight">
-                                            <div>
-                                                <span x-text="set.addedWeight + ' lbs added'"></span>
-                                                <small class="text-muted" x-text="` (total: ${set.weight} lbs)`"></small>
-                                            </div>
-                                        </template>
-                                        <template x-if="!isWeightedBodyweight">
-                                            <span x-text="set.weight + ' lbs'"></span>
-                                        </template>
-                                    </div>
-                                </template>
-                            </td>
-                            <td>
-                                <template x-if="!isWeightedBodyweight && set.weight <= barWeight">
-                                    <span>Empty bar</span>
-                                </template>
-                                <template x-if="isWeightedBodyweight && set.addedWeight <= 0">
-                                    <span>Bodyweight only</span>
-                                </template>
-                                <template x-if="(!isWeightedBodyweight && set.weight > barWeight) || (isWeightedBodyweight && set.addedWeight > 0)">
-                                    <div class="d-flex gap-1 flex-wrap">
-                                        <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
-                                            <template x-for="i in plate.count" :key="`${plate.weight}-${i}`">
-                                                <span class="badge" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.weight} lbs`"></span>
+                        <template x-if="!set.isBackoff">
+                            <tr>
+                                <td x-text="index + 1"></td>
+                                <td x-text="set.reps"></td>
+                                <td>
+                                    <template x-if="set.plates.remaining > 0 && minimizePlateChanges && !isWeightedBodyweight">
+                                        <div>
+                                            <span x-text="set.plates.actualWeight + ' lbs'"></span>
+                                            <small class="text-muted" x-text="` (target: ${set.weight})`"></small>
+                                        </div>
+                                    </template>
+                                    <template x-if="set.plates.remaining > 0 && minimizePlateChanges && isWeightedBodyweight">
+                                        <div>
+                                            <span x-text="set.plates.actualWeight + ' lbs added'"></span>
+                                            <small class="text-muted" x-text="` (total: ${Number(bodyweight) + Number(set.plates.actualWeight)} lbs)`"></small>
+                                        </div>
+                                    </template>
+                                    <template x-if="set.plates.remaining === 0 || !minimizePlateChanges">
+                                        <div>
+                                            <template x-if="isWeightedBodyweight">
+                                                <div>
+                                                    <span x-text="set.addedWeight + ' lbs added'"></span>
+                                                    <small class="text-muted" x-text="` (total: ${set.weight} lbs)`"></small>
+                                                </div>
                                             </template>
-                                        </template>
-                                        <template x-if="set.plates.remaining > 0 && minimizePlateChanges">
-                                            <span class="badge text-bg-warning" x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"></span>
-                                        </template>
-                                    </div>
-                                </template>
-                            </td>
-                        </tr>
+                                            <template x-if="!isWeightedBodyweight">
+                                                <span x-text="set.weight + ' lbs'"></span>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </td>
+                                <td>
+                                    <template x-if="!isWeightedBodyweight && set.weight <= barWeight">
+                                        <span>Empty bar</span>
+                                    </template>
+                                    <template x-if="isWeightedBodyweight && set.addedWeight <= 0">
+                                        <span>Bodyweight only</span>
+                                    </template>
+                                    <template x-if="(!isWeightedBodyweight && set.weight > barWeight) || (isWeightedBodyweight && set.addedWeight > 0)">
+                                        <div class="d-flex gap-1 flex-wrap">
+                                            <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
+                                                <template x-for="i in plate.count" :key="`${plate.weight}-${i}`">
+                                                    <span class="badge" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.weight} lbs`"></span>
+                                                </template>
+                                            </template>
+                                            <template x-if="set.plates.remaining > 0 && minimizePlateChanges">
+                                                <span class="badge text-bg-warning" x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"></span>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
                     </template>
                 </tbody>
             </table>
@@ -138,7 +140,7 @@
 
         <div class="card mt-4 mb-4" x-show="targetWeight > 0">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0" x-text="isWeightedBodyweight ? 'Working Set (Added Weight)' : 'Working Set'"></h5>
+                <h5 class="mb-0" x-text="enableBackoff ? (isWeightedBodyweight ? 'Top Set (Added Weight)' : 'Top Set') : (isWeightedBodyweight ? 'Working Set (Added Weight)' : 'Working Set')"></h5>
             </div>
             <div class="card-body">
                 <div class="row align-items-center">
@@ -191,6 +193,66 @@
             </div>
         </div>
 
+        <!-- Backoff Set Card -->
+        <template x-if="enableBackoff">
+            <template x-for="(set, index) in warmupSets" :key="index">
+                <template x-if="set.isBackoff">
+                    <div class="card mt-4 mb-4" x-show="targetWeight > 0">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0" x-text="isWeightedBodyweight ? 'Backoff Set (Added Weight)' : 'Backoff Set'"></h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h3 class="mb-0" x-text="isWeightedBodyweight ? set.addedWeight + ' lbs added' : set.weight + ' lbs'"></h3>
+                                    <small class="text-muted" x-text="`(${set.percentage}% of top set)`"></small>
+                                    <small class="text-muted" x-show="isWeightedBodyweight" x-text="`Total: ${set.weight} lbs`"></small>
+                                </div>
+                                <!-- For regular exercises, show plates on each side -->
+                                <div class="col-md-6" x-show="!isWeightedBodyweight">
+                                    <h6>Plates (each side):</h6>
+                                    <template x-if="set.weight <= barWeight">
+                                        <span>Empty bar</span>
+                                    </template>
+                                    <template x-if="set.weight > barWeight">
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
+                                                <template x-for="i in plate.count" :key="`${plate.weight}-${i}`">
+                                                    <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.weight} lbs`"></span>
+                                                </template>
+                                            </template>
+                                            <template x-if="set.plates.remaining > 0 && minimizePlateChanges">
+                                                <span class="badge text-bg-warning fs-5" x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"></span>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                                <!-- For weighted bodyweight, show plates needed directly under the weight -->
+                                <div class="col-md-6" x-show="isWeightedBodyweight && set.addedWeight > 0">
+                                    <h6>Plates:</h6>
+                                    <template x-if="set.addedWeight <= 0">
+                                        <span>Bodyweight only</span>
+                                    </template>
+                                    <template x-if="set.addedWeight > 0">
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
+                                                <template x-for="i in plate.count" :key="`${plate.weight}-${i}`">
+                                                    <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.weight} lbs`"></span>
+                                                </template>
+                                            </template>
+                                            <template x-if="set.plates.remaining > 0 && minimizePlateChanges">
+                                                <span class="badge text-bg-warning fs-5" x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"></span>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </template>
+        </template>
+
         <div class="modal fade" id="plateSettingsModal" tabindex="-1" aria-labelledby="plateSettingsModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -226,6 +288,21 @@
                                 <label class="form-check-label" for="minimizePlateChanges">Minimize plate changes between sets</label>
                             </div>
                             <small class="text-muted">Optimizes warm-up weights to reduce the number of plate changes needed.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="enableBackoff" x-model="enableBackoff" @change="debouncedCalculate">
+                                <label class="form-check-label" for="enableBackoff">Show backoff sets</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" x-show="enableBackoff">
+                            <label for="backoffPercentage" class="form-label">Backoff Set Percentage</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="backoffPercentage" x-model.number="backoffPercentage" @input="debouncedCalculate" inputmode="decimal" step="0.1">
+                                <span class="input-group-text">%</span>
+                            </div>
                         </div>
 
                         <h6 class="mb-3">Available Plates</h6>

@@ -19,6 +19,8 @@ export default () => ({
   isWeightedBodyweight: false,
   bodyweight: "",
   showBodyweightInput: false,
+  enableBackoff: false,
+  backoffPercentage: 80,
 
   barWeight: 45,
   availablePlates: [
@@ -189,6 +191,16 @@ export default () => ({
           }
         }
       }
+
+      // Add backoff sets if enabled
+      if (this.enableBackoff && this.warmupSets.length > 0) {
+        // Use the actual target weight (top set), not the last warmup set
+        const actualTargetWeight = this.isWeightedBodyweight
+          ? Number(bodyweight) + Number(weight) // For bodyweight exercises, target = bodyweight + added weight
+          : weight; // For regular exercises, target = entered weight
+        const backoffSet = this.createBackoffSet(actualTargetWeight, bodyweight);
+        this.warmupSets.push(backoffSet);
+      }
     } else {
       this.warmupSets = [];
       this.roundedTargetWeight = 0;
@@ -287,6 +299,83 @@ export default () => ({
     };
   },
 
+  createBackoffSet(targetWeight, bodyweight = 0) {
+    const backoffPercentage = this.backoffPercentage / 100;
+
+    // Calculate backoff weight based on the target weight
+    let backoffWeight;
+    if (this.isWeightedBodyweight) {
+      // For bodyweight exercises, calculate backoff of the added weight
+      const addedWeight = targetWeight - bodyweight;
+      const backoffAdded = addedWeight * backoffPercentage;
+      backoffWeight = bodyweight + backoffAdded;
+    } else {
+      backoffWeight = targetWeight * backoffPercentage;
+    }
+
+    // Round the backoff weight similar to how working sets are rounded
+    const applyRounding = (set) => {
+      if (this.isWeightedBodyweight) {
+        if (typeof set.addedWeight === "number") {
+          const roundedAdded = Math.max(0, roundToNearest5(set.addedWeight));
+          set.addedWeight = roundedAdded;
+          set.weight = Number(bodyweight) + roundedAdded;
+        } else if (typeof set.weight === "number") {
+          set.weight = Math.max(Number(bodyweight), set.weight);
+        }
+      } else if (typeof set.weight === "number") {
+        if (set.weight <= this.barWeight) {
+          set.weight = this.barWeight;
+        } else {
+          const perSideLoad = (set.weight - this.barWeight) / 2;
+          const roundedPerSide = Math.round(perSideLoad / 5) * 5;
+          const roundedWeight = this.barWeight + roundedPerSide * 2;
+          set.weight = Math.max(this.barWeight, roundedWeight);
+        }
+      }
+      return set;
+    };
+
+    const backoffSet = {
+      percentage: Math.round(this.backoffPercentage),
+      weight: backoffWeight,
+      reps: 8,
+      addedWeight: this.isWeightedBodyweight ? Math.max(0, backoffWeight - bodyweight) : undefined,
+      isBackoff: true,
+    };
+
+    const roundedSet = applyRounding(backoffSet);
+
+    // Calculate plates needed for the backoff set
+    if (this.isWeightedBodyweight) {
+      const addedWeight = Math.max(0, roundedSet.addedWeight);
+      if (addedWeight > 0) {
+        roundedSet.plates = this.calculatePlatesNeeded(addedWeight, {
+          minPlateWeight: 5,
+        });
+      } else {
+        roundedSet.plates = { plateConfig: [], remaining: 0, actualWeight: 0 };
+      }
+    } else {
+      roundedSet.plates = this.calculatePlatesNeeded(roundedSet.weight, {
+        minPlateWeight: 5,
+      });
+    }
+
+    // Update weight if not minimizing plate changes
+    if (!this.minimizePlateChanges && roundedSet.plates.adjustedTargetWeight) {
+      if (this.isWeightedBodyweight) {
+        roundedSet.addedWeight = roundedSet.plates.adjustedTargetWeight;
+        roundedSet.weight = Number(bodyweight) + Number(roundedSet.addedWeight);
+      } else {
+        roundedSet.weight = roundedSet.plates.adjustedTargetWeight;
+      }
+    }
+
+    return roundedSet;
+  },
+
+
   saveSettings() {
     localStorage.setItem(
       "plateSettings",
@@ -299,6 +388,8 @@ export default () => ({
         isWeightedBodyweight: this.isWeightedBodyweight,
         numWarmupSets: this.numWarmupSets,
         selectedFormula: this.selectedFormula,
+        enableBackoff: this.enableBackoff,
+        backoffPercentage: this.backoffPercentage,
       })
     );
   },
@@ -411,6 +502,15 @@ export default () => ({
         this.selectedFormula = settings.selectedFormula;
         this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
       }
+
+      // Load backoff settings if available
+      if (Object.prototype.hasOwnProperty.call(settings, "enableBackoff")) {
+        this.enableBackoff = settings.enableBackoff;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(settings, "backoffPercentage")) {
+        this.backoffPercentage = settings.backoffPercentage;
+      }
     }
 
     // Watch for changes to the weighted bodyweight toggle
@@ -438,6 +538,17 @@ export default () => ({
     // Watch for changes to the number of warm-up sets
     this.$watch("numWarmupSets", () => {
       this.saveSettings();
+    });
+
+    // Watch for changes to backoff settings
+    this.$watch("enableBackoff", () => {
+      this.saveSettings();
+      this.debouncedCalculate();
+    });
+
+    this.$watch("backoffPercentage", () => {
+      this.saveSettings();
+      this.debouncedCalculate();
     });
 
     // Listen for event from Rep Max Calculator to use the calculated max
