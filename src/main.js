@@ -1,9 +1,10 @@
 import Alpine from "alpinejs";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 import calculator from "./components/calculator";
 import repMaxCalculator from "./components/repMaxCalculator";
+import strengthLevelCalculator from "./components/strengthLevelCalculator";
 import "./style.css";
 
 window.Alpine = Alpine;
@@ -56,5 +57,6 @@ Alpine.data("themeToggle", () => ({
 
 Alpine.data("calculator", calculator);
 Alpine.data("repMaxCalculator", repMaxCalculator);
+Alpine.data("strengthLevelCalculator", strengthLevelCalculator);
 
 Alpine.start();
