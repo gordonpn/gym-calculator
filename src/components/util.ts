@@ -1,16 +1,39 @@
-export function debounce(func, wait) {
-  let timeout;
-  return function (...args) {
+/**
+ * Plate interface for representing weight plates
+ */
+export interface Plate {
+  weight: number;
+  available: boolean;
+}
+
+/**
+ * Debounce function to delay execution
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout>;
+  return function (this: any, ...args: Parameters<T>) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(this, args), wait);
   };
 }
 
-export function roundToNearest5(num) {
+/**
+ * Round number to nearest 5
+ */
+export function roundToNearest5(num: number): number {
   return Math.round(num / 5) * 5;
 }
 
-export function roundToSmallestPlate(num, availablePlates) {
+/**
+ * Round number to smallest available plate
+ */
+export function roundToSmallestPlate(
+  num: number,
+  availablePlates: Plate[]
+): number {
   // Find the smallest available plate
   const smallestPlate = availablePlates
     .filter((plate) => plate.available)
@@ -26,12 +49,15 @@ export function roundToSmallestPlate(num, availablePlates) {
   return Math.round(num / smallestPlate) * smallestPlate;
 }
 
+/**
+ * Round to nearest achievable weight based on available plates
+ */
 export function roundToNearestAchievableWeight(
-  targetWeight,
-  barWeight,
-  availablePlates,
-  isWeightedBodyweight = false
-) {
+  targetWeight: number,
+  barWeight: number,
+  availablePlates: Plate[],
+  isWeightedBodyweight: boolean = false
+): number {
   // Validate inputs
   const weight = Number(targetWeight);
   const bar = Number(barWeight);
@@ -94,9 +120,10 @@ export function roundToNearestAchievableWeight(
     : effectiveBarWeight + (totalAdded + smallestPlate) * 2;
 
   // Return whichever is closer to target
-  const result = Math.abs(weight - weightDown) <= Math.abs(weight - weightUp)
-    ? weightDown
-    : weightUp;
+  const result =
+    Math.abs(weight - weightDown) <= Math.abs(weight - weightUp)
+      ? weightDown
+      : weightUp;
 
   return Number(result);
 }

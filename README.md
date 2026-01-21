@@ -29,7 +29,7 @@ pnpm run bun-dev
 * [x] Implement dark mode
 * [x] Add footer information
 * [x] Add option to optimize for minimal plate changes
-* [ ] Add TypeScript tooling
+* [x] Add TypeScript tooling
 * [x] Add Biome for linting and formatting
 * [x] Add lefthook for pre-commit hooks
 * [ ] Add PostCSS for CSS optimizations
@@ -38,3 +38,4 @@ pnpm run bun-dev
 * [x] Add option to warm-up to weighted bodyweight exercises
 * [x] 1RM calculator
 * [x] Persist last selected sets and bodyweight
+* [x] Migrate to Astro framework
