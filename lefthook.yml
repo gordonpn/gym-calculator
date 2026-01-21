@@ -1,6 +1,9 @@
 pre-commit:
   parallel: false
   jobs:
+    - name: typecheck
+      run: pnpm tsc --noEmit
+
     - name: check
       skip: true
       run: pnpm run check

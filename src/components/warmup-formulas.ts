@@ -52,7 +52,6 @@ function generatePossibleWeights(
   targetWeight: number,
   availablePlates: Plate[]
 ): number[] {
-  const possibleWeights: Set<number> = new Set();
   const availablePlateWeights = availablePlates
     .filter((p) => p.available)
     .map((p) => p.weight)
@@ -109,7 +108,6 @@ function optimizePlateChanges(
 
   // Track plate configuration for each set
   const optimized: WarmupSet[] = [];
-  let lastPlateConfig: Array<{ weight: number; count: number }> = [];
 
   for (const set of sorted) {
     const effectiveWeight = set.weight - barWeight;
@@ -136,8 +134,6 @@ function optimizePlateChanges(
       ...set,
       // Track if plates changed from last set
     });
-
-    lastPlateConfig = plateConfig;
   }
 
   return optimized;
@@ -251,8 +247,8 @@ export function fixedIncrements(
   targetWeight: number,
   numSets: number = 5,
   barWeight: number = 45,
-  availablePlates: Plate[] = [],
-  minimizePlateChanges: boolean = false,
+  _availablePlates: Plate[] = [],
+  _minimizePlateChanges: boolean = false,
   isWeightedBodyweight: boolean = false,
   bodyweight: number = 0
 ): WarmupSet[] {
@@ -314,10 +310,10 @@ export function fixedIncrements(
  */
 export function standardPyramid(
   targetWeight: number,
-  numSets?: number,
-  barWeight?: number,
-  availablePlates?: Plate[],
-  minimizePlateChanges?: boolean,
+  _numSets?: number,
+  _barWeight?: number,
+  _availablePlates?: Plate[],
+  _minimizePlateChanges?: boolean,
   isWeightedBodyweight?: boolean,
   bodyweight?: number
 ): WarmupSet[] {
@@ -352,10 +348,10 @@ export function standardPyramid(
 export function weightedBodyweight(
   targetWeight: number,
   numSets: number = 3,
-  barWeight: number = 0,
+  _barWeight: number = 0,
   availablePlates: Plate[] = [],
-  minimizePlateChanges: boolean = false,
-  isWeightedBodyweight: boolean = true,
+  _minimizePlateChanges: boolean = false,
+  _isWeightedBodyweight: boolean = true,
   bodyweight: number = 150
 ): WarmupSet[] {
   return percentageBased(
@@ -363,7 +359,7 @@ export function weightedBodyweight(
     numSets,
     0,
     availablePlates,
-    minimizePlateChanges,
+    false,
     true,
     bodyweight
   );
