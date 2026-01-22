@@ -47,22 +47,37 @@ export interface FormulaOption {
 /**
  * Generate all possible weights that can be achieved with available plates
  */
-function generatePossibleWeights(
+export function generatePossibleWeights(
   barWeight: number,
   targetWeight: number,
-  availablePlates: Plate[]
+  availablePlates: Plate[],
+  isWeightedBodyweight: boolean = false
 ): number[] {
   const availablePlateWeights = availablePlates
     .filter((p) => p.available)
     .map((p) => p.weight)
     .sort((a, b) => b - a);
 
+  if (availablePlateWeights.length === 0) {
+    return [barWeight];
+  }
+
+  // Find the smallest plate to use as increment step
+  const smallestPlate = availablePlateWeights[availablePlateWeights.length - 1];
+
   // Generate all possible combinations up to target weight
   const generateCombinations = (weights: number[], maxWeight: number) => {
     const combos: number[] = [];
-    combos.push(barWeight); // Just the bar
 
-    for (let i = 1; i <= maxWeight; i++) {
+    if (isWeightedBodyweight) {
+      combos.push(barWeight); // Just bodyweight (no bar)
+    } else {
+      combos.push(barWeight); // Just the bar
+    }
+
+    // Loop by smallest plate increment instead of by 1
+    const increment = smallestPlate;
+    for (let i = increment; i <= maxWeight; i += increment) {
       let remaining = i;
       let totalAdded = 0;
 
@@ -73,14 +88,21 @@ function generatePossibleWeights(
       }
 
       if (remaining < 0.001) {
-        combos.push(barWeight + totalAdded * 2);
+        // For weighted bodyweight, added weight is not multiplied by 2 (no both sides)
+        // For regular exercises, plates are on both sides so multiply by 2
+        const totalWeight = isWeightedBodyweight
+          ? barWeight + totalAdded
+          : barWeight + totalAdded * 2;
+        combos.push(totalWeight);
       }
     }
 
     return combos;
   };
 
-  const maxPerSide = (targetWeight - barWeight) / 2;
+  const maxPerSide = isWeightedBodyweight
+    ? targetWeight - barWeight
+    : (targetWeight - barWeight) / 2;
   const combinations = generateCombinations(availablePlateWeights, maxPerSide);
 
   return Array.from(new Set(combinations)).sort((a, b) => a - b);

@@ -1,6 +1,7 @@
 import { debounce, roundToNearest5, roundToNearestAchievableWeight, roundToSmallestPlate, type Plate } from './util';
 import {
     formulaOptions,
+    generatePossibleWeights,
     getDefaultSets,
     getFormula,
     isConfigurableFormula,
@@ -40,6 +41,7 @@ export interface CalculatorData {
   saveSettings(): void;
   savePlateSettings(): void;
   getPlateColor(weight: number | string): string;
+  incrementWeight(direction: 1 | -1): void;
   init(): void;
 }
 
@@ -462,6 +464,49 @@ export default function (): CalculatorData {
           return 'orange';
         default:
           return 'secondary';
+      }
+    },
+
+    incrementWeight(direction: 1 | -1) {
+      const currentWeight = Number.parseFloat(String(this.targetWeight));
+
+      if (Number.isNaN(currentWeight)) {
+        return;
+      }
+
+      // Generate possible weights based on available plates and bar weight
+      // Generate a large range to ensure we capture all possible weights
+      const maxWeight = Math.max(currentWeight + 500, this.barWeight + 500);
+      const possibleWeights = generatePossibleWeights(
+        this.barWeight,
+        maxWeight,
+        this.availablePlates,
+        this.isWeightedBodyweight
+      );
+
+      if (possibleWeights.length === 0) {
+        return;
+      }
+
+      let nextWeight: number | undefined;
+
+      if (direction > 0) {
+        // Find the next weight up (first weight greater than current)
+        nextWeight = possibleWeights.find((w) => w > currentWeight);
+        if (!nextWeight) {
+          nextWeight = possibleWeights[possibleWeights.length - 1];
+        }
+      } else {
+        // Find the next weight down (last weight less than current)
+        nextWeight = [...possibleWeights].reverse().find((w) => w < currentWeight);
+        if (!nextWeight) {
+          nextWeight = possibleWeights[0];
+        }
+      }
+
+      if (nextWeight !== undefined) {
+        this.targetWeight = nextWeight.toString();
+        this.calculate();
       }
     },
 

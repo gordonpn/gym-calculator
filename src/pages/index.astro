@@ -79,13 +79,31 @@ import Layout from '../layouts/Layout.astro';
       </div>
 
       <div class="input-group mb-3">
+        <button
+          class="btn btn-outline-secondary"
+          type="button"
+          @click="incrementWeight(-1)"
+          title="Decrease weight"
+        >
+          −
+        </button>
         <input
           type="number"
-          class="form-control"
+          class="form-control text-center"
           x-model="targetWeight"
           @input="debouncedCalculate"
+          @keydown.arrow-up="incrementWeight(1); $event.preventDefault()"
+          @keydown.arrow-down="incrementWeight(-1); $event.preventDefault()"
           inputmode="decimal"
         />
+        <button
+          class="btn btn-outline-secondary"
+          type="button"
+          @click="incrementWeight(1)"
+          title="Increase weight"
+        >
+          +
+        </button>
         <span class="input-group-text" x-text="isWeightedBodyweight ? 'Additional weight (lbs)' : 'Target weight (lbs)'"></span>
       </div>
 
