@@ -318,13 +318,15 @@ import Layout from '../layouts/Layout.astro';
 
               <div class="mb-3">
                 <label for="barWeight" class="form-label">Bar Weight (lbs)</label>
-                <input
-                  type="number"
-                  class="form-control"
+                <select
+                  class="form-select"
                   id="barWeight"
-                  x-model="barWeight"
-                  inputmode="decimal"
-                />
+                  x-model.number="barWeight"
+                >
+                  <template x-for="weight in barWeightOptions" :key="weight">
+                    <option :value="weight" x-text="weight"></option>
+                  </template>
+                </select>
               </div>
 
               <div class="mb-3">

@@ -28,6 +28,7 @@ export interface CalculatorData {
   enableBackoff: boolean;
   backoffPercentage: number;
   barWeight: number;
+  barWeightOptions: number[];
   availablePlates: Plate[];
   debouncedCalculate?: () => void;
 
@@ -65,6 +66,7 @@ export default function (): CalculatorData {
     enableBackoff: false,
     backoffPercentage: 80,
     barWeight: 45,
+    barWeightOptions: Array.from({ length: 10 }, (_value, index) => index * 5),
     availablePlates: [
       { weight: 55, available: false },
       { weight: 45, available: true },
@@ -521,6 +523,13 @@ export default function (): CalculatorData {
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
         this.barWeight = Number.parseFloat(settings.barWeight);
+        if (Number.isFinite(this.barWeight)) {
+          const normalizedBarWeight = Math.min(
+            45,
+            Math.max(0, Math.round(this.barWeight / 5) * 5)
+          );
+          this.barWeight = normalizedBarWeight;
+        }
 
         if (
           settings.availablePlates &&
