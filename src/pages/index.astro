@@ -1,5 +1,5 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Gym Calculator">
@@ -34,26 +34,84 @@ import Layout from '../layouts/Layout.astro';
         </div>
       </div>
 
-      <div class="mb-3">
-        <div class="form-check form-switch">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="isWeightedBodyweight"
-            x-model="isWeightedBodyweight"
-            @change="debouncedCalculate"
-          />
-          <label class="form-check-label" for="isWeightedBodyweight"
-            >Weighted Bodyweight Exercise</label
+      <div class="mb-4 card">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Warm-up setup</h5>
+
+          <div class="mb-3">
+            <label class="form-label">1) Session timing</label>
+            <div class="list-group">
+              <label class="list-group-item d-flex align-items-center gap-2">
+                <input
+                  class="form-check-input m-0"
+                  type="radio"
+                  name="sessionTiming"
+                  value="pre"
+                  x-model="sessionTiming"
+                  @change="applyJourneySelection()"
+                />
+                <span>Pre-climbing</span>
+              </label>
+              <label class="list-group-item d-flex align-items-center gap-2">
+                <input
+                  class="form-check-input m-0"
+                  type="radio"
+                  name="sessionTiming"
+                  value="post"
+                  x-model="sessionTiming"
+                  @change="applyJourneySelection()"
+                />
+                <span>Post-climbing</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label">2) Equipment type</label>
+            <div class="list-group">
+              <label class="list-group-item d-flex align-items-center gap-2">
+                <input
+                  class="form-check-input m-0"
+                  type="radio"
+                  name="equipmentType"
+                  value="dumbbell"
+                  x-model="equipmentType"
+                  @change="applyJourneySelection()"
+                />
+                <span>Dumbbells</span>
+              </label>
+              <label class="list-group-item d-flex align-items-center gap-2">
+                <input
+                  class="form-check-input m-0"
+                  type="radio"
+                  name="equipmentType"
+                  value="barbell"
+                  x-model="equipmentType"
+                  @change="applyJourneySelection()"
+                />
+                <span>Barbell</span>
+              </label>
+              <label class="list-group-item d-flex align-items-center gap-2">
+                <input
+                  class="form-check-input m-0"
+                  type="radio"
+                  name="equipmentType"
+                  value="weightedBodyweight"
+                  x-model="equipmentType"
+                  @change="applyJourneySelection()"
+                />
+                <span>Weighted bodyweight</span>
+              </label>
+            </div>
+          </div>
+
+          <small class="text-muted" x-show="!hasJourneySelection()"
+            >Choose both options to unlock warm-up calculations.</small
           >
         </div>
-        <small class="text-muted" x-show="isWeightedBodyweight"
-          >For exercises like pull-ups or dips where your bodyweight plus added weight is the total
-          load.</small
-        >
       </div>
 
-      <div class="mb-3" x-show="showBodyweightInput">
+      <div class="mb-3" x-show="showBodyweightInput && hasJourneySelection()">
         <label for="bodyweight" class="form-label">Your Bodyweight (lbs)</label>
         <input
           type="number"
@@ -65,9 +123,16 @@ import Layout from '../layouts/Layout.astro';
         />
       </div>
 
-      <div class="mb-3" x-show="showSetsSelector">
-        <label for="sets-select" class="form-label">Number of Warm-up Sets</label>
-        <select id="sets-select" class="form-select" x-model.number="numWarmupSets" @change="debouncedCalculate">
+      <div class="mb-3" x-show="showSetsSelector && hasJourneySelection()">
+        <label for="sets-select" class="form-label"
+          >Number of Warm-up Sets</label
+        >
+        <select
+          id="sets-select"
+          class="form-select"
+          x-model.number="numWarmupSets"
+          @change="debouncedCalculate"
+        >
           <option value="2">2 Sets</option>
           <option value="3">3 Sets</option>
           <option value="4">4 Sets</option>
@@ -83,6 +148,7 @@ import Layout from '../layouts/Layout.astro';
           class="btn btn-outline-secondary"
           type="button"
           @click="incrementWeight(-1)"
+          :disabled="!hasJourneySelection()"
           title="Decrease weight"
         >
           −
@@ -92,6 +158,7 @@ import Layout from '../layouts/Layout.astro';
           class="form-control text-center"
           x-model="targetWeight"
           @input="debouncedCalculate"
+          :disabled="!hasJourneySelection()"
           @keydown.arrow-up="incrementWeight(1); $event.preventDefault()"
           @keydown.arrow-down="incrementWeight(-1); $event.preventDefault()"
           inputmode="decimal"
@@ -100,11 +167,15 @@ import Layout from '../layouts/Layout.astro';
           class="btn btn-outline-secondary"
           type="button"
           @click="incrementWeight(1)"
+          :disabled="!hasJourneySelection()"
           title="Increase weight"
         >
           +
         </button>
-        <span class="input-group-text" x-text="isWeightedBodyweight ? 'Additional weight (lbs)' : 'Target weight (lbs)'"></span>
+        <span
+          class="input-group-text"
+          x-text="isWeightedBodyweight ? 'Additional weight (lbs)' : 'Target weight (lbs)'"
+        ></span>
       </div>
 
       <div class="mt-4">
@@ -115,7 +186,9 @@ import Layout from '../layouts/Layout.astro';
               <th>Set</th>
               <th>Reps</th>
               <th>Weight (lbs)</th>
-              <th x-text="isWeightedBodyweight ? 'Plates' : 'Plates (each side)'"></th>
+              <th
+                x-text="isWeightedBodyweight ? 'Plates' : 'Plates (each side)'"
+              ></th>
             </tr>
           </thead>
           <tbody>
@@ -125,24 +198,39 @@ import Layout from '../layouts/Layout.astro';
                   <td x-text="index + 1"></td>
                   <td x-text="set.reps"></td>
                   <td>
-                    <template x-if="set.plates.remaining > 0 && minimizePlateChanges && !isWeightedBodyweight">
+                    <template
+                      x-if="set.plates.remaining > 0 && minimizePlateChanges && !isWeightedBodyweight"
+                    >
                       <div>
                         <span x-text="set.plates.actualWeight + ' lbs'"></span>
-                        <small class="text-muted" x-text="` (target: ${set.weight})`"></small>
+                        <small
+                          class="text-muted"
+                          x-text="` (target: ${set.weight})`"></small>
                       </div>
                     </template>
-                    <template x-if="set.plates.remaining > 0 && minimizePlateChanges && isWeightedBodyweight">
+                    <template
+                      x-if="set.plates.remaining > 0 && minimizePlateChanges && isWeightedBodyweight"
+                    >
                       <div>
-                        <span x-text="set.plates.actualWeight + ' lbs added'"></span>
-                        <small class="text-muted" x-text="` (total: ${Number(bodyweight) + Number(set.plates.actualWeight)} lbs)`"></small>
+                        <span x-text="set.plates.actualWeight + ' lbs added'"
+                        ></span>
+                        <small
+                          class="text-muted"
+                          x-text="` (total: ${Number(bodyweight) + Number(set.plates.actualWeight)} lbs)`"
+                        ></small>
                       </div>
                     </template>
-                    <template x-if="set.plates.remaining === 0 || !minimizePlateChanges">
+                    <template
+                      x-if="set.plates.remaining === 0 || !minimizePlateChanges"
+                    >
                       <div>
                         <template x-if="isWeightedBodyweight">
                           <div>
-                            <span x-text="set.addedWeight + ' lbs added'"></span>
-                            <small class="text-muted" x-text="` (total: ${set.weight} lbs)`"></small>
+                            <span x-text="set.addedWeight + ' lbs added'"
+                            ></span>
+                            <small
+                              class="text-muted"
+                              x-text="` (total: ${set.weight} lbs)`"></small>
                           </div>
                         </template>
                         <template x-if="!isWeightedBodyweight">
@@ -152,23 +240,41 @@ import Layout from '../layouts/Layout.astro';
                     </template>
                   </td>
                   <td>
-                    <template x-if="!isWeightedBodyweight && set.weight <= barWeight">
+                    <template
+                      x-if="!isWeightedBodyweight && set.weight <= barWeight"
+                    >
                       <span>Empty bar</span>
                     </template>
-                    <template x-if="isWeightedBodyweight && set.addedWeight <= 0">
+                    <template
+                      x-if="isWeightedBodyweight && set.addedWeight <= 0"
+                    >
                       <span>Bodyweight only</span>
                     </template>
                     <template
                       x-if="(!isWeightedBodyweight && set.weight > barWeight) || (isWeightedBodyweight && set.addedWeight > 0)"
                     >
                       <div class="d-flex gap-1 flex-wrap">
-                        <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
-                          <template x-for="i in plate.count" :key="`${plate.weight}-${i}`">
-                            <span class="badge" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.weight} lbs`"></span>
+                        <template
+                          x-for="plate in set.plates.plateConfig"
+                          :key="plate.weight"
+                        >
+                          <template
+                            x-for="i in plate.count"
+                            :key="`${plate.weight}-${i}`"
+                          >
+                            <span
+                              class="badge"
+                              :class="`text-bg-${getPlateColor(plate.weight)}`"
+                              x-text="`${plate.weight} lbs`"></span>
                           </template>
                         </template>
-                        <template x-if="set.plates.remaining > 0 && minimizePlateChanges">
-                          <span class="badge text-bg-warning" x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"></span>
+                        <template
+                          x-if="set.plates.remaining > 0 && minimizePlateChanges"
+                        >
+                          <span
+                            class="badge text-bg-warning"
+                            x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"
+                          ></span>
                         </template>
                       </div>
                     </template>
@@ -185,16 +291,30 @@ import Layout from '../layouts/Layout.astro';
 
       <div class="card mt-4 mb-4" x-show="targetWeight > 0">
         <div class="card-header bg-primary text-white">
-          <h5 class="mb-0" x-text="enableBackoff ? (isWeightedBodyweight ? 'Top Set (Added Weight)' : 'Top Set') : (isWeightedBodyweight ? 'Working Set (Added Weight)' : 'Working Set')"></h5>
+          <h5
+            class="mb-0"
+            x-text="enableBackoff ? (isWeightedBodyweight ? 'Top Set (Added Weight)' : 'Top Set') : (isWeightedBodyweight ? 'Working Set (Added Weight)' : 'Working Set')"
+          >
+          </h5>
         </div>
         <div class="card-body">
           <div class="row align-items-center">
             <div class="col-md-6">
-              <h3 class="mb-0" x-text="isWeightedBodyweight ? roundedTargetWeight + ' lbs added' : roundedTargetWeight + ' lbs'"></h3>
+              <h3
+                class="mb-0"
+                x-text="isWeightedBodyweight ? roundedTargetWeight + ' lbs added' : roundedTargetWeight + ' lbs'"
+              >
+              </h3>
               <template x-if="roundedTargetWeight !== Number(targetWeight)">
-                <small class="text-muted" x-text="`(Rounded from ${targetWeight} lbs)`"></small>
+                <small
+                  class="text-muted"
+                  x-text="`(Rounded from ${targetWeight} lbs)`"></small>
               </template>
-              <small class="text-muted" x-show="isWeightedBodyweight" x-text="`Total: ${Number(bodyweight) + Number(roundedTargetWeight)} lbs`"></small>
+              <small
+                class="text-muted"
+                x-show="isWeightedBodyweight"
+                x-text="`Total: ${Number(bodyweight) + Number(roundedTargetWeight)} lbs`"
+              ></small>
             </div>
             <!-- For regular exercises, show plates on each side -->
             <div class="col-md-6" x-show="!isWeightedBodyweight">
@@ -204,32 +324,63 @@ import Layout from '../layouts/Layout.astro';
               </template>
               <template x-if="roundedTargetWeight > barWeight">
                 <div class="d-flex gap-2 flex-wrap">
-                  <template x-for="plate in calculatePlatesNeeded(roundedTargetWeight).plateConfig" :key="plate.weight">
-                    <template x-for="i in plate.count" :key="`${plate.weight}-${i}`">
-                      <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.weight} lbs`"></span>
+                  <template
+                    x-for="plate in calculatePlatesNeeded(roundedTargetWeight).plateConfig"
+                    :key="plate.weight"
+                  >
+                    <template
+                      x-for="i in plate.count"
+                      :key="`${plate.weight}-${i}`"
+                    >
+                      <span
+                        class="badge fs-5"
+                        :class="`text-bg-${getPlateColor(plate.weight)}`"
+                        x-text="`${plate.weight} lbs`"></span>
                     </template>
                   </template>
-                  <template x-if="calculatePlatesNeeded(roundedTargetWeight).remaining > 0 && minimizePlateChanges">
-                    <span class="badge text-bg-warning fs-5" x-text="`Missing: ${calculatePlatesNeeded(roundedTargetWeight).remaining.toFixed(1)} lbs`"></span>
+                  <template
+                    x-if="calculatePlatesNeeded(roundedTargetWeight).remaining > 0 && minimizePlateChanges"
+                  >
+                    <span
+                      class="badge text-bg-warning fs-5"
+                      x-text="`Missing: ${calculatePlatesNeeded(roundedTargetWeight).remaining.toFixed(1)} lbs`"
+                    ></span>
                   </template>
                 </div>
               </template>
             </div>
             <!-- For weighted bodyweight, show plates needed directly under the weight -->
-            <div class="col-md-6" x-show="isWeightedBodyweight && roundedTargetWeight > 0">
+            <div
+              class="col-md-6"
+              x-show="isWeightedBodyweight && roundedTargetWeight > 0"
+            >
               <h6>Plates:</h6>
               <template x-if="roundedTargetWeight <= 0">
                 <span>Bodyweight only</span>
               </template>
               <template x-if="roundedTargetWeight > 0">
                 <div class="d-flex gap-2 flex-wrap">
-                  <template x-for="plate in calculatePlatesNeeded(roundedTargetWeight).plateConfig" :key="plate.weight">
-                    <template x-for="i in plate.count" :key="`${plate.weight}-${i}`">
-                      <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.weight} lbs`"></span>
+                  <template
+                    x-for="plate in calculatePlatesNeeded(roundedTargetWeight).plateConfig"
+                    :key="plate.weight"
+                  >
+                    <template
+                      x-for="i in plate.count"
+                      :key="`${plate.weight}-${i}`"
+                    >
+                      <span
+                        class="badge fs-5"
+                        :class="`text-bg-${getPlateColor(plate.weight)}`"
+                        x-text="`${plate.weight} lbs`"></span>
                     </template>
                   </template>
-                  <template x-if="calculatePlatesNeeded(roundedTargetWeight).remaining > 0 && minimizePlateChanges">
-                    <span class="badge text-bg-warning fs-5" x-text="`Missing: ${calculatePlatesNeeded(roundedTargetWeight).remaining.toFixed(1)} lbs`"></span>
+                  <template
+                    x-if="calculatePlatesNeeded(roundedTargetWeight).remaining > 0 && minimizePlateChanges"
+                  >
+                    <span
+                      class="badge text-bg-warning fs-5"
+                      x-text="`Missing: ${calculatePlatesNeeded(roundedTargetWeight).remaining.toFixed(1)} lbs`"
+                    ></span>
                   </template>
                 </div>
               </template>
@@ -244,14 +395,27 @@ import Layout from '../layouts/Layout.astro';
           <template x-if="set.isBackoff">
             <div class="card mt-4 mb-4" x-show="targetWeight > 0">
               <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0" x-text="isWeightedBodyweight ? 'Backoff Set (Added Weight)' : 'Backoff Set'"></h5>
+                <h5
+                  class="mb-0"
+                  x-text="isWeightedBodyweight ? 'Backoff Set (Added Weight)' : 'Backoff Set'"
+                >
+                </h5>
               </div>
               <div class="card-body">
                 <div class="row align-items-center">
                   <div class="col-md-6">
-                    <h3 class="mb-0" x-text="isWeightedBodyweight ? set.addedWeight + ' lbs added' : set.weight + ' lbs'"></h3>
-                    <small class="text-muted" x-text="`(${set.percentage}% of top set)`"></small>
-                    <small class="text-muted" x-show="isWeightedBodyweight" x-text="`Total: ${set.weight} lbs`"></small>
+                    <h3
+                      class="mb-0"
+                      x-text="isWeightedBodyweight ? set.addedWeight + ' lbs added' : set.weight + ' lbs'"
+                    >
+                    </h3>
+                    <small
+                      class="text-muted"
+                      x-text="`(${set.percentage}% of top set)`"></small>
+                    <small
+                      class="text-muted"
+                      x-show="isWeightedBodyweight"
+                      x-text="`Total: ${set.weight} lbs`"></small>
                   </div>
                   <!-- For regular exercises, show plates on each side -->
                   <div class="col-md-6" x-show="!isWeightedBodyweight">
@@ -261,32 +425,63 @@ import Layout from '../layouts/Layout.astro';
                     </template>
                     <template x-if="set.weight > barWeight">
                       <div class="d-flex gap-2 flex-wrap">
-                        <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
-                          <template x-for="i in plate.count" :key="`${plate.weight}-${i}`">
-                            <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.weight} lbs`"></span>
+                        <template
+                          x-for="plate in set.plates.plateConfig"
+                          :key="plate.weight"
+                        >
+                          <template
+                            x-for="i in plate.count"
+                            :key="`${plate.weight}-${i}`"
+                          >
+                            <span
+                              class="badge fs-5"
+                              :class="`text-bg-${getPlateColor(plate.weight)}`"
+                              x-text="`${plate.weight} lbs`"></span>
                           </template>
                         </template>
-                        <template x-if="set.plates.remaining > 0 && minimizePlateChanges">
-                          <span class="badge text-bg-warning fs-5" x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"></span>
+                        <template
+                          x-if="set.plates.remaining > 0 && minimizePlateChanges"
+                        >
+                          <span
+                            class="badge text-bg-warning fs-5"
+                            x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"
+                          ></span>
                         </template>
                       </div>
                     </template>
                   </div>
                   <!-- For weighted bodyweight, show plates needed directly under the weight -->
-                  <div class="col-md-6" x-show="isWeightedBodyweight && set.addedWeight > 0">
+                  <div
+                    class="col-md-6"
+                    x-show="isWeightedBodyweight && set.addedWeight > 0"
+                  >
                     <h6>Plates:</h6>
                     <template x-if="set.addedWeight <= 0">
                       <span>Bodyweight only</span>
                     </template>
                     <template x-if="set.addedWeight > 0">
                       <div class="d-flex gap-2 flex-wrap">
-                        <template x-for="plate in set.plates.plateConfig" :key="plate.weight">
-                          <template x-for="i in plate.count" :key="`${plate.weight}-${i}`">
-                            <span class="badge fs-5" :class="`text-bg-${getPlateColor(plate.weight)}`" x-text="`${plate.weight} lbs`"></span>
+                        <template
+                          x-for="plate in set.plates.plateConfig"
+                          :key="plate.weight"
+                        >
+                          <template
+                            x-for="i in plate.count"
+                            :key="`${plate.weight}-${i}`"
+                          >
+                            <span
+                              class="badge fs-5"
+                              :class="`text-bg-${getPlateColor(plate.weight)}`"
+                              x-text="`${plate.weight} lbs`"></span>
                           </template>
                         </template>
-                        <template x-if="set.plates.remaining > 0 && minimizePlateChanges">
-                          <span class="badge text-bg-warning fs-5" x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"></span>
+                        <template
+                          x-if="set.plates.remaining > 0 && minimizePlateChanges"
+                        >
+                          <span
+                            class="badge text-bg-warning fs-5"
+                            x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"
+                          ></span>
                         </template>
                       </div>
                     </template>
@@ -299,25 +494,30 @@ import Layout from '../layouts/Layout.astro';
       </template>
 
       <!-- Plate Settings Modal -->
-      <div class="modal fade" id="plateSettingsModal" tabindex="-1" aria-labelledby="plateSettingsModalLabel" aria-hidden="true">
+      <div
+        class="modal fade"
+        id="plateSettingsModal"
+        tabindex="-1"
+        aria-labelledby="plateSettingsModalLabel"
+        aria-hidden="true"
+      >
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="plateSettingsModalLabel">Warm-up settings</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <h5 class="modal-title" id="plateSettingsModalLabel">
+                Warm-up settings
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label for="formula-select" class="form-label">Formula</label>
-                <select id="formula-select" class="form-select" x-model="selectedFormula" @change="onFormulaChange()">
-                  <template x-for="option in formulaOptions" :key="option.id">
-                    <option :value="option.id" x-text="option.name"></option>
-                  </template>
-                </select>
-              </div>
-
-              <div class="mb-3">
-                <label for="barWeight" class="form-label">Bar Weight (lbs)</label>
+                <label for="barWeight" class="form-label"
+                  >Bar Weight (lbs)</label
+                >
                 <select
                   class="form-select"
                   id="barWeight"
@@ -334,20 +534,6 @@ import Layout from '../layouts/Layout.astro';
                   <input
                     class="form-check-input"
                     type="checkbox"
-                    id="barOnlyFirstSet"
-                    x-model="barOnlyFirstSet"
-                  />
-                  <label class="form-check-label" for="barOnlyFirstSet"
-                    >Add barbell-only/bodyweight-only set</label
-                  >
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <div class="form-check form-switch">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
                     id="minimizePlateChanges"
                     x-model="minimizePlateChanges"
                   />
@@ -356,7 +542,8 @@ import Layout from '../layouts/Layout.astro';
                   >
                 </div>
                 <small class="text-muted"
-                  >Optimizes warm-up weights to reduce the number of plate changes needed.</small
+                  >Optimizes warm-up weights to reduce the number of plate
+                  changes needed.</small
                 >
               </div>
 
@@ -369,12 +556,16 @@ import Layout from '../layouts/Layout.astro';
                     x-model="enableBackoff"
                     @change="debouncedCalculate"
                   />
-                  <label class="form-check-label" for="enableBackoff">Show backoff sets</label>
+                  <label class="form-check-label" for="enableBackoff"
+                    >Show backoff sets</label
+                  >
                 </div>
               </div>
 
               <div class="mb-3" x-show="enableBackoff">
-                <label for="backoffPercentage" class="form-label">Backoff Set Percentage</label>
+                <label for="backoffPercentage" class="form-label"
+                  >Backoff Set Percentage</label
+                >
                 <div class="input-group">
                   <input
                     type="number"
@@ -390,28 +581,33 @@ import Layout from '../layouts/Layout.astro';
               </div>
 
               <h6 class="mb-3">Available Plates</h6>
-              <div class="row g-3">
-                <template x-for="(plate, index) in availablePlates" :key="plate.weight">
-                  <div class="col-md-6">
-                    <div class="card">
-                      <div class="card-body">
-                        <div class="form-check form-switch">
-                          <input
-                            class="form-check-input"
-                            type="checkbox"
-                            :id="`plate-${plate.weight}`"
-                            x-model="plate.available"
-                          />
-                          <label class="form-check-label" :for="`plate-${plate.weight}`" x-text="`${plate.weight} lbs plates`"></label>
-                        </div>
-                      </div>
-                    </div>
+              <div class="row row-cols-2 row-cols-md-3 g-2">
+                <template
+                  x-for="(plate, index) in availablePlates"
+                  :key="plate.weight"
+                >
+                  <div class="col">
+                    <input
+                      class="btn-check"
+                      type="checkbox"
+                      :id="`plate-${plate.weight}`"
+                      x-model="plate.available"
+                    />
+                    <label
+                      class="btn btn-sm w-100 text-start"
+                      :class="plate.available ? 'btn-primary' : 'btn-outline-secondary'"
+                      :for="`plate-${plate.weight}`"
+                      x-text="`${plate.weight} lbs`"></label>
                   </div>
                 </template>
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">Cancel</button
+              >
               <button
                 type="button"
                 class="btn btn-primary"
@@ -426,32 +622,59 @@ import Layout from '../layouts/Layout.astro';
       </div>
 
       <!-- Rep Max Calculator Modal -->
-      <div class="modal fade" id="repMaxCalculatorModal" tabindex="-1" aria-labelledby="repMaxCalculatorModalLabel" aria-hidden="true">
+      <div
+        class="modal fade"
+        id="repMaxCalculatorModal"
+        tabindex="-1"
+        aria-labelledby="repMaxCalculatorModalLabel"
+        aria-hidden="true"
+      >
         <div class="modal-dialog modal-lg">
           <div class="modal-content" x-data="repMaxCalculator">
             <div class="modal-header">
-              <h5 class="modal-title" id="repMaxCalculatorModalLabel">Rep Max Calculator</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <h5 class="modal-title" id="repMaxCalculatorModalLabel">
+                Rep Max Calculator
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <p class="text-muted">
-                Calculate your one-rep max (1RM) and rep ranges based on your weight and reps. Add
-                multiple sets for a more accurate estimation.
+                Calculate your one-rep max (1RM) and rep ranges based on your
+                weight and reps. Add multiple sets for a more accurate
+                estimation.
               </p>
 
               <div class="row g-3 align-items-end mb-3">
                 <div class="col-md-8 col-lg-9">
-                  <label for="calculationMethod" class="form-label">Calculation Method</label>
-                  <select id="calculationMethod" class="form-select" x-model="calculationMethod">
+                  <label for="calculationMethod" class="form-label"
+                    >Calculation Method</label
+                  >
+                  <select
+                    id="calculationMethod"
+                    class="form-select"
+                    x-model="calculationMethod"
+                  >
                     <option value="average">Average of all sets</option>
                     <option value="highest">Highest estimated 1RM</option>
                     <option value="lowest">Lowest estimated 1RM</option>
-                    <option value="weighted">Weighted average (by weight×reps)</option>
+                    <option value="weighted"
+                      >Weighted average (by weight×reps)</option
+                    >
                   </select>
-                  <small class="text-muted">Choose how to calculate your 1RM from multiple sets.</small>
+                  <small class="text-muted"
+                    >Choose how to calculate your 1RM from multiple sets.</small
+                  >
                 </div>
                 <div class="col-md-4 col-lg-3 d-grid">
-                  <button type="button" class="btn btn-outline-primary" @click="addSet()">
+                  <button
+                    type="button"
+                    class="btn btn-outline-primary"
+                    @click="addSet()"
+                  >
                     <i class="bi bi-plus-circle"></i> Add Set
                   </button>
                 </div>
@@ -464,7 +687,9 @@ import Layout from '../layouts/Layout.astro';
                       <th scope="col">Set</th>
                       <th scope="col" class="w-50">Weight (lbs)</th>
                       <th scope="col" class="w-25">Reps</th>
-                      <th scope="col" class="d-none d-md-table-cell text-center">Est. 1RM</th>
+                      <th scope="col" class="d-none d-md-table-cell text-center"
+                        >Est. 1RM</th
+                      >
                       <th scope="col" class="text-end">&nbsp;</th>
                     </tr>
                   </thead>
@@ -493,8 +718,12 @@ import Layout from '../layouts/Layout.astro';
                             inputmode="numeric"
                           />
                         </td>
-                        <td class="d-none d-md-table-cell text-center text-muted">
-                          <span x-text="set.estimatedMax > 0 ? set.estimatedMax + ' lbs' : '—'"></span>
+                        <td
+                          class="d-none d-md-table-cell text-center text-muted"
+                        >
+                          <span
+                            x-text="set.estimatedMax > 0 ? set.estimatedMax + ' lbs' : '—'"
+                          ></span>
                         </td>
                         <td class="text-end">
                           <button
@@ -528,12 +757,25 @@ import Layout from '../layouts/Layout.astro';
                   <div class="card-body">
                     <h2 class="text-center" x-text="estimatedMax + ' lbs'"></h2>
                     <p class="text-muted text-center" x-show="sets.length > 1">
-                      <span x-show="calculationMethod === 'average'">Based on average of multiple sets</span>
-                      <span x-show="calculationMethod === 'highest'">Based on highest estimated 1RM</span>
-                      <span x-show="calculationMethod === 'lowest'">Based on lowest estimated 1RM</span>
-                      <span x-show="calculationMethod === 'weighted'">Based on weighted average of multiple sets</span>
+                      <span x-show="calculationMethod === 'average'"
+                        >Based on average of multiple sets</span
+                      >
+                      <span x-show="calculationMethod === 'highest'"
+                        >Based on highest estimated 1RM</span
+                      >
+                      <span x-show="calculationMethod === 'lowest'"
+                        >Based on lowest estimated 1RM</span
+                      >
+                      <span x-show="calculationMethod === 'weighted'"
+                        >Based on weighted average of multiple sets</span
+                      >
                     </p>
-                    <p class="text-muted text-center" x-show="sets.length === 1">Based on the Epley formula</p>
+                    <p
+                      class="text-muted text-center"
+                      x-show="sets.length === 1"
+                    >
+                      Based on the Epley formula
+                    </p>
                   </div>
                 </div>
 
@@ -561,7 +803,11 @@ import Layout from '../layouts/Layout.astro';
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">Close</button
+              >
               <div class="dropdown dropup" x-show="estimatedMax > 0">
                 <button
                   class="btn btn-primary dropdown-toggle"
@@ -572,7 +818,9 @@ import Layout from '../layouts/Layout.astro';
                   Apply as Target Weight
                 </button>
                 <ul class="dropdown-menu">
-                  <li><h6 class="dropdown-header">Choose Rep Max to Apply</h6></li>
+                  <li>
+                    <h6 class="dropdown-header">Choose Rep Max to Apply</h6>
+                  </li>
                   <template x-for="data in repRangeData" :key="data.reps">
                     <li>
                       <a
@@ -581,10 +829,15 @@ import Layout from '../layouts/Layout.astro';
                         @click.prevent="$dispatch('use-calculated-max', { weight: data.weight }); $el.closest('.modal').querySelector('.btn-close').click()"
                       >
                         <div>
-                          <span class="fw-bold" x-text="data.reps + 'RM'"></span>
-                          <small class="text-muted d-block" x-text="data.percentage + '% of 1RM'"></small>
+                          <span class="fw-bold" x-text="data.reps + 'RM'"
+                          ></span>
+                          <small
+                            class="text-muted d-block"
+                            x-text="data.percentage + '% of 1RM'"></small>
                         </div>
-                        <span class="badge bg-primary" x-text="data.weight + ' lbs'"></span>
+                        <span
+                          class="badge bg-primary"
+                          x-text="data.weight + ' lbs'"></span>
                       </a>
                     </li>
                   </template>
@@ -596,30 +849,53 @@ import Layout from '../layouts/Layout.astro';
       </div>
 
       <!-- Strength Level Modal -->
-      <div class="modal fade" id="strengthLevelModal" tabindex="-1" aria-labelledby="strengthLevelModalLabel" aria-hidden="true">
+      <div
+        class="modal fade"
+        id="strengthLevelModal"
+        tabindex="-1"
+        aria-labelledby="strengthLevelModalLabel"
+        aria-hidden="true"
+      >
         <div class="modal-dialog modal-lg">
-          <div class="modal-content" x-data="strengthLevelCalculator" x-init="init">
+          <div
+            class="modal-content"
+            x-data="strengthLevelCalculator"
+            x-init="init"
+          >
             <div class="modal-header">
-              <h5 class="modal-title" id="strengthLevelModalLabel">Strength Level Checker</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <h5 class="modal-title" id="strengthLevelModalLabel">
+                Strength Level Checker
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <p class="text-muted">
-                Estimate your 1RM from multiple sets, then see how it stacks up against common
-                strength standards for your bodyweight.
+                Estimate your 1RM from multiple sets, then see how it stacks up
+                against common strength standards for your bodyweight.
               </p>
 
               <div class="row g-3 mb-3">
                 <div class="col-md-4">
                   <label for="strengthLift" class="form-label">Lift</label>
-                  <select id="strengthLift" class="form-select" x-model="selectedLift" @change="handleSetInput()">
+                  <select
+                    id="strengthLift"
+                    class="form-select"
+                    x-model="selectedLift"
+                    @change="handleSetInput()"
+                  >
                     <template x-for="lift in lifts" :key="lift.id">
                       <option :value="lift.id" x-text="lift.name"></option>
                     </template>
                   </select>
                 </div>
                 <div class="col-md-4">
-                  <label for="strengthBodyweight" class="form-label">Bodyweight (lbs)</label>
+                  <label for="strengthBodyweight" class="form-label"
+                    >Bodyweight (lbs)</label
+                  >
                   <input
                     type="number"
                     class="form-control"
@@ -630,18 +906,31 @@ import Layout from '../layouts/Layout.astro';
                   />
                 </div>
                 <div class="col-md-4">
-                  <label for="strengthCalcMethod" class="form-label">Calculation Method</label>
-                  <select id="strengthCalcMethod" class="form-select" x-model="calculationMethod" @change="handleSetInput()">
+                  <label for="strengthCalcMethod" class="form-label"
+                    >Calculation Method</label
+                  >
+                  <select
+                    id="strengthCalcMethod"
+                    class="form-select"
+                    x-model="calculationMethod"
+                    @change="handleSetInput()"
+                  >
                     <option value="average">Average of all sets</option>
                     <option value="highest">Highest estimated 1RM</option>
                     <option value="lowest">Lowest estimated 1RM</option>
-                    <option value="weighted">Weighted average (by weight×reps)</option>
+                    <option value="weighted"
+                      >Weighted average (by weight×reps)</option
+                    >
                   </select>
                 </div>
               </div>
 
               <div class="d-flex justify-content-end mb-3">
-                <button type="button" class="btn btn-outline-primary" @click="addSet()">
+                <button
+                  type="button"
+                  class="btn btn-outline-primary"
+                  @click="addSet()"
+                >
                   <i class="bi bi-plus-circle"></i> Add Set
                 </button>
               </div>
@@ -653,7 +942,9 @@ import Layout from '../layouts/Layout.astro';
                       <th scope="col">Set</th>
                       <th scope="col" class="w-50">Weight (lbs)</th>
                       <th scope="col" class="w-25">Reps</th>
-                      <th scope="col" class="d-none d-md-table-cell text-center">Est. 1RM</th>
+                      <th scope="col" class="d-none d-md-table-cell text-center"
+                        >Est. 1RM</th
+                      >
                       <th scope="col" class="text-end">&nbsp;</th>
                     </tr>
                   </thead>
@@ -682,8 +973,12 @@ import Layout from '../layouts/Layout.astro';
                             inputmode="numeric"
                           />
                         </td>
-                        <td class="d-none d-md-table-cell text-center text-muted">
-                          <span x-text="set.estimatedMax > 0 ? set.estimatedMax + ' lbs' : '—'"></span>
+                        <td
+                          class="d-none d-md-table-cell text-center text-muted"
+                        >
+                          <span
+                            x-text="set.estimatedMax > 0 ? set.estimatedMax + ' lbs' : '—'"
+                          ></span>
                         </td>
                         <td class="text-end">
                           <button
@@ -716,17 +1011,35 @@ import Layout from '../layouts/Layout.astro';
                       <h5 class="mb-0">Strength Level</h5>
                     </div>
                     <div class="card-body">
-                      <h4 class="mb-2" x-text="strengthResult ? strengthResult.level : ''"></h4>
-                      <p class="mb-2 text-muted" x-text="strengthResult ? `1RM / BW: ${strengthResult.ratioDisplay}x` : ''"></p>
-                      <template x-if="strengthResult && strengthResult.nextLevel">
+                      <h4
+                        class="mb-2"
+                        x-text="strengthResult ? strengthResult.level : ''"
+                      >
+                      </h4>
+                      <p
+                        class="mb-2 text-muted"
+                        x-text="strengthResult ? `1RM / BW: ${strengthResult.ratioDisplay}x` : ''"
+                      >
+                      </p>
+                      <template
+                        x-if="strengthResult && strengthResult.nextLevel"
+                      >
                         <p class="mb-0">
-                          <span class="fw-semibold" x-text="`Next: ${strengthResult.nextLevel}`"></span>
+                          <span
+                            class="fw-semibold"
+                            x-text="`Next: ${strengthResult.nextLevel}`"></span>
                           <br />
-                          <span x-text="`Reach about ${strengthResult.nextWeight} lbs (${strengthResult.nextMultiple}x bodyweight).`"></span>
+                          <span
+                            x-text="`Reach about ${strengthResult.nextWeight} lbs (${strengthResult.nextMultiple}x bodyweight).`"
+                          ></span>
                         </p>
                       </template>
-                      <template x-if="strengthResult && !strengthResult.nextLevel">
-                        <p class="mb-0">You are at or beyond the Elite standard for this lift.</p>
+                      <template
+                        x-if="strengthResult && !strengthResult.nextLevel"
+                      >
+                        <p class="mb-0">
+                          You are at or beyond the Elite standard for this lift.
+                        </p>
                       </template>
                     </div>
                   </div>
@@ -738,14 +1051,29 @@ import Layout from '../layouts/Layout.astro';
                       <h5 class="mb-0">Estimated 1 Rep Max</h5>
                     </div>
                     <div class="card-body">
-                      <h2 class="text-center" x-text="estimatedMax + ' lbs'"></h2>
-                      <p class="text-muted text-center" x-show="sets.length > 1">
-                        <span x-show="calculationMethod === 'average'">Based on average of multiple sets</span>
-                        <span x-show="calculationMethod === 'highest'">Based on highest estimated 1RM</span>
-                        <span x-show="calculationMethod === 'lowest'">Based on lowest estimated 1RM</span>
-                        <span x-show="calculationMethod === 'weighted'">Based on weighted average of multiple sets</span>
+                      <h2 class="text-center" x-text="estimatedMax + ' lbs'">
+                      </h2>
+                      <p
+                        class="text-muted text-center"
+                        x-show="sets.length > 1"
+                      >
+                        <span x-show="calculationMethod === 'average'"
+                          >Based on average of multiple sets</span
+                        >
+                        <span x-show="calculationMethod === 'highest'"
+                          >Based on highest estimated 1RM</span
+                        >
+                        <span x-show="calculationMethod === 'lowest'"
+                          >Based on lowest estimated 1RM</span
+                        >
+                        <span x-show="calculationMethod === 'weighted'"
+                          >Based on weighted average of multiple sets</span
+                        >
                       </p>
-                      <p class="text-muted text-center" x-show="sets.length === 1">
+                      <p
+                        class="text-muted text-center"
+                        x-show="sets.length === 1"
+                      >
                         Based on the Epley/Brzycki formulas
                       </p>
                     </div>
@@ -754,7 +1082,11 @@ import Layout from '../layouts/Layout.astro';
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">Close</button
+              >
             </div>
           </div>
         </div>

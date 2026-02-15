@@ -23,6 +23,8 @@ Calculate efficient warm-up progressions to your target weight using multiple sc
 - Optional barbell-only or bodyweight-only set
 - Minimize plate changes between sets to reduce setup time
 - Enable backoff sets at a configurable percentage (useful for recovery work)
+- Routine selection via a radio list in Warm-up settings
+- Automatic routine switching for weighted bodyweight mode
 - Input target weight and get calculated warm-up progression
 - Visual plate breakdown showing exactly which plates to load
 
@@ -79,13 +81,13 @@ Compare your estimated 1RM against established strength standards from training 
 ### Warm-up Calculator Workflow
 
 1. Enter your **target weight** (the main working set)
-2. Select your preferred **warm-up formula**
+2. Select your preferred **warm-up routine** from the Warm-up settings radio list
 3. For configurable formulas (Percentage-Based, Fixed Increments), adjust the number of sets
 4. Configure options:
    - Bar weight (default 45 lbs)
    - Plate changes optimization
    - Backoff sets (optional)
-   - Weighted bodyweight (for assistance exercises)
+   - Weighted bodyweight (for assistance exercises; automatically uses the weighted routine)
 5. **Automatic Calculation**:
    - Algorithm generates intermediate weights based on selected formula
    - Rep counts are automatically assigned based on intensity percentage

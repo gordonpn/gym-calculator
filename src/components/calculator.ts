@@ -1,25 +1,36 @@
-import { debounce, roundToNearest5, roundToNearestAchievableWeight, roundToSmallestPlate, type Plate } from './util';
 import {
-    formulaOptions,
-    generatePossibleWeights,
-    getDefaultSets,
-    getFormula,
-    isConfigurableFormula,
-    type PlateCalculation,
-    type WarmupSet,
-} from './warmup-formulas';
+  type Plate,
+  debounce,
+  roundToNearest5,
+  roundToNearestAchievableWeight,
+  roundToSmallestPlate,
+} from "./util";
+import {
+  type PlateCalculation,
+  type WarmupSet,
+  formulaOptions,
+  generatePossibleWeights,
+  getDefaultSets,
+  getFormula,
+  isConfigurableFormula,
+} from "./warmup-formulas";
+
+type SessionTiming = "pre" | "post" | "";
+type EquipmentType = "barbell" | "dumbbell" | "weightedBodyweight" | "";
 
 /**
  * Interface for the calculator Alpine component state
  */
 export interface CalculatorData {
+  sessionTiming: SessionTiming;
+  equipmentType: EquipmentType;
   numWarmupSets: number;
   targetWeight: string | number;
   roundedTargetWeight: number;
   selectedFormula: string;
   warmupSets: WarmupSet[];
   formulaOptions: typeof formulaOptions;
-  barOnlyFirstSet: boolean;
+  lastRegularFormula: string;
   showSetsSelector: boolean;
   minimizePlateChanges: boolean;
   isWeightedBodyweight: boolean;
@@ -32,16 +43,20 @@ export interface CalculatorData {
   availablePlates: Plate[];
   debouncedCalculate?: () => void;
 
+  hasJourneySelection(): boolean;
+  getAutoFormulaForJourney(): string;
+  applyJourneySelection(shouldPersist?: boolean): void;
   calculate(): void;
   onFormulaChange(): void;
   calculatePlatesNeeded(
     targetWeight: number,
-    options?: { minPlateWeight?: number }
+    options?: { minPlateWeight?: number },
   ): PlateCalculation;
   createBackoffSet(targetWeight: number, bodyweight?: number): WarmupSet;
   saveSettings(): void;
   savePlateSettings(): void;
   getPlateColor(weight: number | string): string;
+  getSelectableFormulaOptions(): typeof formulaOptions;
   incrementWeight(direction: 1 | -1): void;
   init(): void;
 }
@@ -51,17 +66,19 @@ export interface CalculatorData {
  */
 export default function (): CalculatorData {
   return {
+    sessionTiming: "",
+    equipmentType: "",
     numWarmupSets: 6,
-    targetWeight: '',
+    targetWeight: "",
     roundedTargetWeight: 0,
-    selectedFormula: 'percentageBased',
+    selectedFormula: "percentageBased",
     warmupSets: [],
     formulaOptions,
-    barOnlyFirstSet: false,
+    lastRegularFormula: "percentageBased",
     showSetsSelector: true,
     minimizePlateChanges: false,
     isWeightedBodyweight: false,
-    bodyweight: '',
+    bodyweight: "",
     showBodyweightInput: false,
     enableBackoff: false,
     backoffPercentage: 80,
@@ -82,7 +99,65 @@ export default function (): CalculatorData {
       { weight: 0.25, available: true },
     ],
 
+    hasJourneySelection() {
+      return !!this.sessionTiming && !!this.equipmentType;
+    },
+
+    getAutoFormulaForJourney() {
+      if (this.equipmentType === "weightedBodyweight") {
+        return "weightedBodyweight";
+      }
+
+      if (this.sessionTiming === "post") {
+        return "standardPyramid";
+      }
+
+      if (this.equipmentType === "dumbbell") {
+        return "fixedIncrements";
+      }
+
+      return "percentageBased";
+    },
+
+    applyJourneySelection(shouldPersist = true) {
+      this.isWeightedBodyweight = this.equipmentType === "weightedBodyweight";
+      this.showBodyweightInput = this.isWeightedBodyweight;
+
+      if (
+        this.isWeightedBodyweight &&
+        (!this.bodyweight || Number(this.bodyweight) <= 0)
+      ) {
+        this.bodyweight = "150";
+      }
+
+      if (this.hasJourneySelection()) {
+        this.selectedFormula = this.getAutoFormulaForJourney();
+
+        if (this.selectedFormula !== "weightedBodyweight") {
+          this.lastRegularFormula = this.selectedFormula;
+        }
+
+        this.numWarmupSets = getDefaultSets(this.selectedFormula);
+        this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
+      } else {
+        this.warmupSets = [];
+        this.roundedTargetWeight = 0;
+      }
+
+      if (shouldPersist) {
+        this.saveSettings();
+      }
+
+      this.debouncedCalculate?.();
+    },
+
     calculate() {
+      if (!this.hasJourneySelection()) {
+        this.warmupSets = [];
+        this.roundedTargetWeight = 0;
+        return;
+      }
+
       const weight = Number.parseFloat(String(this.targetWeight));
       const bodyweight = this.isWeightedBodyweight
         ? Number.parseFloat(String(this.bodyweight))
@@ -113,11 +188,11 @@ export default function (): CalculatorData {
               Number(weight),
               Number(this.barWeight),
               this.availablePlates,
-              false
+              false,
             );
             roundedWeight = Number(rounded);
           } catch (e) {
-            console.error('Error rounding weight:', e);
+            console.error("Error rounding weight:", e);
             roundedWeight = Number(weight);
           }
         }
@@ -136,7 +211,7 @@ export default function (): CalculatorData {
             this.availablePlates,
             this.minimizePlateChanges,
             this.isWeightedBodyweight,
-            bodyweight
+            bodyweight,
           );
         } else {
           this.warmupSets = formula(
@@ -146,15 +221,15 @@ export default function (): CalculatorData {
             this.availablePlates,
             this.minimizePlateChanges,
             this.isWeightedBodyweight,
-            bodyweight
+            bodyweight,
           );
         }
 
-        if (this.barOnlyFirstSet && this.warmupSets.length > 0) {
+        if (this.warmupSets.length > 0) {
           if (this.isWeightedBodyweight) {
             const firstSet = this.warmupSets[0];
             const hasBodyweightOnlySet =
-              typeof firstSet.addedWeight === 'number'
+              typeof firstSet.addedWeight === "number"
                 ? firstSet.addedWeight <= 0
                 : firstSet.weight <= bodyweight;
 
@@ -169,7 +244,7 @@ export default function (): CalculatorData {
           } else if (this.warmupSets[0].weight > this.barWeight) {
             this.warmupSets.unshift({
               percentage: Math.round(
-                (this.barWeight / actualTargetWeight) * 100
+                (this.barWeight / actualTargetWeight) * 100,
               ),
               weight: this.barWeight,
               reps: 12,
@@ -179,14 +254,17 @@ export default function (): CalculatorData {
 
         const applyWarmupRounding = (set: WarmupSet): WarmupSet => {
           if (this.isWeightedBodyweight) {
-            if (typeof set.addedWeight === 'number') {
-              const roundedAdded = Math.max(0, roundToNearest5(set.addedWeight));
+            if (typeof set.addedWeight === "number") {
+              const roundedAdded = Math.max(
+                0,
+                roundToNearest5(set.addedWeight),
+              );
               set.addedWeight = roundedAdded;
               set.weight = Number(bodyweight) + roundedAdded;
-            } else if (typeof set.weight === 'number') {
+            } else if (typeof set.weight === "number") {
               set.weight = Math.max(Number(bodyweight), set.weight);
             }
-          } else if (typeof set.weight === 'number') {
+          } else if (typeof set.weight === "number") {
             if (set.weight <= this.barWeight) {
               set.weight = this.barWeight;
             } else {
@@ -197,7 +275,7 @@ export default function (): CalculatorData {
             }
           }
 
-          if (typeof set.idealWeight === 'number') {
+          if (typeof set.idealWeight === "number") {
             set.idealWeight = set.weight;
           }
 
@@ -205,7 +283,7 @@ export default function (): CalculatorData {
         };
 
         this.warmupSets = this.warmupSets.map((set) =>
-          applyWarmupRounding(set)
+          applyWarmupRounding(set),
         );
 
         for (const set of this.warmupSets) {
@@ -231,8 +309,7 @@ export default function (): CalculatorData {
           if (!this.minimizePlateChanges && set.plates.adjustedTargetWeight) {
             if (this.isWeightedBodyweight) {
               set.addedWeight = set.plates.adjustedTargetWeight;
-              set.weight =
-                Number(bodyweight) + Number(set.addedWeight);
+              set.weight = Number(bodyweight) + Number(set.addedWeight);
             } else {
               set.weight = set.plates.adjustedTargetWeight;
             }
@@ -241,7 +318,10 @@ export default function (): CalculatorData {
 
         // Add backoff sets if enabled
         if (this.enableBackoff && this.warmupSets.length > 0) {
-          const backoffSet = this.createBackoffSet(actualTargetWeight, bodyweight);
+          const backoffSet = this.createBackoffSet(
+            actualTargetWeight,
+            bodyweight,
+          );
           this.warmupSets.push(backoffSet);
         }
       } else {
@@ -251,25 +331,24 @@ export default function (): CalculatorData {
     },
 
     onFormulaChange() {
-      if (isConfigurableFormula(this.selectedFormula)) {
-        this.numWarmupSets = getDefaultSets(this.selectedFormula);
-        this.showSetsSelector = true;
-      } else {
-        this.showSetsSelector = false;
+      this.applyJourneySelection();
+    },
+
+    getSelectableFormulaOptions() {
+      if (this.isWeightedBodyweight) {
+        return this.formulaOptions.filter(
+          (option) => option.id === "weightedBodyweight",
+        );
       }
 
-      if (this.selectedFormula === 'weightedBodyweight') {
-        this.isWeightedBodyweight = true;
-        this.showBodyweightInput = true;
-      }
-
-      this.saveSettings();
-      this.debouncedCalculate?.();
+      return this.formulaOptions.filter(
+        (option) => option.id !== "weightedBodyweight",
+      );
     },
 
     calculatePlatesNeeded(
       targetWeight: number,
-      options: { minPlateWeight?: number } = {}
+      options: { minPlateWeight?: number } = {},
     ): PlateCalculation {
       const { minPlateWeight = 0 } = options;
       const isForBodyweightExercise =
@@ -289,7 +368,7 @@ export default function (): CalculatorData {
         : (targetWeight - this.barWeight) / 2;
 
       const filteredPlates = this.availablePlates.filter(
-        (plate) => plate.available && plate.weight >= Number(minPlateWeight)
+        (plate) => plate.available && plate.weight >= Number(minPlateWeight),
       );
 
       let remaining = weightToAdd;
@@ -308,8 +387,10 @@ export default function (): CalculatorData {
       }
 
       const actualPlateWeight =
-        plateConfig.reduce((sum, plate) => sum + plate.weight * plate.count, 0) *
-        (isForBodyweightExercise ? 1 : 2);
+        plateConfig.reduce(
+          (sum, plate) => sum + plate.weight * plate.count,
+          0,
+        ) * (isForBodyweightExercise ? 1 : 2);
 
       const actualWeight = isForBodyweightExercise
         ? actualPlateWeight
@@ -331,10 +412,7 @@ export default function (): CalculatorData {
       };
     },
 
-    createBackoffSet(
-      targetWeight: number,
-      bodyweight: number = 0
-    ): WarmupSet {
+    createBackoffSet(targetWeight: number, bodyweight = 0): WarmupSet {
       const backoffPercentage = this.backoffPercentage / 100;
 
       let backoffWeight: number;
@@ -348,14 +426,14 @@ export default function (): CalculatorData {
 
       const applyRounding = (set: WarmupSet): WarmupSet => {
         if (this.isWeightedBodyweight) {
-          if (typeof set.addedWeight === 'number') {
+          if (typeof set.addedWeight === "number") {
             const roundedAdded = Math.max(0, roundToNearest5(set.addedWeight));
             set.addedWeight = roundedAdded;
             set.weight = Number(bodyweight) + roundedAdded;
-          } else if (typeof set.weight === 'number') {
+          } else if (typeof set.weight === "number") {
             set.weight = Math.max(Number(bodyweight), set.weight);
           }
-        } else if (typeof set.weight === 'number') {
+        } else if (typeof set.weight === "number") {
           if (set.weight <= this.barWeight) {
             set.weight = this.barWeight;
           } else {
@@ -399,7 +477,10 @@ export default function (): CalculatorData {
         });
       }
 
-      if (!this.minimizePlateChanges && roundedSet.plates.adjustedTargetWeight) {
+      if (
+        !this.minimizePlateChanges &&
+        roundedSet.plates.adjustedTargetWeight
+      ) {
         if (this.isWeightedBodyweight) {
           roundedSet.addedWeight = roundedSet.plates.adjustedTargetWeight;
           roundedSet.weight =
@@ -414,11 +495,12 @@ export default function (): CalculatorData {
 
     saveSettings() {
       localStorage.setItem(
-        'plateSettings',
+        "plateSettings",
         JSON.stringify({
+          sessionTiming: this.sessionTiming,
+          equipmentType: this.equipmentType,
           barWeight: Number.parseFloat(String(this.barWeight)),
           availablePlates: this.availablePlates,
-          barOnlyFirstSet: this.barOnlyFirstSet,
           minimizePlateChanges: this.minimizePlateChanges,
           bodyweight: this.bodyweight
             ? Number.parseFloat(String(this.bodyweight))
@@ -428,7 +510,7 @@ export default function (): CalculatorData {
           selectedFormula: this.selectedFormula,
           enableBackoff: this.enableBackoff,
           backoffPercentage: this.backoffPercentage,
-        })
+        }),
       );
     },
 
@@ -441,35 +523,39 @@ export default function (): CalculatorData {
       const w = Number.parseFloat(String(weight));
       switch (w) {
         case 55:
-          return 'danger';
+          return "danger";
         case 45:
-          return 'primary';
+          return "primary";
         case 35:
-          return 'warning';
+          return "warning";
         case 25:
-          return 'success';
+          return "success";
         case 15:
-          return 'info';
+          return "info";
         case 10:
-          return 'burgundy';
+          return "burgundy";
         case 5:
-          return 'secondary';
+          return "secondary";
         case 2.5:
-          return 'purple';
+          return "purple";
         case 1:
-          return 'dark';
+          return "dark";
         case 0.75:
-          return 'light';
+          return "light";
         case 0.5:
-          return 'teal';
+          return "teal";
         case 0.25:
-          return 'orange';
+          return "orange";
         default:
-          return 'secondary';
+          return "secondary";
       }
     },
 
     incrementWeight(direction: 1 | -1) {
+      if (!this.hasJourneySelection()) {
+        return;
+      }
+
       const currentWeight = Number.parseFloat(String(this.targetWeight));
 
       if (Number.isNaN(currentWeight)) {
@@ -483,7 +569,7 @@ export default function (): CalculatorData {
         this.barWeight,
         maxWeight,
         this.availablePlates,
-        this.isWeightedBodyweight
+        this.isWeightedBodyweight,
       );
 
       if (possibleWeights.length === 0) {
@@ -500,7 +586,9 @@ export default function (): CalculatorData {
         }
       } else {
         // Find the next weight down (last weight less than current)
-        nextWeight = [...possibleWeights].reverse().find((w) => w < currentWeight);
+        nextWeight = [...possibleWeights]
+          .reverse()
+          .find((w) => w < currentWeight);
         if (!nextWeight) {
           nextWeight = possibleWeights[0];
         }
@@ -515,18 +603,27 @@ export default function (): CalculatorData {
     init() {
       // @ts-ignore - debounce returns a function, $el will be available in Alpine context
       this.debouncedCalculate = debounce(this.calculate.bind(this), 300);
-      this.selectedFormula = 'percentageBased';
+      this.selectedFormula = "percentageBased";
       this.numWarmupSets = getDefaultSets(this.selectedFormula);
       this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
 
-      const savedSettings = localStorage.getItem('plateSettings');
+      const savedSettings = localStorage.getItem("plateSettings");
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
+
+        if (Object.prototype.hasOwnProperty.call(settings, "sessionTiming")) {
+          this.sessionTiming = settings.sessionTiming;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(settings, "equipmentType")) {
+          this.equipmentType = settings.equipmentType;
+        }
+
         this.barWeight = Number.parseFloat(settings.barWeight);
         if (Number.isFinite(this.barWeight)) {
           const normalizedBarWeight = Math.min(
             45,
-            Math.max(0, Math.round(this.barWeight / 5) * 5)
+            Math.max(0, Math.round(this.barWeight / 5) * 5),
           );
           this.barWeight = normalizedBarWeight;
         }
@@ -535,7 +632,9 @@ export default function (): CalculatorData {
           settings.availablePlates &&
           Array.isArray(settings.availablePlates)
         ) {
-          const expectedWeights = [55, 45, 35, 25, 15, 10, 5, 2.5, 1, 0.75, 0.5, 0.25];
+          const expectedWeights = [
+            55, 45, 35, 25, 15, 10, 5, 2.5, 1, 0.75, 0.5, 0.25,
+          ];
           const plateMap = new Map();
 
           for (const plate of settings.availablePlates) {
@@ -550,114 +649,130 @@ export default function (): CalculatorData {
           }));
 
           const savedWeights = settings.availablePlates.map(
-            (p: Plate) => p.weight
+            (p: Plate) => p.weight,
           );
           const newWeights = expectedWeights.filter(
-            (w) => !savedWeights.includes(w)
+            (w) => !savedWeights.includes(w),
           );
           if (newWeights.length > 0) {
             this.saveSettings();
           }
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, 'barOnlyFirstSet')) {
-          this.barOnlyFirstSet = settings.barOnlyFirstSet;
-        }
-
         if (
-          Object.prototype.hasOwnProperty.call(settings, 'minimizePlateChanges')
+          Object.prototype.hasOwnProperty.call(settings, "minimizePlateChanges")
         ) {
           this.minimizePlateChanges = settings.minimizePlateChanges;
         }
 
         if (
-          Object.prototype.hasOwnProperty.call(settings, 'bodyweight') &&
+          Object.prototype.hasOwnProperty.call(settings, "bodyweight") &&
           settings.bodyweight > 0
         ) {
           this.bodyweight = settings.bodyweight.toString();
         }
 
         if (
-          Object.prototype.hasOwnProperty.call(settings, 'isWeightedBodyweight')
+          Object.prototype.hasOwnProperty.call(settings, "isWeightedBodyweight")
         ) {
           this.isWeightedBodyweight = settings.isWeightedBodyweight;
           this.showBodyweightInput = settings.isWeightedBodyweight;
+
+          if (!this.equipmentType && this.isWeightedBodyweight) {
+            this.equipmentType = "weightedBodyweight";
+          }
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, 'numWarmupSets')) {
+        if (Object.prototype.hasOwnProperty.call(settings, "numWarmupSets")) {
           this.numWarmupSets = settings.numWarmupSets;
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, 'selectedFormula')) {
+        if (Object.prototype.hasOwnProperty.call(settings, "selectedFormula")) {
           this.selectedFormula = settings.selectedFormula;
+          if (this.selectedFormula !== "weightedBodyweight") {
+            this.lastRegularFormula = this.selectedFormula;
+          }
           this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
+
+          if (!this.equipmentType) {
+            this.equipmentType =
+              this.selectedFormula === "weightedBodyweight"
+                ? "weightedBodyweight"
+                : "barbell";
+          }
+
+          if (!this.sessionTiming) {
+            this.sessionTiming = "pre";
+          }
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, 'enableBackoff')) {
+        if (Object.prototype.hasOwnProperty.call(settings, "enableBackoff")) {
           this.enableBackoff = settings.enableBackoff;
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, 'backoffPercentage')) {
+        if (
+          Object.prototype.hasOwnProperty.call(settings, "backoffPercentage")
+        ) {
           this.backoffPercentage = settings.backoffPercentage;
         }
       }
 
-      // @ts-ignore - Alpine's $watch is added by Alpine.js
-      this.$watch('isWeightedBodyweight', (isWeighted: boolean) => {
-        this.showBodyweightInput = isWeighted;
+      if (!this.sessionTiming) {
+        this.sessionTiming = "pre";
+      }
 
-        if (isWeighted && (!this.bodyweight || Number(this.bodyweight) <= 0)) {
-          this.bodyweight = '150';
-        }
+      if (!this.equipmentType) {
+        this.equipmentType = this.isWeightedBodyweight
+          ? "weightedBodyweight"
+          : "barbell";
+      }
 
-        this.saveSettings();
-        this.debouncedCalculate?.();
-      });
+      this.applyJourneySelection(false);
 
       // @ts-ignore
-      this.$watch('bodyweight', (newValue: string | number) => {
+      this.$watch("bodyweight", (newValue: string | number) => {
         if (newValue && Number.parseFloat(String(newValue)) > 0) {
           this.saveSettings();
         }
       });
 
       // @ts-ignore
-      this.$watch('numWarmupSets', () => {
+      this.$watch("numWarmupSets", () => {
         this.saveSettings();
       });
 
       // @ts-ignore
-      this.$watch('enableBackoff', () => {
+      this.$watch("enableBackoff", () => {
         this.saveSettings();
         this.debouncedCalculate?.();
       });
 
       // @ts-ignore
-      this.$watch('backoffPercentage', () => {
+      this.$watch("backoffPercentage", () => {
         this.saveSettings();
         this.debouncedCalculate?.();
       });
 
       // @ts-ignore - $el is available in Alpine context
-      this.$el.addEventListener('use-calculated-max', (e: CustomEvent) => {
+      this.$el.addEventListener("use-calculated-max", (e: CustomEvent) => {
         if (e.detail?.weight) {
           const roundedWeight = roundToSmallestPlate(
             e.detail.weight,
-            this.availablePlates
+            this.availablePlates,
           );
           this.targetWeight = roundedWeight.toString();
           this.calculate();
         }
       });
 
-      const plateModal = document.getElementById('plateSettingsModal');
+      const plateModal = document.getElementById("plateSettingsModal");
       if (plateModal) {
-        plateModal.addEventListener('hidden.bs.modal', () => {
+        plateModal.addEventListener("hidden.bs.modal", () => {
           this.calculate();
         });
       }
 
-      window.addEventListener('beforeunload', () => {
+      window.addEventListener("beforeunload", () => {
         this.saveSettings();
       });
     },
