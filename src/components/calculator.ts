@@ -108,12 +108,14 @@ export default function (): CalculatorData {
         return "weightedBodyweight";
       }
 
-      if (this.sessionTiming === "post") {
-        return "standardPyramid";
+      if (this.equipmentType === "dumbbell") {
+        return this.sessionTiming === "post"
+          ? "dumbbellPostClimbing"
+          : "dumbbellPreClimbing";
       }
 
-      if (this.equipmentType === "dumbbell") {
-        return "fixedIncrements";
+      if (this.sessionTiming === "post") {
+        return "standardPyramid";
       }
 
       return "percentageBased";
@@ -182,7 +184,9 @@ export default function (): CalculatorData {
       if (validWeight) {
         // Calculate the rounded weight for display purposes only
         let roundedWeight = Number(weight);
-        if (!this.isWeightedBodyweight) {
+        if (this.equipmentType === "dumbbell") {
+          roundedWeight = roundToNearest5(Number(weight));
+        } else if (!this.isWeightedBodyweight) {
           try {
             const rounded = roundToNearestAchievableWeight(
               Number(weight),
@@ -226,7 +230,7 @@ export default function (): CalculatorData {
         }
 
         if (this.warmupSets.length > 0) {
-          if (this.isWeightedBodyweight) {
+          if (this.equipmentType === "weightedBodyweight") {
             const firstSet = this.warmupSets[0];
             const hasBodyweightOnlySet =
               typeof firstSet.addedWeight === "number"
@@ -241,7 +245,10 @@ export default function (): CalculatorData {
                 addedWeight: 0,
               });
             }
-          } else if (this.warmupSets[0].weight > this.barWeight) {
+          } else if (
+            this.equipmentType === "barbell" &&
+            this.warmupSets[0].weight > this.barWeight
+          ) {
             this.warmupSets.unshift({
               percentage: Math.round(
                 (this.barWeight / actualTargetWeight) * 100,
@@ -265,7 +272,9 @@ export default function (): CalculatorData {
               set.weight = Math.max(Number(bodyweight), set.weight);
             }
           } else if (typeof set.weight === "number") {
-            if (set.weight <= this.barWeight) {
+            if (this.equipmentType === "dumbbell") {
+              set.weight = Math.max(0, roundToNearest5(set.weight));
+            } else if (set.weight <= this.barWeight) {
               set.weight = this.barWeight;
             } else {
               const perSideLoad = (set.weight - this.barWeight) / 2;
@@ -300,6 +309,12 @@ export default function (): CalculatorData {
                 actualWeight: 0,
               };
             }
+          } else if (this.equipmentType === "dumbbell") {
+            set.plates = {
+              plateConfig: [],
+              remaining: 0,
+              actualWeight: set.weight,
+            };
           } else {
             set.plates = this.calculatePlatesNeeded(set.weight, {
               minPlateWeight: 5,
@@ -434,7 +449,9 @@ export default function (): CalculatorData {
             set.weight = Math.max(Number(bodyweight), set.weight);
           }
         } else if (typeof set.weight === "number") {
-          if (set.weight <= this.barWeight) {
+          if (this.equipmentType === "dumbbell") {
+            set.weight = Math.max(0, roundToNearest5(set.weight));
+          } else if (set.weight <= this.barWeight) {
             set.weight = this.barWeight;
           } else {
             const perSideLoad = (set.weight - this.barWeight) / 2;
@@ -471,6 +488,12 @@ export default function (): CalculatorData {
             actualWeight: 0,
           };
         }
+      } else if (this.equipmentType === "dumbbell") {
+        roundedSet.plates = {
+          plateConfig: [],
+          remaining: 0,
+          actualWeight: roundedSet.weight,
+        };
       } else {
         roundedSet.plates = this.calculatePlatesNeeded(roundedSet.weight, {
           minPlateWeight: 5,

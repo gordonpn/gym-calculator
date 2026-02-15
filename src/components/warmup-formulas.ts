@@ -387,12 +387,71 @@ export function weightedBodyweight(
   );
 }
 
+/**
+ * Dumbbell pre-climbing ramp-up formula (Rule of 3)
+ */
+export function dumbbellPreClimbing(
+  targetWeight: number,
+  _numSets?: number,
+  _barWeight?: number,
+  _availablePlates?: Plate[],
+  _minimizePlateChanges?: boolean,
+  _isWeightedBodyweight?: boolean,
+  _bodyweight?: number
+): WarmupSet[] {
+  return [
+    {
+      percentage: 50,
+      weight: Math.round(targetWeight * 0.5),
+      reps: 12,
+    },
+    {
+      percentage: 75,
+      weight: Math.round(targetWeight * 0.75),
+      reps: 6,
+    },
+    {
+      percentage: 100,
+      weight: Math.round(targetWeight),
+      reps: 0,
+    },
+  ];
+}
+
+/**
+ * Dumbbell post-climbing ramp-up formula (Energy Saver)
+ */
+export function dumbbellPostClimbing(
+  targetWeight: number,
+  _numSets?: number,
+  _barWeight?: number,
+  _availablePlates?: Plate[],
+  _minimizePlateChanges?: boolean,
+  _isWeightedBodyweight?: boolean,
+  _bodyweight?: number
+): WarmupSet[] {
+  return [
+    {
+      percentage: 50,
+      weight: Math.round(targetWeight * 0.5),
+      reps: 8,
+    },
+    {
+      percentage: 100,
+      weight: Math.round(targetWeight),
+      reps: 0,
+    },
+  ];
+}
+
 // Formula registry
 const formulas: Record<string, FormulaFunction> = {
   percentageBased,
   fixedIncrements,
   standardPyramid,
   weightedBodyweight,
+  dumbbellPreClimbing,
+  dumbbellPostClimbing,
 };
 
 const configurableFormulas = new Set(['percentageBased', 'fixedIncrements']);
@@ -416,6 +475,10 @@ export function isConfigurableFormula(formulaId: string): boolean {
  */
 export function getDefaultSets(formulaId: string): number {
   switch (formulaId) {
+    case 'dumbbellPreClimbing':
+      return 3;
+    case 'dumbbellPostClimbing':
+      return 2;
     case 'fixedIncrements':
       return 5;
     case 'standardPyramid':
@@ -435,4 +498,6 @@ export const formulaOptions: FormulaOption[] = [
   { id: 'fixedIncrements', name: 'Fixed Increments' },
   { id: 'standardPyramid', name: 'Standard Pyramid' },
   { id: 'weightedBodyweight', name: 'Weighted Bodyweight' },
+  { id: 'dumbbellPreClimbing', name: 'Dumbbell Pre-Climbing' },
+  { id: 'dumbbellPostClimbing', name: 'Dumbbell Post-Climbing' },
 ];
