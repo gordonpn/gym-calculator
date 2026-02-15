@@ -198,94 +198,93 @@ import Layout from "../layouts/Layout.astro";
               x-for="(set, index) in warmupSets.filter((s) => !s.isBackoff && s.reps > 0)"
               :key="index"
             >
-                <tr>
-                  <td x-text="index + 1"></td>
-                  <td x-text="set.reps"></td>
+              <tr>
+                <td x-text="index + 1"></td>
+                <td x-text="set.reps"></td>
+                <td>
+                  <template
+                    x-if="set.plates.remaining > 0 && minimizePlateChanges && !isWeightedBodyweight"
+                  >
+                    <div>
+                      <span x-text="set.plates.actualWeight + ' lbs'"></span>
+                      <small
+                        class="text-muted"
+                        x-text="` (target: ${set.weight})`"></small>
+                    </div>
+                  </template>
+                  <template
+                    x-if="set.plates.remaining > 0 && minimizePlateChanges && isWeightedBodyweight"
+                  >
+                    <div>
+                      <span x-text="set.plates.actualWeight + ' lbs added'"
+                      ></span>
+                      <small
+                        class="text-muted"
+                        x-text="` (total: ${Number(bodyweight) + Number(set.plates.actualWeight)} lbs)`"
+                      ></small>
+                    </div>
+                  </template>
+                  <template
+                    x-if="set.plates.remaining === 0 || !minimizePlateChanges"
+                  >
+                    <div>
+                      <template x-if="isWeightedBodyweight">
+                        <div>
+                          <span x-text="set.addedWeight + ' lbs added'"></span>
+                          <small
+                            class="text-muted"
+                            x-text="` (total: ${set.weight} lbs)`"></small>
+                        </div>
+                      </template>
+                      <template x-if="!isWeightedBodyweight">
+                        <span x-text="set.weight + ' lbs'"></span>
+                      </template>
+                    </div>
+                  </template>
+                </td>
+                <template x-if="equipmentType !== 'dumbbell'">
                   <td>
                     <template
-                      x-if="set.plates.remaining > 0 && minimizePlateChanges && !isWeightedBodyweight"
+                      x-if="!isWeightedBodyweight && set.weight <= barWeight"
                     >
-                      <div>
-                        <span x-text="set.plates.actualWeight + ' lbs'"></span>
-                        <small
-                          class="text-muted"
-                          x-text="` (target: ${set.weight})`"></small>
-                      </div>
+                      <span>Empty bar</span>
                     </template>
                     <template
-                      x-if="set.plates.remaining > 0 && minimizePlateChanges && isWeightedBodyweight"
+                      x-if="isWeightedBodyweight && set.addedWeight <= 0"
                     >
-                      <div>
-                        <span x-text="set.plates.actualWeight + ' lbs added'"
-                        ></span>
-                        <small
-                          class="text-muted"
-                          x-text="` (total: ${Number(bodyweight) + Number(set.plates.actualWeight)} lbs)`"
-                        ></small>
-                      </div>
+                      <span>Bodyweight only</span>
                     </template>
                     <template
-                      x-if="set.plates.remaining === 0 || !minimizePlateChanges"
+                      x-if="(!isWeightedBodyweight && set.weight > barWeight) || (isWeightedBodyweight && set.addedWeight > 0)"
                     >
-                      <div>
-                        <template x-if="isWeightedBodyweight">
-                          <div>
-                            <span x-text="set.addedWeight + ' lbs added'"
-                            ></span>
-                            <small
-                              class="text-muted"
-                              x-text="` (total: ${set.weight} lbs)`"></small>
-                          </div>
+                      <div class="d-flex gap-1 flex-wrap">
+                        <template
+                          x-for="plate in set.plates.plateConfig"
+                          :key="plate.weight"
+                        >
+                          <template
+                            x-for="i in plate.count"
+                            :key="`${plate.weight}-${i}`"
+                          >
+                            <span
+                              class="badge"
+                              :class="`text-bg-${getPlateColor(plate.weight)}`"
+                              x-text="`${plate.weight} lbs`"></span>
+                          </template>
                         </template>
-                        <template x-if="!isWeightedBodyweight">
-                          <span x-text="set.weight + ' lbs'"></span>
+                        <template
+                          x-if="set.plates.remaining > 0 && minimizePlateChanges"
+                        >
+                          <span
+                            class="badge text-bg-warning"
+                            x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"
+                          ></span>
                         </template>
                       </div>
                     </template>
                   </td>
-                  <template x-if="equipmentType !== 'dumbbell'">
-                    <td>
-                      <template
-                        x-if="!isWeightedBodyweight && set.weight <= barWeight"
-                      >
-                        <span>Empty bar</span>
-                      </template>
-                      <template
-                        x-if="isWeightedBodyweight && set.addedWeight <= 0"
-                      >
-                        <span>Bodyweight only</span>
-                      </template>
-                      <template
-                        x-if="(!isWeightedBodyweight && set.weight > barWeight) || (isWeightedBodyweight && set.addedWeight > 0)"
-                      >
-                        <div class="d-flex gap-1 flex-wrap">
-                          <template
-                            x-for="plate in set.plates.plateConfig"
-                            :key="plate.weight"
-                          >
-                            <template
-                              x-for="i in plate.count"
-                              :key="`${plate.weight}-${i}`"
-                            >
-                              <span
-                                class="badge"
-                                :class="`text-bg-${getPlateColor(plate.weight)}`"
-                                x-text="`${plate.weight} lbs`"></span>
-                            </template>
-                          </template>
-                          <template
-                            x-if="set.plates.remaining > 0 && minimizePlateChanges"
-                          >
-                            <span
-                              class="badge text-bg-warning"
-                              x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"
-                            ></span>
-                          </template>
-                        </div>
-                      </template>
-                    </td>
-                  </template>
-                </tr>
+                </template>
+              </tr>
             </template>
           </tbody>
         </table>

@@ -125,6 +125,10 @@ export default function (): CalculatorData {
       this.isWeightedBodyweight = this.equipmentType === "weightedBodyweight";
       this.showBodyweightInput = this.isWeightedBodyweight;
 
+      if (this.equipmentType !== "barbell") {
+        this.minimizePlateChanges = false;
+      }
+
       if (
         this.isWeightedBodyweight &&
         (!this.bodyweight || Number(this.bodyweight) <= 0)
@@ -182,6 +186,9 @@ export default function (): CalculatorData {
         : !Number.isNaN(weight) && weight > 0;
 
       if (validWeight) {
+        const useMinimizePlateChanges =
+          this.equipmentType === "barbell" && this.minimizePlateChanges;
+
         // Calculate the rounded weight for display purposes only
         let roundedWeight = Number(weight);
         if (this.equipmentType === "dumbbell") {
@@ -213,7 +220,7 @@ export default function (): CalculatorData {
             this.numWarmupSets,
             this.barWeight,
             this.availablePlates,
-            this.minimizePlateChanges,
+            useMinimizePlateChanges,
             this.isWeightedBodyweight,
             bodyweight,
           );
@@ -223,7 +230,7 @@ export default function (): CalculatorData {
             undefined,
             this.barWeight,
             this.availablePlates,
-            this.minimizePlateChanges,
+            useMinimizePlateChanges,
             this.isWeightedBodyweight,
             bodyweight,
           );
@@ -321,7 +328,7 @@ export default function (): CalculatorData {
             });
           }
 
-          if (!this.minimizePlateChanges && set.plates.adjustedTargetWeight) {
+          if (!useMinimizePlateChanges && set.plates.adjustedTargetWeight) {
             if (this.isWeightedBodyweight) {
               set.addedWeight = set.plates.adjustedTargetWeight;
               set.weight = Number(bodyweight) + Number(set.addedWeight);
@@ -365,6 +372,8 @@ export default function (): CalculatorData {
       targetWeight: number,
       options: { minPlateWeight?: number } = {},
     ): PlateCalculation {
+      const useMinimizePlateChanges =
+        this.equipmentType === "barbell" && this.minimizePlateChanges;
       const { minPlateWeight = 0 } = options;
       const isForBodyweightExercise =
         this.isWeightedBodyweight && targetWeight > 0;
@@ -411,7 +420,7 @@ export default function (): CalculatorData {
         ? actualPlateWeight
         : Number.parseFloat(String(this.barWeight)) + actualPlateWeight;
 
-      if (!this.minimizePlateChanges && remaining > 0) {
+      if (!useMinimizePlateChanges && remaining > 0) {
         return {
           plateConfig,
           remaining: 0,
@@ -475,6 +484,9 @@ export default function (): CalculatorData {
 
       const roundedSet = applyRounding(backoffSet);
 
+      const useMinimizePlateChanges =
+        this.equipmentType === "barbell" && this.minimizePlateChanges;
+
       if (this.isWeightedBodyweight) {
         const addedWeight = Math.max(0, roundedSet.addedWeight || 0);
         if (addedWeight > 0) {
@@ -500,10 +512,7 @@ export default function (): CalculatorData {
         });
       }
 
-      if (
-        !this.minimizePlateChanges &&
-        roundedSet.plates.adjustedTargetWeight
-      ) {
+      if (!useMinimizePlateChanges && roundedSet.plates.adjustedTargetWeight) {
         if (this.isWeightedBodyweight) {
           roundedSet.addedWeight = roundedSet.plates.adjustedTargetWeight;
           roundedSet.weight =
