@@ -444,6 +444,81 @@ export function dumbbellPostClimbing(
   ];
 }
 
+/**
+ * Barbell pre-climbing ramp-up formula (Cold)
+ * Empty bar x15, 50% x5, 75% x3, working weight
+ */
+export function barbellPreClimbing(
+  targetWeight: number,
+  _numSets?: number,
+  barWeight: number = 45,
+  _availablePlates?: Plate[],
+  _minimizePlateChanges?: boolean,
+  _isWeightedBodyweight?: boolean,
+  _bodyweight?: number
+): WarmupSet[] {
+  const workingWeight = Math.round(targetWeight);
+  const emptyBarWeight = Math.round(barWeight);
+
+  return [
+    {
+      percentage: Math.round((emptyBarWeight / Math.max(workingWeight, 1)) * 100),
+      weight: emptyBarWeight,
+      reps: 15,
+    },
+    {
+      percentage: 50,
+      weight: Math.round(workingWeight * 0.5),
+      reps: 5,
+    },
+    {
+      percentage: 75,
+      weight: Math.round(workingWeight * 0.75),
+      reps: 3,
+    },
+    {
+      percentage: 100,
+      weight: workingWeight,
+      reps: 0,
+    },
+  ];
+}
+
+/**
+ * Barbell post-climbing ramp-up formula (Warm)
+ * Empty bar x10, 60% x4, skip, working weight
+ */
+export function barbellPostClimbing(
+  targetWeight: number,
+  _numSets?: number,
+  barWeight: number = 45,
+  _availablePlates?: Plate[],
+  _minimizePlateChanges?: boolean,
+  _isWeightedBodyweight?: boolean,
+  _bodyweight?: number
+): WarmupSet[] {
+  const workingWeight = Math.round(targetWeight);
+  const emptyBarWeight = Math.round(barWeight);
+
+  return [
+    {
+      percentage: Math.round((emptyBarWeight / Math.max(workingWeight, 1)) * 100),
+      weight: emptyBarWeight,
+      reps: 10,
+    },
+    {
+      percentage: 60,
+      weight: Math.round(workingWeight * 0.6),
+      reps: 4,
+    },
+    {
+      percentage: 100,
+      weight: workingWeight,
+      reps: 0,
+    },
+  ];
+}
+
 // Formula registry
 const formulas: Record<string, FormulaFunction> = {
   percentageBased,
@@ -452,6 +527,8 @@ const formulas: Record<string, FormulaFunction> = {
   weightedBodyweight,
   dumbbellPreClimbing,
   dumbbellPostClimbing,
+  barbellPreClimbing,
+  barbellPostClimbing,
 };
 
 const configurableFormulas = new Set(['percentageBased', 'fixedIncrements']);
@@ -475,6 +552,10 @@ export function isConfigurableFormula(formulaId: string): boolean {
  */
 export function getDefaultSets(formulaId: string): number {
   switch (formulaId) {
+    case 'barbellPreClimbing':
+      return 4;
+    case 'barbellPostClimbing':
+      return 3;
     case 'dumbbellPreClimbing':
       return 3;
     case 'dumbbellPostClimbing':
@@ -494,10 +575,10 @@ export function getDefaultSets(formulaId: string): number {
  * Formula options
  */
 export const formulaOptions: FormulaOption[] = [
-  { id: 'percentageBased', name: 'Percentage-Based' },
   { id: 'fixedIncrements', name: 'Fixed Increments' },
-  { id: 'standardPyramid', name: 'Standard Pyramid' },
   { id: 'weightedBodyweight', name: 'Weighted Bodyweight' },
   { id: 'dumbbellPreClimbing', name: 'Dumbbell Pre-Climbing' },
   { id: 'dumbbellPostClimbing', name: 'Dumbbell Post-Climbing' },
+  { id: 'barbellPreClimbing', name: 'Barbell Pre-Climbing' },
+  { id: 'barbellPostClimbing', name: 'Barbell Post-Climbing' },
 ];

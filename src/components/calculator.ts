@@ -114,11 +114,9 @@ export default function (): CalculatorData {
           : "dumbbellPreClimbing";
       }
 
-      if (this.sessionTiming === "post") {
-        return "standardPyramid";
-      }
-
-      return "percentageBased";
+      return this.sessionTiming === "post"
+        ? "barbellPostClimbing"
+        : "barbellPreClimbing";
     },
 
     applyJourneySelection(shouldPersist = true) {

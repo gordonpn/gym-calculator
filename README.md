@@ -10,21 +10,19 @@ The standout feature is the **plate optimization algorithm** that minimizes plat
 
 ### 🔥 Warm-up Calculator
 
-Calculate efficient warm-up progressions to your target weight using multiple scientifically-backed formulas:
+Calculate efficient warm-up progressions to your target weight using journey-based routines:
 
-- **Percentage-Based Formula**: Progressive percentages (40%-90%) of your target weight distributed evenly across your desired number of sets. Each set's rep count is automatically determined based on intensity.
-- **Fixed Increments Formula**: Equal weight increments from the bar to approximately 90% of your target weight. Useful for steady, predictable warm-up progression.
-- **Standard Pyramid Formula**: Classic 4-set pyramid at 50%, 60%, 70%, and 80% of target weight. A time-tested approach for efficient warm-ups.
-- **Weighted Bodyweight Formula**: Specialized for bodyweight exercises (pull-ups, dips, etc.). Adds weight incrementally to reach your target weighted bodyweight.
+- **Barbell Pre-Climbing (Cold)**: Empty bar × 15, 50% × 5, 75% × 3, then working set.
+- **Barbell Post-Climbing (Warm)**: Empty bar × 10, 60% × 4, then working set.
+- **Dumbbell Pre-Climbing (Rule of 3)**: 50% × 10-12, 75% × 4-6, then working set.
+- **Dumbbell Post-Climbing (Energy Saver)**: 50% × 8, then working set.
+- **Weighted Bodyweight**: Bodyweight + incremental loading to your target added weight.
 
 **Key Options:**
 - Adjust bar weight (standard 45 lbs or customize for specialty bars)
-- Configurable number of warm-up sets for percentage-based and fixed increments formulas
-- Optional barbell-only or bodyweight-only set
 - Minimize plate changes between sets to reduce setup time
 - Enable backoff sets at a configurable percentage (useful for recovery work)
-- Routine selection via a radio list in Warm-up settings
-- Automatic routine switching for weighted bodyweight mode
+- Guided setup for session timing (pre/post climbing) and equipment type
 - Input target weight and get calculated warm-up progression
 - Visual plate breakdown showing exactly which plates to load
 
@@ -81,16 +79,16 @@ Compare your estimated 1RM against established strength standards from training 
 ### Warm-up Calculator Workflow
 
 1. Enter your **target weight** (the main working set)
-2. Select your preferred **warm-up routine** from the Warm-up settings radio list
-3. For configurable formulas (Percentage-Based, Fixed Increments), adjust the number of sets
+2. Select your **session timing** (pre-climbing or post-climbing)
+3. Select your **equipment type** (barbell, dumbbells, or weighted bodyweight)
 4. Configure options:
    - Bar weight (default 45 lbs)
    - Plate changes optimization
    - Backoff sets (optional)
-   - Weighted bodyweight (for assistance exercises; automatically uses the weighted routine)
+   - Weighted bodyweight body mass (when that equipment type is selected)
 5. **Automatic Calculation**:
-   - Algorithm generates intermediate weights based on selected formula
-   - Rep counts are automatically assigned based on intensity percentage
+   - Algorithm selects the matching pre/post routine for your equipment
+   - Algorithm generates intermediate warm-up sets and rep targets
    - Plates are optimally configured to minimize changes if enabled
 6. Review your warm-up progression in a clean table format with weight, reps, and intensity
 7. See the exact plate breakdown for your working set
@@ -124,8 +122,8 @@ Compare your estimated 1RM against established strength standards from training 
 
 The app automatically saves your settings to **browser local storage**:
 
-- Selected warm-up formula and number of sets
-- Bar weight configuration
+- Selected session timing and equipment type
+- Bar weight and plate settings
 - Available plates
 - Last entered weights and rep counts
 - Bodyweight
@@ -179,7 +177,7 @@ src/
 
 **Strength Standards**: Uses bodyweight-relative strength standards from strength training literature to evaluate performance across different body weights fairly.
 
-**Fixed Increments Formula**: Calculates equal weight increments that progressively increase from the bar to your warm-up top weight, ensuring smooth and predictable progressions.
+**Journey-Based Warm-up Mapping**: Automatically picks pre-climbing or post-climbing routines by equipment type so warm-ups match fatigue state and movement pattern.
 
 ## Development
 
