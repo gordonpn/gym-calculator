@@ -105,7 +105,9 @@ export default function (): CalculatorData {
 
     getAutoFormulaForJourney() {
       if (this.equipmentType === "weightedBodyweight") {
-        return "weightedBodyweight";
+        return this.sessionTiming === "post"
+          ? "weightedBodyweightPostClimbing"
+          : "weightedBodyweightPreClimbing";
       }
 
       if (this.equipmentType === "dumbbell") {

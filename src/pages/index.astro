@@ -186,7 +186,7 @@ import Layout from "../layouts/Layout.astro";
               <th>Set</th>
               <th>Reps</th>
               <th>Weight (lbs)</th>
-              <template x-if="equipmentType !== 'dumbbell'">
+              <template x-if="equipmentType === 'barbell'">
                 <th
                   x-text="isWeightedBodyweight ? 'Plates' : 'Plates (each side)'"
                 ></th>
@@ -242,7 +242,7 @@ import Layout from "../layouts/Layout.astro";
                     </div>
                   </template>
                 </td>
-                <template x-if="equipmentType !== 'dumbbell'">
+                <template x-if="equipmentType === 'barbell'">
                   <td>
                     <template
                       x-if="!isWeightedBodyweight && set.weight <= barWeight"
@@ -353,42 +353,6 @@ import Layout from "../layouts/Layout.astro";
                 </div>
               </template>
             </div>
-            <!-- For weighted bodyweight, show plates needed directly under the weight -->
-            <div
-              class="col-md-6"
-              x-show="isWeightedBodyweight && roundedTargetWeight > 0"
-            >
-              <h6>Plates:</h6>
-              <template x-if="roundedTargetWeight <= 0">
-                <span>Bodyweight only</span>
-              </template>
-              <template x-if="roundedTargetWeight > 0">
-                <div class="d-flex gap-2 flex-wrap">
-                  <template
-                    x-for="plate in calculatePlatesNeeded(roundedTargetWeight).plateConfig"
-                    :key="plate.weight"
-                  >
-                    <template
-                      x-for="i in plate.count"
-                      :key="`${plate.weight}-${i}`"
-                    >
-                      <span
-                        class="badge fs-5"
-                        :class="`text-bg-${getPlateColor(plate.weight)}`"
-                        x-text="`${plate.weight} lbs`"></span>
-                    </template>
-                  </template>
-                  <template
-                    x-if="calculatePlatesNeeded(roundedTargetWeight).remaining > 0 && minimizePlateChanges"
-                  >
-                    <span
-                      class="badge text-bg-warning fs-5"
-                      x-text="`Missing: ${calculatePlatesNeeded(roundedTargetWeight).remaining.toFixed(1)} lbs`"
-                    ></span>
-                  </template>
-                </div>
-              </template>
-            </div>
           </div>
         </div>
       </div>
@@ -428,42 +392,6 @@ import Layout from "../layouts/Layout.astro";
                       <span>Empty bar</span>
                     </template>
                     <template x-if="set.weight > barWeight">
-                      <div class="d-flex gap-2 flex-wrap">
-                        <template
-                          x-for="plate in set.plates.plateConfig"
-                          :key="plate.weight"
-                        >
-                          <template
-                            x-for="i in plate.count"
-                            :key="`${plate.weight}-${i}`"
-                          >
-                            <span
-                              class="badge fs-5"
-                              :class="`text-bg-${getPlateColor(plate.weight)}`"
-                              x-text="`${plate.weight} lbs`"></span>
-                          </template>
-                        </template>
-                        <template
-                          x-if="set.plates.remaining > 0 && minimizePlateChanges"
-                        >
-                          <span
-                            class="badge text-bg-warning fs-5"
-                            x-text="`Missing: ${set.plates.remaining.toFixed(1)} lbs`"
-                          ></span>
-                        </template>
-                      </div>
-                    </template>
-                  </div>
-                  <!-- For weighted bodyweight, show plates needed directly under the weight -->
-                  <div
-                    class="col-md-6"
-                    x-show="isWeightedBodyweight && set.addedWeight > 0"
-                  >
-                    <h6>Plates:</h6>
-                    <template x-if="set.addedWeight <= 0">
-                      <span>Bodyweight only</span>
-                    </template>
-                    <template x-if="set.addedWeight > 0">
                       <div class="d-flex gap-2 flex-wrap">
                         <template
                           x-for="plate in set.plates.plateConfig"
