@@ -37,14 +37,6 @@ export type FormulaFunction = (
 ) => WarmupSet[];
 
 /**
- * Interface for formula option
- */
-export interface FormulaOption {
-  id: string;
-  name: string;
-}
-
-/**
  * Generate all possible weights that can be achieved with available plates
  */
 export function generatePossibleWeights(
@@ -647,17 +639,3 @@ export function getDefaultSets(formulaId: string): number {
       return 6;
   }
 }
-
-/**
- * Formula options
- */
-export const formulaOptions: FormulaOption[] = [
-  { id: 'fixedIncrements', name: 'Fixed Increments' },
-  { id: 'weightedBodyweight', name: 'Weighted Bodyweight' },
-  { id: 'weightedBodyweightPreClimbing', name: 'Weighted Bodyweight Pre-Climbing' },
-  { id: 'weightedBodyweightPostClimbing', name: 'Weighted Bodyweight Post-Climbing' },
-  { id: 'dumbbellPreClimbing', name: 'Dumbbell Pre-Climbing' },
-  { id: 'dumbbellPostClimbing', name: 'Dumbbell Post-Climbing' },
-  { id: 'barbellPreClimbing', name: 'Barbell Pre-Climbing' },
-  { id: 'barbellPostClimbing', name: 'Barbell Post-Climbing' },
-];

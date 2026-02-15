@@ -8,7 +8,6 @@ import {
 import {
   type PlateCalculation,
   type WarmupSet,
-  formulaOptions,
   generatePossibleWeights,
   getDefaultSets,
   getFormula,
@@ -29,8 +28,6 @@ export interface CalculatorData {
   roundedTargetWeight: number;
   selectedFormula: string;
   warmupSets: WarmupSet[];
-  formulaOptions: typeof formulaOptions;
-  lastRegularFormula: string;
   showSetsSelector: boolean;
   minimizePlateChanges: boolean;
   isWeightedBodyweight: boolean;
@@ -47,7 +44,6 @@ export interface CalculatorData {
   getAutoFormulaForJourney(): string;
   applyJourneySelection(shouldPersist?: boolean): void;
   calculate(): void;
-  onFormulaChange(): void;
   calculatePlatesNeeded(
     targetWeight: number,
     options?: { minPlateWeight?: number },
@@ -56,7 +52,6 @@ export interface CalculatorData {
   saveSettings(): void;
   savePlateSettings(): void;
   getPlateColor(weight: number | string): string;
-  getSelectableFormulaOptions(): typeof formulaOptions;
   incrementWeight(direction: 1 | -1): void;
   init(): void;
 }
@@ -71,10 +66,8 @@ export default function (): CalculatorData {
     numWarmupSets: 6,
     targetWeight: "",
     roundedTargetWeight: 0,
-    selectedFormula: "percentageBased",
+    selectedFormula: "barbellPreClimbing",
     warmupSets: [],
-    formulaOptions,
-    lastRegularFormula: "percentageBased",
     showSetsSelector: true,
     minimizePlateChanges: false,
     isWeightedBodyweight: false,
@@ -138,10 +131,6 @@ export default function (): CalculatorData {
 
       if (this.hasJourneySelection()) {
         this.selectedFormula = this.getAutoFormulaForJourney();
-
-        if (this.selectedFormula !== "weightedBodyweight") {
-          this.lastRegularFormula = this.selectedFormula;
-        }
 
         this.numWarmupSets = getDefaultSets(this.selectedFormula);
         this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
@@ -236,36 +225,6 @@ export default function (): CalculatorData {
           );
         }
 
-        if (this.warmupSets.length > 0) {
-          if (this.equipmentType === "weightedBodyweight") {
-            const firstSet = this.warmupSets[0];
-            const hasBodyweightOnlySet =
-              typeof firstSet.addedWeight === "number"
-                ? firstSet.addedWeight <= 0
-                : firstSet.weight <= bodyweight;
-
-            if (!hasBodyweightOnlySet && bodyweight > 0) {
-              this.warmupSets.unshift({
-                percentage: Math.round((bodyweight / actualTargetWeight) * 100),
-                weight: bodyweight,
-                reps: 12,
-                addedWeight: 0,
-              });
-            }
-          } else if (
-            this.equipmentType === "barbell" &&
-            this.warmupSets[0].weight > this.barWeight
-          ) {
-            this.warmupSets.unshift({
-              percentage: Math.round(
-                (this.barWeight / actualTargetWeight) * 100,
-              ),
-              weight: this.barWeight,
-              reps: 12,
-            });
-          }
-        }
-
         const applyWarmupRounding = (set: WarmupSet): WarmupSet => {
           if (this.isWeightedBodyweight) {
             if (typeof set.addedWeight === "number") {
@@ -350,22 +309,6 @@ export default function (): CalculatorData {
         this.warmupSets = [];
         this.roundedTargetWeight = 0;
       }
-    },
-
-    onFormulaChange() {
-      this.applyJourneySelection();
-    },
-
-    getSelectableFormulaOptions() {
-      if (this.isWeightedBodyweight) {
-        return this.formulaOptions.filter(
-          (option) => option.id === "weightedBodyweight",
-        );
-      }
-
-      return this.formulaOptions.filter(
-        (option) => option.id !== "weightedBodyweight",
-      );
     },
 
     calculatePlatesNeeded(
@@ -635,7 +578,7 @@ export default function (): CalculatorData {
     init() {
       // @ts-ignore - debounce returns a function, $el will be available in Alpine context
       this.debouncedCalculate = debounce(this.calculate.bind(this), 300);
-      this.selectedFormula = "percentageBased";
+      this.selectedFormula = "barbellPreClimbing";
       this.numWarmupSets = getDefaultSets(this.selectedFormula);
       this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
 
@@ -721,9 +664,6 @@ export default function (): CalculatorData {
 
         if (Object.prototype.hasOwnProperty.call(settings, "selectedFormula")) {
           this.selectedFormula = settings.selectedFormula;
-          if (this.selectedFormula !== "weightedBodyweight") {
-            this.lastRegularFormula = this.selectedFormula;
-          }
           this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
 
           if (!this.equipmentType) {
