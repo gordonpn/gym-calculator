@@ -233,7 +233,7 @@ All data is stored **locally in your browser** using the Web Storage API (localS
 
 ## Roadmap & Future Features
 
-- [ ] Mobile app (PWA)
+- [x] Mobile app (PWA)
 * [x] Improve warm-up table to include reps
 * [x] Improve on formulas: allow a custom formula where the user can specify how many warm-up sets they want
 * [x] Implement dark mode
