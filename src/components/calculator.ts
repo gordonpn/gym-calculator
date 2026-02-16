@@ -594,13 +594,15 @@ export default function (): CalculatorData {
           this.equipmentType = settings.equipmentType;
         }
 
-        this.barWeight = Number.parseFloat(settings.barWeight);
-        if (Number.isFinite(this.barWeight)) {
-          const normalizedBarWeight = Math.min(
-            45,
-            Math.max(0, Math.round(this.barWeight / 5) * 5),
-          );
-          this.barWeight = normalizedBarWeight;
+        if (Object.prototype.hasOwnProperty.call(settings, "barWeight")) {
+          const parsedBarWeight = Number.parseFloat(String(settings.barWeight));
+          if (Number.isFinite(parsedBarWeight)) {
+            const normalizedBarWeight = Math.min(
+              45,
+              Math.max(0, Math.round(parsedBarWeight / 5) * 5),
+            );
+            this.barWeight = normalizedBarWeight;
+          }
         }
 
         if (
@@ -711,6 +713,39 @@ export default function (): CalculatorData {
       // @ts-ignore
       this.$watch("numWarmupSets", () => {
         this.saveSettings();
+      });
+
+      // @ts-ignore
+      this.$watch("barWeight", (newValue: number) => {
+        const parsedBarWeight = Number.parseFloat(String(newValue));
+        if (!Number.isFinite(parsedBarWeight)) {
+          return;
+        }
+
+        const normalizedBarWeight = Math.min(
+          45,
+          Math.max(0, Math.round(parsedBarWeight / 5) * 5),
+        );
+
+        if (this.barWeight !== normalizedBarWeight) {
+          this.barWeight = normalizedBarWeight;
+          return;
+        }
+
+        this.saveSettings();
+        this.debouncedCalculate?.();
+      });
+
+      // @ts-ignore
+      this.$watch("minimizePlateChanges", () => {
+        this.saveSettings();
+        this.debouncedCalculate?.();
+      });
+
+      // @ts-ignore
+      this.$watch("availablePlates", () => {
+        this.saveSettings();
+        this.debouncedCalculate?.();
       });
 
       // @ts-ignore
