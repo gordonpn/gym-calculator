@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Gym Calculator favicon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d6efd" />
+      <stop offset="100%" stop-color="#6610f2" />
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f8f9fa" />
+      <stop offset="100%" stop-color="#ced4da" />
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="url(#bg)" />
+
+  <rect x="17" y="30" width="30" height="4" rx="2" fill="url(#bar)" />
+
+  <rect x="12" y="24" width="4" height="16" rx="1" fill="#f8f9fa" />
+  <rect x="8" y="26" width="3" height="12" rx="1" fill="#e9ecef" />
+
+  <rect x="48" y="24" width="4" height="16" rx="1" fill="#f8f9fa" />
+  <rect x="53" y="26" width="3" height="12" rx="1" fill="#e9ecef" />
+
+  <circle cx="32" cy="32" r="2.2" fill="#adb5bd" />
+</svg>

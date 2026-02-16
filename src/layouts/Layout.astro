@@ -1,16 +1,16 @@
 ---
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
-import '../styles/style.css';
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import "../styles/style.css";
 
 interface Props {
   title?: string;
 }
 
-const { title = 'Gym Calculator' } = Astro.props;
+const { title = "Gym Calculator" } = Astro.props;
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-bs-theme="auto">
   <head>
     <meta charset="UTF-8" />
@@ -18,24 +18,40 @@ const { title = 'Gym Calculator' } = Astro.props;
       name="viewport"
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <meta name="theme-color" content="#212529" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta
+      name="theme-color"
+      content="#212529"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta
+      name="theme-color"
+      content="#ffffff"
+      media="(prefers-color-scheme: light)"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.svg" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <title>{title}</title>
     <script is:inline>
       // Initialize theme before rendering to prevent flash
       const getPreferredTheme = () => {
-        const storedTheme = localStorage.getItem('theme');
+        const storedTheme = localStorage.getItem("theme");
         if (storedTheme) {
           return storedTheme;
         }
-        return window.matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light';
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
       };
 
-      document.documentElement.setAttribute('data-bs-theme', getPreferredTheme());
+      document.documentElement.setAttribute(
+        "data-bs-theme",
+        getPreferredTheme(),
+      );
     </script>
   </head>
   <body>
@@ -44,8 +60,13 @@ const { title = 'Gym Calculator' } = Astro.props;
       <div class="container-fluid">
         <a class="navbar-brand" href="#">Warm-up calculator</a>
         <div class="ms-auto">
-          <button class="btn theme-toggle" x-data="themeToggle" @click="toggleTheme">
-            <i class="bi" :class="isDarkTheme ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
+          <button
+            class="btn theme-toggle"
+            x-data="themeToggle"
+            @click="toggleTheme"
+          >
+            <i class="bi" :class="isDarkTheme ? 'bi-sun-fill' : 'bi-moon-fill'"
+            ></i>
           </button>
         </div>
       </div>
@@ -57,8 +78,14 @@ const { title = 'Gym Calculator' } = Astro.props;
     <!-- Footer -->
     <footer class="footer mt-5 py-3 bg-body-tertiary">
       <div class="container text-center">
-        <p class="mb-1" x-data>© <span x-text="new Date().getFullYear()"></span> gordonpn - MIT License</p>
-        <a href="https://github.com/gordonpn/gym-calculator" target="_blank" class="text-decoration-none">
+        <p class="mb-1" x-data>
+          © <span x-text="new Date().getFullYear()"></span> gordonpn - MIT License
+        </p>
+        <a
+          href="https://github.com/gordonpn/gym-calculator"
+          target="_blank"
+          class="text-decoration-none"
+        >
           <i class="bi bi-github"></i> Open Source
         </a>
       </div>
@@ -66,7 +93,7 @@ const { title = 'Gym Calculator' } = Astro.props;
 
     <!-- Bootstrap JS - Load on client only -->
     <script>
-      import('bootstrap');
+      import("bootstrap");
     </script>
   </body>
 </html>
