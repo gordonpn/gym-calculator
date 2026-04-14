@@ -759,11 +759,29 @@ export default function (): CalculatorData {
       // @ts-ignore - $el is available in Alpine context
       this.$el.addEventListener("use-calculated-max", (e: CustomEvent) => {
         if (e.detail?.weight) {
-          const roundedWeight = roundToSmallestPlate(
-            e.detail.weight,
-            this.availablePlates,
-          );
-          this.targetWeight = roundedWeight.toString();
+          const calculatedWeight = Number.parseFloat(String(e.detail.weight));
+
+          if (!Number.isFinite(calculatedWeight)) {
+            return;
+          }
+
+          if (this.isWeightedBodyweight) {
+            const bodyweight = Number.parseFloat(String(this.bodyweight));
+
+            if (!Number.isFinite(bodyweight) || bodyweight <= 0) {
+              return;
+            }
+
+            const addedWeight = Math.max(0, calculatedWeight - bodyweight);
+            this.targetWeight = roundToNearest5(addedWeight).toString();
+          } else {
+            const roundedWeight = roundToSmallestPlate(
+              calculatedWeight,
+              this.availablePlates,
+            );
+            this.targetWeight = roundedWeight.toString();
+          }
+
           this.calculate();
         }
       });

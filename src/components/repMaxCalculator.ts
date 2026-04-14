@@ -25,12 +25,22 @@ export interface RepMaxCalculatorData {
   repRangeData: RepRangeData[];
   errorMessage: string;
   calculationMethod: 'average' | 'highest' | 'lowest' | 'weighted';
+  parentIsWeightedBodyweight: boolean;
+  parentBodyweight: string | number;
 
   addSet(): void;
   removeSet(index: number): void;
   calculateSetMax(set: RepMaxSet): number;
   calculateAverageMax(): void;
   handleSetInput(): void;
+  getBodyweightValue(): number;
+  getEnteredWeight(set: RepMaxSet): number;
+  getEffectiveSetWeight(set: RepMaxSet): number;
+  isValidSet(set: RepMaxSet): boolean;
+  syncBodyweightContext(
+    isWeightedBodyweight: boolean,
+    bodyweight: string | number,
+  ): void;
   init(): void;
 }
 
@@ -46,6 +56,54 @@ export default function (): RepMaxCalculatorData {
     repRangeData: [],
     errorMessage: '',
     calculationMethod: 'average',
+    parentIsWeightedBodyweight: false,
+    parentBodyweight: '',
+
+    syncBodyweightContext(isWeightedBodyweight, bodyweight) {
+      this.parentIsWeightedBodyweight = isWeightedBodyweight;
+      this.parentBodyweight = bodyweight;
+
+      this.calculateAverageMax();
+    },
+
+    getBodyweightValue(): number {
+      const bodyweight = Number.parseFloat(String(this.parentBodyweight));
+      return Number.isFinite(bodyweight) && bodyweight > 0 ? bodyweight : 0;
+    },
+
+    getEnteredWeight(set: RepMaxSet): number {
+      return Number.parseFloat(String(set.weight));
+    },
+
+    getEffectiveSetWeight(set: RepMaxSet): number {
+      const enteredWeight = this.getEnteredWeight(set);
+      const bodyweight = this.getBodyweightValue();
+
+      if (this.parentIsWeightedBodyweight) {
+        return enteredWeight + bodyweight;
+      }
+
+      return enteredWeight;
+    },
+
+    isValidSet(set: RepMaxSet): boolean {
+      const enteredWeight = this.getEnteredWeight(set);
+      const reps = Number.parseInt(String(set.reps));
+
+      if (Number.isNaN(reps) || reps <= 0) {
+        return false;
+      }
+
+      if (this.parentIsWeightedBodyweight) {
+        return (
+          this.getBodyweightValue() > 0 &&
+          !Number.isNaN(enteredWeight) &&
+          enteredWeight >= 0
+        );
+      }
+
+      return !Number.isNaN(enteredWeight) && enteredWeight > 0;
+    },
 
     addSet() {
       const lastSet = this.sets[this.sets.length - 1];
@@ -67,7 +125,7 @@ export default function (): RepMaxCalculatorData {
     },
 
     calculateSetMax(set: RepMaxSet): number {
-      const w = Number.parseFloat(String(set.weight));
+      const w = this.getEffectiveSetWeight(set);
       const r = Number.parseInt(String(set.reps));
 
       if (Number.isNaN(w) || w <= 0 || Number.isNaN(r) || r <= 0) {
@@ -95,10 +153,9 @@ export default function (): RepMaxCalculatorData {
       this.errorMessage = '';
 
       const validSets = this.sets.filter((set) => {
-        const w = Number.parseFloat(String(set.weight));
         const r = Number.parseInt(String(set.reps));
 
-        if (Number.isNaN(w) || w <= 0 || Number.isNaN(r) || r <= 0) {
+        if (!this.isValidSet(set)) {
           return false;
         }
 
@@ -143,7 +200,7 @@ export default function (): RepMaxCalculatorData {
           let totalWeight = 0;
           let weightedSum = 0;
           for (const set of validSets) {
-            const weight = Number.parseFloat(String(set.weight));
+            const weight = this.getEffectiveSetWeight(set);
             const reps = Number.parseInt(String(set.reps));
             const factor = weight * reps;
             weightedSum += set.estimatedMax * factor;
@@ -200,6 +257,8 @@ export default function (): RepMaxCalculatorData {
         localStorage.setItem('repMaxCalculationMethod', method);
         this.calculateAverageMax();
       });
+
+      this.calculateAverageMax();
     },
   };
 }

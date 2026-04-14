@@ -562,7 +562,12 @@ import Layout from "../layouts/Layout.astro";
         aria-hidden="true"
       >
         <div class="modal-dialog modal-lg">
-          <div class="modal-content" x-data="repMaxCalculator">
+          <div
+            class="modal-content"
+            x-data="repMaxCalculator"
+            x-init="init"
+            x-effect="syncBodyweightContext(isWeightedBodyweight, bodyweight)"
+          >
             <div class="modal-header">
               <h5 class="modal-title" id="repMaxCalculatorModalLabel">
                 Rep Max Calculator
@@ -617,7 +622,11 @@ import Layout from "../layouts/Layout.astro";
                   <thead>
                     <tr>
                       <th scope="col">Set</th>
-                      <th scope="col" class="w-50">Weight (lbs)</th>
+                      <th scope="col" class="w-50">
+                        <span
+                          x-text="isWeightedBodyweight ? 'Added weight (lbs)' : 'Weight (lbs)'"
+                        ></span>
+                      </th>
                       <th scope="col" class="w-25">Reps</th>
                       <th scope="col" class="d-none d-md-table-cell text-center"
                         >Est. 1RM</th
