@@ -380,7 +380,7 @@ export function weightedBodyweight(
 }
 
 /**
- * Weighted bodyweight pre-climbing formula (Cold)
+ * Weighted bodyweight formula for Fresh sessions
  * Bodyweight-only x8, 50% added weight x3, working set (+added)
  */
 export function weightedBodyweightPreClimbing(
@@ -419,7 +419,7 @@ export function weightedBodyweightPreClimbing(
 }
 
 /**
- * Weighted bodyweight post-climbing formula (Warm)
+ * Weighted bodyweight formula for Warmed up sessions
  * Bodyweight-only x5, skip middle set, working set (+added)
  */
 export function weightedBodyweightPostClimbing(
@@ -451,7 +451,7 @@ export function weightedBodyweightPostClimbing(
 }
 
 /**
- * Dumbbell pre-climbing ramp-up formula (Rule of 3)
+ * Dumbbell ramp-up formula for Fresh sessions (Rule of 3)
  */
 export function dumbbellPreClimbing(
   targetWeight: number,
@@ -482,7 +482,7 @@ export function dumbbellPreClimbing(
 }
 
 /**
- * Dumbbell post-climbing ramp-up formula (Energy Saver)
+ * Dumbbell ramp-up formula for Warmed up sessions (Energy Saver)
  */
 export function dumbbellPostClimbing(
   targetWeight: number,
@@ -508,7 +508,7 @@ export function dumbbellPostClimbing(
 }
 
 /**
- * Barbell pre-climbing ramp-up formula (Cold)
+ * Barbell ramp-up formula for Fresh sessions
  * Empty bar x15, 50% x5, 75% x3, working weight
  */
 export function barbellPreClimbing(
@@ -548,7 +548,7 @@ export function barbellPreClimbing(
 }
 
 /**
- * Barbell post-climbing ramp-up formula (Warm)
+ * Barbell ramp-up formula for Warmed up sessions
  * Empty bar x10, 60% x4, skip, working weight
  */
 export function barbellPostClimbing(
