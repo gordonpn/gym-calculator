@@ -203,7 +203,7 @@ import Layout from "../layouts/Layout.astro";
                 <td x-text="set.reps"></td>
                 <td>
                   <template
-                    x-if="set.plates.remaining > 0 && minimizePlateChanges && !isWeightedBodyweight"
+                    x-if="set.plates.remaining > 0 && barbellMinimizePlateChanges && !isWeightedBodyweight"
                   >
                     <div>
                       <span x-text="set.plates.actualWeight + ' lbs'"></span>
@@ -213,7 +213,7 @@ import Layout from "../layouts/Layout.astro";
                     </div>
                   </template>
                   <template
-                    x-if="set.plates.remaining > 0 && minimizePlateChanges && isWeightedBodyweight"
+                    x-if="set.plates.remaining > 0 && barbellMinimizePlateChanges && isWeightedBodyweight"
                   >
                     <div>
                       <span x-text="set.plates.actualWeight + ' lbs added'"
@@ -225,7 +225,7 @@ import Layout from "../layouts/Layout.astro";
                     </div>
                   </template>
                   <template
-                    x-if="set.plates.remaining === 0 || !minimizePlateChanges"
+                    x-if="set.plates.remaining === 0 || !barbellMinimizePlateChanges"
                   >
                     <div>
                       <template x-if="isWeightedBodyweight">
@@ -273,7 +273,7 @@ import Layout from "../layouts/Layout.astro";
                           </template>
                         </template>
                         <template
-                          x-if="set.plates.remaining > 0 && minimizePlateChanges"
+                          x-if="set.plates.remaining > 0 && barbellMinimizePlateChanges"
                         >
                           <span
                             class="badge text-bg-warning"
@@ -343,7 +343,7 @@ import Layout from "../layouts/Layout.astro";
                     </template>
                   </template>
                   <template
-                    x-if="calculatePlatesNeeded(roundedTargetWeight).remaining > 0 && minimizePlateChanges"
+                    x-if="calculatePlatesNeeded(roundedTargetWeight).remaining > 0 && barbellMinimizePlateChanges"
                   >
                     <span
                       class="badge text-bg-warning fs-5"
@@ -408,7 +408,7 @@ import Layout from "../layouts/Layout.astro";
                           </template>
                         </template>
                         <template
-                          x-if="set.plates.remaining > 0 && minimizePlateChanges"
+                          x-if="set.plates.remaining > 0 && barbellMinimizePlateChanges"
                         >
                           <span
                             class="badge text-bg-warning fs-5"
@@ -467,7 +467,7 @@ import Layout from "../layouts/Layout.astro";
                     class="form-check-input"
                     type="checkbox"
                     id="minimizePlateChanges"
-                    x-model="minimizePlateChanges"
+                    x-model="barbellMinimizePlateChanges"
                   />
                   <label class="form-check-label" for="minimizePlateChanges"
                     >Minimize plate changes between sets</label

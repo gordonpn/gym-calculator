@@ -30,6 +30,7 @@ export interface CalculatorData {
   warmupSets: WarmupSet[];
   showSetsSelector: boolean;
   minimizePlateChanges: boolean;
+  barbellMinimizePlateChanges: boolean;
   isWeightedBodyweight: boolean;
   bodyweight: string | number;
   showBodyweightInput: boolean;
@@ -70,6 +71,7 @@ export default function (): CalculatorData {
     warmupSets: [],
     showSetsSelector: true,
     minimizePlateChanges: false,
+    barbellMinimizePlateChanges: false,
     isWeightedBodyweight: false,
     bodyweight: "",
     showBodyweightInput: false,
@@ -172,7 +174,7 @@ export default function (): CalculatorData {
 
       if (validWeight) {
         const useMinimizePlateChanges =
-          this.equipmentType === "barbell" && this.minimizePlateChanges;
+          this.equipmentType === "barbell" && this.barbellMinimizePlateChanges;
 
         // Calculate the rounded weight for display purposes only
         let roundedWeight = Number(weight);
@@ -312,7 +314,7 @@ export default function (): CalculatorData {
       options: { minPlateWeight?: number } = {},
     ): PlateCalculation {
       const useMinimizePlateChanges =
-        this.equipmentType === "barbell" && this.minimizePlateChanges;
+        this.equipmentType === "barbell" && this.barbellMinimizePlateChanges;
       const { minPlateWeight = 0 } = options;
       const isForBodyweightExercise =
         this.isWeightedBodyweight && targetWeight > 0;
@@ -424,7 +426,7 @@ export default function (): CalculatorData {
       const roundedSet = applyRounding(backoffSet);
 
       const useMinimizePlateChanges =
-        this.equipmentType === "barbell" && this.minimizePlateChanges;
+        this.equipmentType === "barbell" && this.barbellMinimizePlateChanges;
 
       if (this.isWeightedBodyweight) {
         const addedWeight = Math.max(0, roundedSet.addedWeight || 0);
@@ -472,7 +474,8 @@ export default function (): CalculatorData {
           equipmentType: this.equipmentType,
           barWeight: Number.parseFloat(String(this.barWeight)),
           availablePlates: this.availablePlates,
-          minimizePlateChanges: this.minimizePlateChanges,
+          minimizePlateChanges: this.barbellMinimizePlateChanges,
+          barbellMinimizePlateChanges: this.barbellMinimizePlateChanges,
           bodyweight: this.bodyweight
             ? Number.parseFloat(String(this.bodyweight))
             : 0,
@@ -633,10 +636,20 @@ export default function (): CalculatorData {
         }
 
         if (
+          Object.prototype.hasOwnProperty.call(
+            settings,
+            "barbellMinimizePlateChanges",
+          )
+        ) {
+          this.barbellMinimizePlateChanges =
+            settings.barbellMinimizePlateChanges;
+        } else if (
           Object.prototype.hasOwnProperty.call(settings, "minimizePlateChanges")
         ) {
-          this.minimizePlateChanges = settings.minimizePlateChanges;
+          this.barbellMinimizePlateChanges = settings.minimizePlateChanges;
         }
+
+        this.minimizePlateChanges = this.barbellMinimizePlateChanges;
 
         if (
           Object.prototype.hasOwnProperty.call(settings, "bodyweight") &&
@@ -733,7 +746,8 @@ export default function (): CalculatorData {
       });
 
       // @ts-ignore
-      this.$watch("minimizePlateChanges", () => {
+      this.$watch("barbellMinimizePlateChanges", () => {
+        this.minimizePlateChanges = this.barbellMinimizePlateChanges;
         this.saveSettings();
         this.debouncedCalculate?.();
       });
