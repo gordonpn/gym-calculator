@@ -118,10 +118,6 @@ export default function (): CalculatorData {
       this.isWeightedBodyweight = this.equipmentType === "weightedBodyweight";
       this.showBodyweightInput = this.isWeightedBodyweight;
 
-      if (this.equipmentType !== "barbell") {
-        this.minimizePlateChanges = false;
-      }
-
       if (
         this.isWeightedBodyweight &&
         (!this.bodyweight || Number(this.bodyweight) <= 0)
