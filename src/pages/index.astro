@@ -450,7 +450,11 @@ import Layout from "../layouts/Layout.astro";
                 <label for="barWeight" class="form-label"
                   >Bar Weight (lbs)</label
                 >
-                <select class="form-select" id="barWeight" x-model="barWeight">
+                <select
+                  class="form-select"
+                  id="barWeight"
+                  x-model.number="barWeight"
+                >
                   <template x-for="weight in barWeightOptions" :key="weight">
                     <option :value="weight" x-text="weight"></option>
                   </template>

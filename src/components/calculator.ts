@@ -595,12 +595,14 @@ export default function (): CalculatorData {
 
         if (Object.prototype.hasOwnProperty.call(settings, "barWeight")) {
           const parsedBarWeight = Number.parseFloat(String(settings.barWeight));
-          if (Number.isFinite(parsedBarWeight)) {
+          if (Number.isFinite(parsedBarWeight) && parsedBarWeight > 0) {
             const normalizedBarWeight = Math.min(
               45,
               Math.max(5, Math.round(parsedBarWeight / 5) * 5),
             );
             this.barWeight = normalizedBarWeight;
+          } else {
+            this.barWeight = 45;
           }
         }
 
@@ -727,7 +729,7 @@ export default function (): CalculatorData {
       // @ts-ignore
       this.$watch("barWeight", (newValue: number) => {
         const parsedBarWeight = Number.parseFloat(String(newValue));
-        if (!Number.isFinite(parsedBarWeight)) {
+        if (!Number.isFinite(parsedBarWeight) || parsedBarWeight <= 0) {
           return;
         }
 
