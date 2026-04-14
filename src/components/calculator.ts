@@ -78,7 +78,7 @@ export default function (): CalculatorData {
     enableBackoff: false,
     backoffPercentage: 80,
     barWeight: 45,
-    barWeightOptions: Array.from({ length: 10 }, (_value, index) => index * 5),
+    barWeightOptions: Array.from({ length: 9 }, (_value, index) => 45 - index * 5),
     availablePlates: [
       { weight: 55, available: false },
       { weight: 45, available: true },
@@ -598,7 +598,7 @@ export default function (): CalculatorData {
           if (Number.isFinite(parsedBarWeight)) {
             const normalizedBarWeight = Math.min(
               45,
-              Math.max(0, Math.round(parsedBarWeight / 5) * 5),
+              Math.max(5, Math.round(parsedBarWeight / 5) * 5),
             );
             this.barWeight = normalizedBarWeight;
           }
@@ -733,7 +733,7 @@ export default function (): CalculatorData {
 
         const normalizedBarWeight = Math.min(
           45,
-          Math.max(0, Math.round(parsedBarWeight / 5) * 5),
+          Math.max(5, Math.round(parsedBarWeight / 5) * 5),
         );
 
         if (this.barWeight !== normalizedBarWeight) {
