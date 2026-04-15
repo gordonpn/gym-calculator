@@ -456,7 +456,11 @@ import Layout from "../layouts/Layout.astro";
                   x-model.number="barWeight"
                 >
                   <template x-for="weight in barWeightOptions" :key="weight">
-                    <option :value="weight" x-text="weight"></option>
+                    <option
+                      :value="weight"
+                      :selected="Number(weight) === Number(barWeight)"
+                      x-text="weight"
+                    ></option>
                   </template>
                 </select>
               </div>
