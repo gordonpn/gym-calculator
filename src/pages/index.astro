@@ -12,6 +12,7 @@ import Layout from "../layouts/Layout.astro";
             class="btn btn-outline-primary w-100"
             data-bs-toggle="modal"
             data-bs-target="#plateSettingsModal"
+            @click="openPlateSettingsModal()"
           >
             <i class="bi bi-gear"></i> Warm-up options
           </button>
@@ -446,6 +447,179 @@ import Layout from "../layouts/Layout.astro";
                 aria-label="Close"></button>
             </div>
             <div class="modal-body">
+              <div class="mb-4 border rounded p-3">
+                <h6 class="mb-2">Plate Presets</h6>
+                <p class="text-muted small mb-3">
+                  Save bar weight and plate setup as named presets. Presets are
+                  stored only in this browser on this device.
+                </p>
+
+                <div class="mb-2">
+                  <label for="platePresetName" class="form-label"
+                    >New preset name</label
+                  >
+                  <div class="input-group">
+                    <input
+                      id="platePresetName"
+                      type="text"
+                      class="form-control"
+                      x-model="platePresetNameInput"
+                      @input="clearPresetStatus()"
+                      @keydown.enter.prevent="savePlatePreset()"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      @click="savePlatePreset()"
+                    >
+                      Save Preset
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mb-2">
+                  <label class="form-label"
+                    >Saved presets (<span x-text="platePresets.length"
+                    ></span>)</label
+                  >
+                  <div
+                    class="list-group preset-list"
+                    x-show="platePresets.length > 0"
+                  >
+                    <template x-for="preset in platePresets" :key="preset.id">
+                      <button
+                        type="button"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                        :class="preset.id === selectedPlatePresetId ? 'active' : ''"
+                        @click="selectedPlatePresetId = preset.id; onPlatePresetSelectionChange()"
+                      >
+                        <span x-text="preset.name"></span>
+                        <span
+                          class="badge text-bg-light"
+                          x-show="preset.id === defaultPlatePresetId"
+                          >Default</span
+                        >
+                      </button>
+                    </template>
+                  </div>
+                </div>
+
+                <template x-if="platePresets.length === 0">
+                  <p class="text-muted small mb-2">
+                    No presets yet. Enter a name and save your current setup.
+                  </p>
+                </template>
+
+                <div class="mb-2" x-show="selectedPlatePresetId">
+                  <label for="platePresetRename" class="form-label"
+                    >Rename selected preset</label
+                  >
+                  <div class="input-group">
+                    <input
+                      id="platePresetRename"
+                      type="text"
+                      class="form-control"
+                      x-model="platePresetRenameInput"
+                      @input="clearPresetStatus()"
+                      @keydown.enter.prevent="renameSelectedPlatePreset()"
+                      @keydown.escape.prevent="onPlatePresetSelectionChange()"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      @click="renameSelectedPlatePreset()"
+                    >
+                      Rename
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="d-flex flex-wrap gap-2 mb-2"
+                  x-show="platePresets.length > 0"
+                >
+                  <button
+                    type="button"
+                    class="btn btn-outline-success btn-sm"
+                    :disabled="!selectedPlatePresetId"
+                    @click="applySelectedPlatePreset()"
+                  >
+                    Apply
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-danger btn-sm"
+                    :disabled="!selectedPlatePresetId"
+                    @click="deleteSelectedPlatePreset()"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-dark btn-sm"
+                    :disabled="!selectedPlatePresetId"
+                    @click="setDefaultSelectedPlatePreset()"
+                  >
+                    Set Default
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    :disabled="!defaultPlatePresetId"
+                    @click="clearDefaultPlatePreset()"
+                  >
+                    Clear Default
+                  </button>
+                </div>
+
+                <p class="small mb-1" x-show="defaultPlatePresetId">
+                  <span class="badge text-bg-secondary me-2">Default</span>
+                  <span
+                    x-text="platePresets.find((preset) => preset.id === defaultPlatePresetId)?.name || 'None'"
+                  ></span>
+                </p>
+                <div
+                  class="alert alert-danger py-2 mb-2"
+                  role="alert"
+                  aria-live="polite"
+                  x-show="platePresetError"
+                  x-text="platePresetError"
+                >
+                </div>
+                <div
+                  class="alert alert-success py-2 mb-0"
+                  role="status"
+                  aria-live="polite"
+                  x-show="platePresetStatus"
+                  x-text="platePresetStatus"
+                >
+                </div>
+
+                <div
+                  class="position-fixed bottom-0 end-0 p-3"
+                  style="z-index: 1080"
+                >
+                  <div
+                    class="toast align-items-center border-0 show"
+                    :class="presetToastVariant === 'success' ? 'text-bg-success' : (presetToastVariant === 'warning' ? 'text-bg-warning' : 'text-bg-danger')"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    x-show="showPresetToast"
+                    x-transition.opacity
+                  >
+                    <div class="d-flex">
+                      <div class="toast-body" x-text="presetToastMessage"></div>
+                      <button
+                        type="button"
+                        class="btn-close btn-close-white me-2 m-auto"
+                        @click="showPresetToast = false"
+                        aria-label="Close"></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="mb-3">
                 <label for="barWeight" class="form-label"
                   >Bar Weight (lbs)</label
@@ -459,8 +633,7 @@ import Layout from "../layouts/Layout.astro";
                     <option
                       :value="weight"
                       :selected="Number(weight) === Number(barWeight)"
-                      x-text="weight"
-                    ></option>
+                      x-text="weight"></option>
                   </template>
                 </select>
               </div>
@@ -523,17 +696,34 @@ import Layout from "../layouts/Layout.astro";
                   :key="plate.weight"
                 >
                   <div class="col">
-                    <input
-                      class="btn-check"
-                      type="checkbox"
-                      :id="`plate-${plate.weight}`"
-                      x-model="plate.available"
-                    />
-                    <label
-                      class="btn btn-sm w-100 text-start"
-                      :class="plate.available ? 'btn-primary' : 'btn-outline-secondary'"
-                      :for="`plate-${plate.weight}`"
-                      x-text="`${plate.weight} lbs`"></label>
+                    <div class="card p-2 h-100">
+                      <div class="form-check mb-2">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          :id="`plate-${plate.weight}`"
+                          x-model="plate.available"
+                        />
+                        <label
+                          class="form-check-label"
+                          :for="`plate-${plate.weight}`"
+                          x-text="`${plate.weight} lbs`"></label>
+                      </div>
+                      <label
+                        class="form-label form-label-sm mb-1"
+                        :for="`plate-count-${plate.weight}`">Count</label
+                      >
+                      <input
+                        class="form-control form-control-sm"
+                        type="number"
+                        min="0"
+                        step="1"
+                        :id="`plate-count-${plate.weight}`"
+                        :disabled="!plate.available"
+                        x-model.number="plate.count"
+                        @input="plate.count = Math.max(0, Math.floor(Number(plate.count) || 0))"
+                      />
+                    </div>
                   </div>
                 </template>
               </div>

@@ -1,10 +1,20 @@
+import Modal from 'bootstrap/js/dist/modal';
+import {
+  PLATE_PRESETS_STORAGE_KEY,
+  type PlatePreset,
+  buildPlatePresetSnapshot,
+  createPlatePresetPayload,
+  normalizePlateCollection,
+  parsePlatePresetStore,
+  serializePlatePresetStore,
+} from './presetStorage';
 import {
   type Plate,
   debounce,
   roundToNearest5,
   roundToNearestAchievableWeight,
   roundToSmallestPlate,
-} from "./util";
+} from './util';
 import {
   type PlateCalculation,
   type WarmupSet,
@@ -12,10 +22,36 @@ import {
   getDefaultSets,
   getFormula,
   isConfigurableFormula,
-} from "./warmup-formulas";
+} from './warmup-formulas';
 
-type SessionTiming = "pre" | "post" | "";
-type EquipmentType = "barbell" | "dumbbell" | "weightedBodyweight" | "";
+type SessionTiming = 'pre' | 'post' | '';
+type EquipmentType = 'barbell' | 'dumbbell' | 'weightedBodyweight' | '';
+
+const DEFAULT_BAR_WEIGHT = 45;
+const PLATE_DEFAULT_COUNT = 10;
+
+const DEFAULT_AVAILABLE_PLATES: Plate[] = [
+  { weight: 55, available: false, count: 0 },
+  { weight: 45, available: true, count: PLATE_DEFAULT_COUNT },
+  { weight: 35, available: true, count: PLATE_DEFAULT_COUNT },
+  { weight: 25, available: true, count: PLATE_DEFAULT_COUNT },
+  { weight: 15, available: true, count: PLATE_DEFAULT_COUNT },
+  { weight: 10, available: true, count: PLATE_DEFAULT_COUNT },
+  { weight: 5, available: true, count: PLATE_DEFAULT_COUNT },
+  { weight: 2.5, available: true, count: PLATE_DEFAULT_COUNT },
+  { weight: 1, available: true, count: PLATE_DEFAULT_COUNT },
+  { weight: 0.75, available: true, count: PLATE_DEFAULT_COUNT },
+  { weight: 0.5, available: true, count: PLATE_DEFAULT_COUNT },
+  { weight: 0.25, available: true, count: PLATE_DEFAULT_COUNT },
+];
+
+const makePresetId = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.round(Math.random() * 1_000_000)}`;
+};
 
 /**
  * Interface for the calculator Alpine component state
@@ -39,6 +75,17 @@ export interface CalculatorData {
   barWeight: number;
   barWeightOptions: number[];
   availablePlates: Plate[];
+  platePresets: PlatePreset[];
+  selectedPlatePresetId: string;
+  platePresetNameInput: string;
+  platePresetRenameInput: string;
+  defaultPlatePresetId: string;
+  platePresetError: string;
+  platePresetStatus: string;
+  presetToastMessage: string;
+  presetToastVariant: 'success' | 'danger' | 'warning';
+  showPresetToast: boolean;
+  presetToastTimeoutId?: ReturnType<typeof setTimeout>;
   debouncedCalculate?: () => void;
 
   hasJourneySelection(): boolean;
@@ -52,6 +99,22 @@ export interface CalculatorData {
   createBackoffSet(targetWeight: number, bodyweight?: number): WarmupSet;
   saveSettings(): void;
   savePlateSettings(): void;
+  savePlatePreset(): void;
+  applySelectedPlatePreset(): void;
+  renameSelectedPlatePreset(): void;
+  deleteSelectedPlatePreset(): void;
+  setDefaultSelectedPlatePreset(): void;
+  clearDefaultPlatePreset(): void;
+  openPlateSettingsModal(): void;
+  onPlatePresetSelectionChange(): void;
+  clearPresetStatus(): void;
+  triggerPresetToast(
+    message: string,
+    variant?: 'success' | 'danger' | 'warning',
+  ): void;
+  hydratePlatePresets(): void;
+  persistPlatePresetStore(): boolean;
+  isSelectedPlatePresetDefault(): boolean;
   getPlateColor(weight: number | string): string;
   incrementWeight(direction: 1 | -1): void;
   init(): void;
@@ -62,37 +125,35 @@ export interface CalculatorData {
  */
 export default function (): CalculatorData {
   return {
-    sessionTiming: "",
-    equipmentType: "",
+    sessionTiming: '',
+    equipmentType: '',
     numWarmupSets: 6,
-    targetWeight: "",
+    targetWeight: '',
     roundedTargetWeight: 0,
-    selectedFormula: "barbellPreClimbing",
+    selectedFormula: 'barbellPreClimbing',
     warmupSets: [],
     showSetsSelector: true,
     minimizePlateChanges: false,
     barbellMinimizePlateChanges: false,
     isWeightedBodyweight: false,
-    bodyweight: "",
+    bodyweight: '',
     showBodyweightInput: false,
     enableBackoff: false,
     backoffPercentage: 80,
-    barWeight: 45,
+    barWeight: DEFAULT_BAR_WEIGHT,
     barWeightOptions: Array.from({ length: 9 }, (_value, index) => 45 - index * 5),
-    availablePlates: [
-      { weight: 55, available: false },
-      { weight: 45, available: true },
-      { weight: 35, available: true },
-      { weight: 25, available: true },
-      { weight: 15, available: true },
-      { weight: 10, available: true },
-      { weight: 5, available: true },
-      { weight: 2.5, available: true },
-      { weight: 1, available: true },
-      { weight: 0.75, available: true },
-      { weight: 0.5, available: true },
-      { weight: 0.25, available: true },
-    ],
+    availablePlates: normalizePlateCollection(DEFAULT_AVAILABLE_PLATES),
+    platePresets: [],
+    selectedPlatePresetId: '',
+    platePresetNameInput: '',
+    platePresetRenameInput: '',
+    defaultPlatePresetId: '',
+    platePresetError: '',
+    platePresetStatus: '',
+    presetToastMessage: '',
+    presetToastVariant: 'success',
+    showPresetToast: false,
+    presetToastTimeoutId: undefined,
 
     hasJourneySelection() {
       return !!this.sessionTiming && !!this.equipmentType;
@@ -333,14 +394,18 @@ export default function (): CalculatorData {
         : (targetWeight - this.barWeight) / 2;
 
       const filteredPlates = this.availablePlates.filter(
-        (plate) => plate.available && plate.weight >= Number(minPlateWeight),
+        (plate) =>
+          plate.available &&
+          plate.weight >= Number(minPlateWeight) &&
+          Number(plate.count ?? 0) > 0,
       );
 
       let remaining = weightToAdd;
       const plateConfig: Array<{ weight: number; count: number }> = [];
 
       for (const plate of filteredPlates) {
-        const count = Math.floor(remaining / plate.weight);
+        const maxCount = Math.max(0, Math.floor(Number(plate.count ?? 0)));
+        const count = Math.min(Math.floor(remaining / plate.weight), maxCount);
 
         if (count > 0) {
           plateConfig.push({
@@ -467,13 +532,15 @@ export default function (): CalculatorData {
     },
 
     saveSettings() {
+      const normalizedPlates = normalizePlateCollection(this.availablePlates);
+
       localStorage.setItem(
         "plateSettings",
         JSON.stringify({
           sessionTiming: this.sessionTiming,
           equipmentType: this.equipmentType,
           barWeight: Number.parseFloat(String(this.barWeight)),
-          availablePlates: this.availablePlates,
+          availablePlates: normalizedPlates,
           minimizePlateChanges: this.barbellMinimizePlateChanges,
           barbellMinimizePlateChanges: this.barbellMinimizePlateChanges,
           bodyweight: this.bodyweight
@@ -491,6 +558,269 @@ export default function (): CalculatorData {
     savePlateSettings() {
       this.saveSettings();
       this.calculate();
+    },
+
+    openPlateSettingsModal() {
+      const modalElement = document.getElementById('plateSettingsModal');
+      if (!modalElement) {
+        return;
+      }
+
+      const modalInstance = Modal.getOrCreateInstance(modalElement);
+      modalInstance.show();
+    },
+
+    clearPresetStatus() {
+      this.platePresetError = '';
+      this.platePresetStatus = '';
+    },
+
+    triggerPresetToast(message, variant = 'success') {
+      this.presetToastMessage = message;
+      this.presetToastVariant = variant;
+      this.showPresetToast = true;
+
+      if (this.presetToastTimeoutId) {
+        clearTimeout(this.presetToastTimeoutId);
+      }
+
+      this.presetToastTimeoutId = setTimeout(() => {
+        this.showPresetToast = false;
+      }, 2800);
+    },
+
+    hydratePlatePresets() {
+      const presetStore = parsePlatePresetStore(
+        localStorage.getItem(PLATE_PRESETS_STORAGE_KEY),
+      );
+
+      this.platePresets = presetStore.presets;
+      this.defaultPlatePresetId = presetStore.defaultPresetId || '';
+
+      const hasSelected = this.platePresets.some(
+        (preset) => preset.id === this.selectedPlatePresetId,
+      );
+
+      if (!hasSelected) {
+        this.selectedPlatePresetId = this.platePresets[0]?.id ?? '';
+      }
+
+      const selectedPreset = this.platePresets.find(
+        (preset) => preset.id === this.selectedPlatePresetId,
+      );
+      this.platePresetRenameInput = selectedPreset ? selectedPreset.name : '';
+    },
+
+    persistPlatePresetStore() {
+      try {
+        localStorage.setItem(
+          PLATE_PRESETS_STORAGE_KEY,
+          serializePlatePresetStore({
+            defaultPresetId: this.defaultPlatePresetId || null,
+            presets: this.platePresets,
+          }),
+        );
+        return true;
+      } catch {
+        this.platePresetError =
+          'Could not save presets in this browser. Please check storage availability.';
+        this.triggerPresetToast(this.platePresetError, 'danger');
+        return false;
+      }
+    },
+
+    onPlatePresetSelectionChange() {
+      this.clearPresetStatus();
+
+      const selectedPreset = this.platePresets.find(
+        (preset) => preset.id === this.selectedPlatePresetId,
+      );
+
+      this.platePresetRenameInput = selectedPreset ? selectedPreset.name : '';
+
+      if (selectedPreset) {
+        this.applySelectedPlatePreset();
+      }
+    },
+
+    isSelectedPlatePresetDefault() {
+      return (
+        !!this.selectedPlatePresetId &&
+        this.selectedPlatePresetId === this.defaultPlatePresetId
+      );
+    },
+
+    savePlatePreset() {
+      this.clearPresetStatus();
+
+      try {
+        const presetName = String(this.platePresetNameInput).trim();
+        if (!presetName) {
+          this.platePresetError = 'Preset name is required.';
+          return;
+        }
+
+        const currentSnapshot = buildPlatePresetSnapshot(
+          this.barWeight,
+          this.availablePlates,
+        );
+
+        const samePresetAlreadyExists = this.platePresets.some(
+          (preset) =>
+            preset.name === presetName &&
+            buildPlatePresetSnapshot(
+              preset.barWeight,
+              preset.availablePlates,
+            ) === currentSnapshot,
+        );
+
+        if (samePresetAlreadyExists) {
+          this.platePresetStatus = 'No changes detected for this preset name.';
+          this.triggerPresetToast(this.platePresetStatus, 'warning');
+          return;
+        }
+
+        const now = Date.now();
+        const newPreset = createPlatePresetPayload(
+          makePresetId(),
+          presetName,
+          this.barWeight,
+          this.availablePlates,
+          now,
+        );
+
+        this.platePresets = [...this.platePresets, newPreset].sort(
+          (a, b) => b.updatedAt - a.updatedAt,
+        );
+
+        this.selectedPlatePresetId = newPreset.id;
+        this.platePresetRenameInput = newPreset.name;
+        this.platePresetNameInput = '';
+
+        if (!this.persistPlatePresetStore()) {
+          return;
+        }
+
+        this.platePresetStatus = 'Preset saved.';
+        this.triggerPresetToast(this.platePresetStatus, 'success');
+      } catch {
+        this.platePresetError =
+          'Could not save preset. Please try again with a different name.';
+        this.triggerPresetToast(this.platePresetError, 'danger');
+      }
+    },
+
+    applySelectedPlatePreset() {
+      this.clearPresetStatus();
+
+      const selectedPreset = this.platePresets.find(
+        (preset) => preset.id === this.selectedPlatePresetId,
+      );
+
+      if (!selectedPreset) {
+        this.platePresetError = 'Select a preset to apply.';
+        return;
+      }
+
+      this.barWeight = selectedPreset.barWeight;
+      this.availablePlates = normalizePlateCollection(selectedPreset.availablePlates);
+      this.saveSettings();
+      this.calculate();
+      this.platePresetStatus = `Applied preset: ${selectedPreset.name}`;
+      this.triggerPresetToast(this.platePresetStatus, 'success');
+    },
+
+    renameSelectedPlatePreset() {
+      this.clearPresetStatus();
+
+      const selectedPreset = this.platePresets.find(
+        (preset) => preset.id === this.selectedPlatePresetId,
+      );
+
+      if (!selectedPreset) {
+        this.platePresetError = 'Select a preset to rename.';
+        return;
+      }
+
+      const renamedValue = String(this.platePresetRenameInput).trim();
+      if (!renamedValue) {
+        this.platePresetError = 'Preset name is required.';
+        return;
+      }
+
+      selectedPreset.name = renamedValue;
+      selectedPreset.updatedAt = Date.now();
+      this.platePresets = [...this.platePresets].sort(
+        (a, b) => b.updatedAt - a.updatedAt,
+      );
+
+      if (!this.persistPlatePresetStore()) {
+        return;
+      }
+
+      this.platePresetStatus = 'Preset renamed.';
+    },
+
+    deleteSelectedPlatePreset() {
+      this.clearPresetStatus();
+
+      const selectedPreset = this.platePresets.find(
+        (preset) => preset.id === this.selectedPlatePresetId,
+      );
+
+      if (!selectedPreset) {
+        this.platePresetError = 'Select a preset to delete.';
+        return;
+      }
+
+      if (!window.confirm(`Delete preset "${selectedPreset.name}"?`)) {
+        return;
+      }
+
+      this.platePresets = this.platePresets.filter(
+        (preset) => preset.id !== this.selectedPlatePresetId,
+      );
+
+      if (this.defaultPlatePresetId === selectedPreset.id) {
+        this.defaultPlatePresetId = '';
+      }
+
+      this.selectedPlatePresetId = this.platePresets[0]?.id ?? '';
+      this.platePresetRenameInput = this.platePresets[0]?.name ?? '';
+
+      if (!this.persistPlatePresetStore()) {
+        return;
+      }
+
+      this.platePresetStatus = 'Preset deleted.';
+    },
+
+    setDefaultSelectedPlatePreset() {
+      this.clearPresetStatus();
+
+      if (!this.selectedPlatePresetId) {
+        this.platePresetError = 'Select a preset to set as default.';
+        return;
+      }
+
+      this.defaultPlatePresetId = this.selectedPlatePresetId;
+
+      if (!this.persistPlatePresetStore()) {
+        return;
+      }
+
+      this.platePresetStatus = 'Default preset updated.';
+    },
+
+    clearDefaultPlatePreset() {
+      this.clearPresetStatus();
+      this.defaultPlatePresetId = '';
+
+      if (!this.persistPlatePresetStore()) {
+        return;
+      }
+
+      this.platePresetStatus = 'Default preset cleared.';
     },
 
     getPlateColor(weight: number | string): string {
@@ -577,13 +907,19 @@ export default function (): CalculatorData {
     init() {
       // @ts-ignore - debounce returns a function, $el will be available in Alpine context
       this.debouncedCalculate = debounce(this.calculate.bind(this), 300);
-      this.selectedFormula = "barbellPreClimbing";
+      this.selectedFormula = 'barbellPreClimbing';
       this.numWarmupSets = getDefaultSets(this.selectedFormula);
       this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
 
       const savedSettings = localStorage.getItem("plateSettings");
       if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
+        let settings: Record<string, any> = {};
+
+        try {
+          settings = JSON.parse(savedSettings);
+        } catch {
+          settings = {};
+        }
 
         if (Object.prototype.hasOwnProperty.call(settings, "sessionTiming")) {
           this.sessionTiming = settings.sessionTiming;
@@ -602,7 +938,7 @@ export default function (): CalculatorData {
             );
             this.barWeight = normalizedBarWeight;
           } else {
-            this.barWeight = 45;
+            this.barWeight = DEFAULT_BAR_WEIGHT;
           }
         }
 
@@ -610,31 +946,7 @@ export default function (): CalculatorData {
           settings.availablePlates &&
           Array.isArray(settings.availablePlates)
         ) {
-          const expectedWeights = [
-            55, 45, 35, 25, 15, 10, 5, 2.5, 1, 0.75, 0.5, 0.25,
-          ];
-          const plateMap = new Map();
-
-          for (const plate of settings.availablePlates) {
-            plateMap.set(plate.weight, plate.available);
-          }
-
-          this.availablePlates = expectedWeights.map((weight) => ({
-            weight: weight,
-            available: plateMap.has(weight)
-              ? plateMap.get(weight)
-              : weight !== 55,
-          }));
-
-          const savedWeights = settings.availablePlates.map(
-            (p: Plate) => p.weight,
-          );
-          const newWeights = expectedWeights.filter(
-            (w) => !savedWeights.includes(w),
-          );
-          if (newWeights.length > 0) {
-            this.saveSettings();
-          }
+          this.availablePlates = normalizePlateCollection(settings.availablePlates);
         }
 
         if (
@@ -710,6 +1022,20 @@ export default function (): CalculatorData {
         this.equipmentType = this.isWeightedBodyweight
           ? "weightedBodyweight"
           : "barbell";
+      }
+
+      this.hydratePlatePresets();
+
+      if (this.defaultPlatePresetId) {
+        const defaultPreset = this.platePresets.find(
+          (preset) => preset.id === this.defaultPlatePresetId,
+        );
+
+        if (defaultPreset) {
+          this.barWeight = defaultPreset.barWeight;
+          this.availablePlates = normalizePlateCollection(defaultPreset.availablePlates);
+          this.saveSettings();
+        }
       }
 
       this.applyJourneySelection(false);

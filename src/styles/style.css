@@ -104,3 +104,8 @@ input[type="reset"] {
   background-color: #fd7e14 !important;
   color: white !important;
 }
+
+.preset-list {
+  max-height: 180px;
+  overflow-y: auto;
+}

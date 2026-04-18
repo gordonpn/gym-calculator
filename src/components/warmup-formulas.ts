@@ -46,19 +46,26 @@ export function generatePossibleWeights(
   isWeightedBodyweight: boolean = false
 ): number[] {
   const availablePlateWeights = availablePlates
-    .filter((p) => p.available)
-    .map((p) => p.weight)
-    .sort((a, b) => b - a);
+    .filter((p) => p.available && Number(p.count ?? 0) > 0)
+    .map((p) => ({
+      weight: p.weight,
+      count: Math.max(0, Math.floor(Number(p.count ?? 0))),
+    }))
+    .sort((a, b) => b.weight - a.weight);
 
   if (availablePlateWeights.length === 0) {
     return [barWeight];
   }
 
   // Find the smallest plate to use as increment step
-  const smallestPlate = availablePlateWeights[availablePlateWeights.length - 1];
+  const smallestPlate =
+    availablePlateWeights[availablePlateWeights.length - 1].weight;
 
   // Generate all possible combinations up to target weight
-  const generateCombinations = (weights: number[], maxWeight: number) => {
+  const generateCombinations = (
+    weights: Array<{ weight: number; count: number }>,
+    maxWeight: number
+  ) => {
     const combos: number[] = [];
 
     if (isWeightedBodyweight) {
@@ -74,9 +81,10 @@ export function generatePossibleWeights(
       let totalAdded = 0;
 
       for (const plate of weights) {
-        const count = Math.floor(remaining / plate);
-        totalAdded += count * plate;
-        remaining -= count * plate;
+        const desiredCount = Math.floor(remaining / plate.weight);
+        const count = Math.min(desiredCount, plate.count);
+        totalAdded += count * plate.weight;
+        remaining -= count * plate.weight;
       }
 
       if (remaining < 0.001) {
@@ -129,18 +137,22 @@ function optimizePlateChanges(
 
     // Calculate plates needed
     const availablePlateWeights = availablePlates
-      .filter((p) => p.available)
-      .map((p) => p.weight)
-      .sort((a, b) => b - a);
+      .filter((p) => p.available && Number(p.count ?? 0) > 0)
+      .map((p) => ({
+        weight: p.weight,
+        count: Math.max(0, Math.floor(Number(p.count ?? 0))),
+      }))
+      .sort((a, b) => b.weight - a.weight);
 
     let remaining = perSide;
     const plateConfig: Array<{ weight: number; count: number }> = [];
 
     for (const plate of availablePlateWeights) {
-      const count = Math.floor(remaining / plate);
+      const desiredCount = Math.floor(remaining / plate.weight);
+      const count = Math.min(desiredCount, plate.count);
       if (count > 0) {
-        plateConfig.push({ weight: plate, count });
-        remaining -= count * plate;
+        plateConfig.push({ weight: plate.weight, count });
+        remaining -= count * plate.weight;
       }
     }
 

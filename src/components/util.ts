@@ -4,7 +4,21 @@
 export interface Plate {
   weight: number;
   available: boolean;
+  count?: number;
 }
+
+const getPlateCount = (plate: Plate): number => {
+  if (!plate.available) {
+    return 0;
+  }
+
+  if (typeof plate.count === 'number' && Number.isFinite(plate.count)) {
+    return Math.max(0, Math.floor(plate.count));
+  }
+
+  // Backward compatibility: older saved data had no count limit.
+  return Number.POSITIVE_INFINITY;
+};
 
 /**
  * Debounce function to delay execution
@@ -36,7 +50,7 @@ export function roundToSmallestPlate(
 ): number {
   // Find the smallest available plate
   const smallestPlate = availablePlates
-    .filter((plate) => plate.available)
+    .filter((plate) => getPlateCount(plate) > 0)
     .map((plate) => plate.weight)
     .sort((a, b) => a - b)[0];
 
@@ -76,7 +90,7 @@ export function roundToNearestAchievableWeight(
 
   // Get available plates sorted by weight (largest first for greedy algorithm)
   const availablePlateWeights = availablePlates
-    .filter((plate) => plate && plate.available)
+    .filter((plate) => plate && getPlateCount(plate) > 0)
     .map((plate) => Number(plate.weight))
     .sort((a, b) => b - a);
 
@@ -96,7 +110,9 @@ export function roundToNearestAchievableWeight(
   let totalAdded = 0;
 
   for (const plate of availablePlateWeights) {
-    const count = Math.floor(remaining / plate);
+    const sourcePlate = availablePlates.find((p) => p.weight === plate);
+    const maxCount = sourcePlate ? getPlateCount(sourcePlate) : 0;
+    const count = Math.min(Math.floor(remaining / plate), maxCount);
     totalAdded += count * plate;
     remaining = remaining - count * plate;
   }

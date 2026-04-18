@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "biome check --verbose --write --unsafe ."
+    "check": "biome check --verbose --write --unsafe .",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "gordonpn",
@@ -14,7 +15,8 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@types/bootstrap": "^5.2.10",
-    "lefthook": "^1.11.12"
+    "lefthook": "^1.11.12",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@astrojs/alpinejs": "^0.5.0",
