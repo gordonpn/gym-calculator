@@ -1,27 +1,27 @@
 import Modal from 'bootstrap/js/dist/modal';
 import {
-    PLATE_PRESETS_STORAGE_KEY,
-    type PlatePreset,
-    buildPlatePresetSnapshot,
-    createPlatePresetPayload,
-    normalizePlateCollection,
-    parsePlatePresetStore,
-    serializePlatePresetStore,
+  PLATE_PRESETS_STORAGE_KEY,
+  type PlatePreset,
+  buildPlatePresetSnapshot,
+  createPlatePresetPayload,
+  normalizePlateCollection,
+  parsePlatePresetStore,
+  serializePlatePresetStore,
 } from './presetStorage';
 import {
-    type Plate,
-    debounce,
-    roundToNearest5,
-    roundToNearestAchievableWeight,
-    roundToSmallestPlate,
+  type Plate,
+  debounce,
+  roundToNearest5,
+  roundToNearestAchievableWeight,
+  roundToSmallestPlate,
 } from './util';
 import {
-    type PlateCalculation,
-    type WarmupSet,
-    generatePossibleWeights,
-    getDefaultSets,
-    getFormula,
-    isConfigurableFormula,
+  type PlateCalculation,
+  type WarmupSet,
+  generatePossibleWeights,
+  getDefaultSets,
+  getFormula,
+  isConfigurableFormula,
 } from './warmup-formulas';
 
 type SessionTiming = 'pre' | 'post' | '';
@@ -85,13 +85,14 @@ export interface CalculatorData {
   showPresetToast: boolean;
   isCalculating: boolean;
   calculationRequestId: number;
-  pendingCalculationFrame: number | null;
+  pendingCalculationTimeout: ReturnType<typeof setTimeout> | null;
   presetToastTimeoutId?: ReturnType<typeof setTimeout>;
   debouncedCalculate?: () => void;
 
   hasJourneySelection(): boolean;
   getAutoFormulaForJourney(): string;
   applyJourneySelection(shouldPersist?: boolean): void;
+  hasCalculableWeight(): boolean;
   scheduleCalculation(): void;
   runCalculation(): void;
   calculate(): void;
@@ -156,7 +157,7 @@ export default function (): CalculatorData {
     showPresetToast: false,
     isCalculating: false,
     calculationRequestId: 0,
-    pendingCalculationFrame: null,
+    pendingCalculationTimeout: null,
     presetToastTimeoutId: undefined,
 
     hasJourneySelection() {
@@ -209,35 +210,52 @@ export default function (): CalculatorData {
       this.debouncedCalculate?.();
     },
 
+    hasCalculableWeight() {
+      const weight = Number.parseFloat(String(this.targetWeight));
+      return !Number.isNaN(weight);
+    },
+
     scheduleCalculation() {
       const requestId = ++this.calculationRequestId;
 
-      if (this.pendingCalculationFrame !== null) {
-        cancelAnimationFrame(this.pendingCalculationFrame);
+      if (this.pendingCalculationTimeout !== null) {
+        clearTimeout(this.pendingCalculationTimeout);
+        this.pendingCalculationTimeout = null;
       }
 
-      this.isCalculating = true;
-      this.pendingCalculationFrame = requestAnimationFrame(() => {
-        this.pendingCalculationFrame = null;
+      // Yield one macrotask so the loading indicator can paint first.
+      this.pendingCalculationTimeout = setTimeout(() => {
+        this.pendingCalculationTimeout = null;
 
-        // Yield one macrotask so the loading indicator can paint first.
-        setTimeout(() => {
-          if (requestId !== this.calculationRequestId) {
-            return;
-          }
+        if (requestId !== this.calculationRequestId) {
+          return;
+        }
 
-          try {
-            this.runCalculation();
-          } finally {
-            if (requestId === this.calculationRequestId) {
-              this.isCalculating = false;
-            }
+        this.isCalculating = true;
+        try {
+          this.runCalculation();
+        } finally {
+          if (requestId === this.calculationRequestId) {
+            this.isCalculating = false;
           }
-        }, 0);
-      });
+        }
+      }, 0);
     },
 
     calculate() {
+      if (!this.hasCalculableWeight()) {
+        this.calculationRequestId += 1;
+
+        if (this.pendingCalculationTimeout !== null) {
+          clearTimeout(this.pendingCalculationTimeout);
+          this.pendingCalculationTimeout = null;
+        }
+
+        this.isCalculating = false;
+        this.runCalculation();
+        return;
+      }
+
       this.scheduleCalculation();
     },
 
