@@ -149,7 +149,7 @@ import Layout from "../layouts/Layout.astro";
           class="btn btn-outline-secondary"
           type="button"
           @click="incrementWeight(-1)"
-          :disabled="!hasJourneySelection()"
+          :disabled="!hasJourneySelection() || isCalculating"
           title="Decrease weight"
         >
           −
@@ -159,7 +159,7 @@ import Layout from "../layouts/Layout.astro";
           class="form-control text-center"
           x-model="targetWeight"
           @input="debouncedCalculate"
-          :disabled="!hasJourneySelection()"
+          :disabled="!hasJourneySelection() || isCalculating"
           @keydown.arrow-up="incrementWeight(1); $event.preventDefault()"
           @keydown.arrow-down="incrementWeight(-1); $event.preventDefault()"
           inputmode="decimal"
@@ -168,7 +168,7 @@ import Layout from "../layouts/Layout.astro";
           class="btn btn-outline-secondary"
           type="button"
           @click="incrementWeight(1)"
-          :disabled="!hasJourneySelection()"
+          :disabled="!hasJourneySelection() || isCalculating"
           title="Increase weight"
         >
           +
@@ -177,6 +177,16 @@ import Layout from "../layouts/Layout.astro";
           class="input-group-text"
           x-text="isWeightedBodyweight ? 'Additional weight (lbs)' : 'Target weight (lbs)'"
         ></span>
+      </div>
+
+      <div
+        class="d-flex align-items-center gap-2 text-muted mb-2"
+        x-show="isCalculating && hasJourneySelection()"
+        role="status"
+        aria-live="polite"
+      >
+        <div class="spinner-border spinner-border-sm" aria-hidden="true"></div>
+        <span>Calculating warm-up sets...</span>
       </div>
 
       <div class="mt-4">

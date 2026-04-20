@@ -85,12 +85,17 @@ export interface CalculatorData {
   presetToastMessage: string;
   presetToastVariant: 'success' | 'danger' | 'warning';
   showPresetToast: boolean;
+  isCalculating: boolean;
+  calculationRequestId: number;
+  pendingCalculationFrame: number | null;
   presetToastTimeoutId?: ReturnType<typeof setTimeout>;
   debouncedCalculate?: () => void;
 
   hasJourneySelection(): boolean;
   getAutoFormulaForJourney(): string;
   applyJourneySelection(shouldPersist?: boolean): void;
+  scheduleCalculation(): void;
+  runCalculation(): void;
   calculate(): void;
   calculatePlatesNeeded(
     targetWeight: number,
@@ -153,6 +158,9 @@ export default function (): CalculatorData {
     presetToastMessage: '',
     presetToastVariant: 'success',
     showPresetToast: false,
+    isCalculating: false,
+    calculationRequestId: 0,
+    pendingCalculationFrame: null,
     presetToastTimeoutId: undefined,
 
     hasJourneySelection() {
@@ -205,7 +213,39 @@ export default function (): CalculatorData {
       this.debouncedCalculate?.();
     },
 
+    scheduleCalculation() {
+      const requestId = ++this.calculationRequestId;
+
+      if (this.pendingCalculationFrame !== null) {
+        cancelAnimationFrame(this.pendingCalculationFrame);
+      }
+
+      this.isCalculating = true;
+      this.pendingCalculationFrame = requestAnimationFrame(() => {
+        this.pendingCalculationFrame = null;
+
+        // Yield one macrotask so the loading indicator can paint first.
+        setTimeout(() => {
+          if (requestId !== this.calculationRequestId) {
+            return;
+          }
+
+          try {
+            this.runCalculation();
+          } finally {
+            if (requestId === this.calculationRequestId) {
+              this.isCalculating = false;
+            }
+          }
+        }, 0);
+      });
+    },
+
     calculate() {
+      this.scheduleCalculation();
+    },
+
+    runCalculation() {
       if (!this.hasJourneySelection()) {
         this.warmupSets = [];
         this.roundedTargetWeight = 0;
