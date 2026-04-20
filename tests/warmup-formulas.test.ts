@@ -54,6 +54,35 @@ describe('percentageBased minimizePlateChanges behavior', () => {
         }
     });
 
+    it('does not keep unreachable set weights in the optimized sequence', () => {
+        const barWeight = 45;
+        const targetWeight = 160;
+        const availablePlates: Plate[] = [
+            { weight: 45, available: true, count: 1 },
+        ];
+
+        const possibleWeights = generatePossibleWeights(
+            barWeight,
+            targetWeight,
+            availablePlates,
+            false
+        );
+
+        const minimizedSets = percentageBased(
+            targetWeight,
+            2,
+            barWeight,
+            availablePlates,
+            true,
+            false,
+            0
+        );
+
+        for (const set of minimizedSets) {
+            expect(possibleWeights).toContain(set.weight);
+        }
+    });
+
     it('reduces set-to-set weight changes under constrained plate availability', () => {
         const barWeight = 45;
         const targetWeight = 215;

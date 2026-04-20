@@ -22,6 +22,11 @@ export interface PlateCalculation {
   actualWeight: number;
 }
 
+interface ExactPlateConfig {
+  config: number[];
+  remaining: number;
+}
+
 /**
  * Type alias for warmup formula functions
  */
@@ -152,7 +157,9 @@ function optimizePlateChanges(
     return sets;
   }
 
-  const getConfigForWeight = (totalWeight: number): number[] => {
+  const getExactConfigForWeight = (
+    totalWeight: number
+  ): ExactPlateConfig | null => {
     const counts = Array.from({ length: plateOptions.length }, () => 0);
     const perSide = Math.max(0, (totalWeight - barWeight) / 2);
     let remaining = perSide;
@@ -165,7 +172,14 @@ function optimizePlateChanges(
       remaining -= count * plate.weight;
     }
 
-    return counts;
+    if (remaining > 0.001) {
+      return null;
+    }
+
+    return {
+      config: counts,
+      remaining,
+    };
   };
 
   const movementCost = (from: number[], to: number[]): number => {
@@ -186,15 +200,32 @@ function optimizePlateChanges(
       .sort((a, b) => Math.abs(a - idealWeight) - Math.abs(b - idealWeight))
       .slice(0, 8);
 
-    nearest.push(set.weight);
+    if (!nearest.includes(set.weight)) {
+      nearest.push(set.weight);
+    }
 
     const uniqueWeights = Array.from(new Set(nearest)).sort((a, b) => a - b);
 
-    return uniqueWeights.map((weight) => ({
-      weight,
-      config: getConfigForWeight(weight),
-      deviation: Math.abs(weight - idealWeight),
-    }));
+    return uniqueWeights
+      .map((weight) => {
+        const exactConfig = getExactConfigForWeight(weight);
+
+        if (!exactConfig) {
+          return null;
+        }
+
+        return {
+          weight,
+          config: exactConfig.config,
+          deviation: Math.abs(weight - idealWeight),
+        };
+      })
+      .filter(
+        (
+          candidate,
+        ): candidate is { weight: number; config: number[]; deviation: number } =>
+          candidate !== null
+      );
   });
 
   if (candidatesBySet.some((candidates) => candidates.length === 0)) {
