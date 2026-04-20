@@ -19,7 +19,7 @@ Warm-up settings include:
 
 - Bar weight selection (`0` to `45` lbs in 5-lb steps)
 - Available plate toggles (`55`, `45`, `35`, `25`, `15`, `10`, `5`, `2.5`, `1`, `0.75`, `0.5`, `0.25`)
-- Optional plate-change minimization (barbell mode)
+- Automatic plate-change minimization (barbell mode)
 - Optional backoff set with configurable percentage
 - Increment/decrement controls for target weight
 

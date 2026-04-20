@@ -124,44 +124,156 @@ function optimizePlateChanges(
   barWeight: number,
   availablePlates: Plate[]
 ): WarmupSet[] {
-  // Sort sets by weight
-  const sorted = [...sets].sort((a, b) => a.weight - b.weight);
-
-  // Track plate configuration for each set
-  const optimized: WarmupSet[] = [];
-
-  for (const set of sorted) {
-    const effectiveWeight = set.weight - barWeight;
-    const perSide = effectiveWeight / 2;
-
-    // Calculate plates needed
-    const availablePlateWeights = availablePlates
-      .filter((p) => p.available && Number(p.count ?? 0) > 0)
-      .map((p) => ({
-        weight: p.weight,
-        count: Math.max(0, Math.floor(Number(p.count ?? 0))),
-      }))
-      .sort((a, b) => b.weight - a.weight);
-
-    let remaining = perSide;
-    const plateConfig: Array<{ weight: number; count: number }> = [];
-
-    for (const plate of availablePlateWeights) {
-      const desiredCount = Math.floor(remaining / plate.weight);
-      const count = Math.min(desiredCount, plate.count);
-      if (count > 0) {
-        plateConfig.push({ weight: plate.weight, count });
-        remaining -= count * plate.weight;
-      }
-    }
-
-    optimized.push({
-      ...set,
-      // Track if plates changed from last set
-    });
+  if (sets.length <= 1) {
+    return sets;
   }
 
-  return optimized;
+  const plateOptions = availablePlates
+    .filter((plate) => plate.available && Number(plate.count ?? 0) > 0)
+    .map((plate) => ({
+      weight: Number(plate.weight),
+      count: Math.max(0, Math.floor(Number(plate.count ?? 0))),
+    }))
+    .sort((a, b) => b.weight - a.weight);
+
+  if (plateOptions.length === 0) {
+    return sets;
+  }
+
+  const maxSetWeight = Math.max(...sets.map((set) => set.weight));
+  const possibleWeights = generatePossibleWeights(
+    barWeight,
+    maxSetWeight,
+    availablePlates,
+    false
+  );
+
+  if (possibleWeights.length === 0) {
+    return sets;
+  }
+
+  const getConfigForWeight = (totalWeight: number): number[] => {
+    const counts = Array.from({ length: plateOptions.length }, () => 0);
+    const perSide = Math.max(0, (totalWeight - barWeight) / 2);
+    let remaining = perSide;
+
+    for (let i = 0; i < plateOptions.length; i++) {
+      const plate = plateOptions[i];
+      const desiredCount = Math.floor(remaining / plate.weight);
+      const count = Math.min(desiredCount, plate.count);
+      counts[i] = count;
+      remaining -= count * plate.weight;
+    }
+
+    return counts;
+  };
+
+  const movementCost = (from: number[], to: number[]): number => {
+    let moves = 0;
+    for (let i = 0; i < to.length; i++) {
+      moves += Math.abs((from[i] || 0) - (to[i] || 0));
+    }
+    return moves;
+  };
+
+  const baseConfig = Array.from({ length: plateOptions.length }, () => 0);
+
+  const candidatesBySet = sets.map((set) => {
+    const idealWeight =
+      typeof set.idealWeight === 'number' ? set.idealWeight : set.weight;
+
+    const nearest = [...possibleWeights]
+      .sort((a, b) => Math.abs(a - idealWeight) - Math.abs(b - idealWeight))
+      .slice(0, 8);
+
+    nearest.push(set.weight);
+
+    const uniqueWeights = Array.from(new Set(nearest)).sort((a, b) => a - b);
+
+    return uniqueWeights.map((weight) => ({
+      weight,
+      config: getConfigForWeight(weight),
+      deviation: Math.abs(weight - idealWeight),
+    }));
+  });
+
+  if (candidatesBySet.some((candidates) => candidates.length === 0)) {
+    return sets;
+  }
+
+  const dpMoves: number[][] = [];
+  const dpDeviation: number[][] = [];
+  const prevIndex: number[][] = [];
+
+  for (let setIndex = 0; setIndex < candidatesBySet.length; setIndex++) {
+    const candidates = candidatesBySet[setIndex];
+    dpMoves.push(Array.from({ length: candidates.length }, () => Number.POSITIVE_INFINITY));
+    dpDeviation.push(
+      Array.from({ length: candidates.length }, () => Number.POSITIVE_INFINITY)
+    );
+    prevIndex.push(Array.from({ length: candidates.length }, () => -1));
+  }
+
+  for (let j = 0; j < candidatesBySet[0].length; j++) {
+    const candidate = candidatesBySet[0][j];
+    dpMoves[0][j] = movementCost(baseConfig, candidate.config);
+    dpDeviation[0][j] = candidate.deviation;
+  }
+
+  for (let i = 1; i < candidatesBySet.length; i++) {
+    for (let j = 0; j < candidatesBySet[i].length; j++) {
+      const current = candidatesBySet[i][j];
+
+      for (let k = 0; k < candidatesBySet[i - 1].length; k++) {
+        const previous = candidatesBySet[i - 1][k];
+        if (current.weight < previous.weight) {
+          continue;
+        }
+
+        const nextMoves = dpMoves[i - 1][k] + movementCost(previous.config, current.config);
+        const nextDeviation = dpDeviation[i - 1][k] + current.deviation;
+
+        const isBetterMoves = nextMoves < dpMoves[i][j];
+        const isTieWithBetterDeviation =
+          nextMoves === dpMoves[i][j] && nextDeviation < dpDeviation[i][j];
+
+        if (isBetterMoves || isTieWithBetterDeviation) {
+          dpMoves[i][j] = nextMoves;
+          dpDeviation[i][j] = nextDeviation;
+          prevIndex[i][j] = k;
+        }
+      }
+    }
+  }
+
+  let bestLast = 0;
+  const lastRow = dpMoves.length - 1;
+  for (let j = 1; j < dpMoves[lastRow].length; j++) {
+    const hasBetterMoves = dpMoves[lastRow][j] < dpMoves[lastRow][bestLast];
+    const hasSameMovesBetterDeviation =
+      dpMoves[lastRow][j] === dpMoves[lastRow][bestLast] &&
+      dpDeviation[lastRow][j] < dpDeviation[lastRow][bestLast];
+
+    if (hasBetterMoves || hasSameMovesBetterDeviation) {
+      bestLast = j;
+    }
+  }
+
+  const chosenWeights: number[] = Array.from({ length: sets.length }, () => barWeight);
+  let cursor = bestLast;
+  for (let i = sets.length - 1; i >= 0; i--) {
+    chosenWeights[i] = candidatesBySet[i][cursor].weight;
+    cursor = prevIndex[i][cursor];
+  }
+
+  return sets.map((set, index) => ({
+    ...set,
+    weight: chosenWeights[index],
+    addedWeight:
+      typeof set.addedWeight === 'number'
+        ? Math.max(0, chosenWeights[index] - barWeight)
+        : set.addedWeight,
+  }));
 }
 
 /**

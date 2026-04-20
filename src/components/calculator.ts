@@ -1,27 +1,27 @@
 import Modal from 'bootstrap/js/dist/modal';
 import {
-  PLATE_PRESETS_STORAGE_KEY,
-  type PlatePreset,
-  buildPlatePresetSnapshot,
-  createPlatePresetPayload,
-  normalizePlateCollection,
-  parsePlatePresetStore,
-  serializePlatePresetStore,
+    PLATE_PRESETS_STORAGE_KEY,
+    type PlatePreset,
+    buildPlatePresetSnapshot,
+    createPlatePresetPayload,
+    normalizePlateCollection,
+    parsePlatePresetStore,
+    serializePlatePresetStore,
 } from './presetStorage';
 import {
-  type Plate,
-  debounce,
-  roundToNearest5,
-  roundToNearestAchievableWeight,
-  roundToSmallestPlate,
+    type Plate,
+    debounce,
+    roundToNearest5,
+    roundToNearestAchievableWeight,
+    roundToSmallestPlate,
 } from './util';
 import {
-  type PlateCalculation,
-  type WarmupSet,
-  generatePossibleWeights,
-  getDefaultSets,
-  getFormula,
-  isConfigurableFormula,
+    type PlateCalculation,
+    type WarmupSet,
+    generatePossibleWeights,
+    getDefaultSets,
+    getFormula,
+    isConfigurableFormula,
 } from './warmup-formulas';
 
 type SessionTiming = 'pre' | 'post' | '';
@@ -65,8 +65,6 @@ export interface CalculatorData {
   selectedFormula: string;
   warmupSets: WarmupSet[];
   showSetsSelector: boolean;
-  minimizePlateChanges: boolean;
-  barbellMinimizePlateChanges: boolean;
   isWeightedBodyweight: boolean;
   bodyweight: string | number;
   showBodyweightInput: boolean;
@@ -138,8 +136,6 @@ export default function (): CalculatorData {
     selectedFormula: 'barbellPreClimbing',
     warmupSets: [],
     showSetsSelector: true,
-    minimizePlateChanges: false,
-    barbellMinimizePlateChanges: false,
     isWeightedBodyweight: false,
     bodyweight: '',
     showBodyweightInput: false,
@@ -274,8 +270,7 @@ export default function (): CalculatorData {
         : !Number.isNaN(weight) && weight > 0;
 
       if (validWeight) {
-        const useMinimizePlateChanges =
-          this.equipmentType === "barbell" && this.barbellMinimizePlateChanges;
+        const useMinimizePlateChanges = this.equipmentType === "barbell";
 
         // Calculate the rounded weight for display purposes only
         let roundedWeight = Number(weight);
@@ -548,8 +543,6 @@ export default function (): CalculatorData {
           equipmentType: this.equipmentType,
           barWeight: Number.parseFloat(String(this.barWeight)),
           availablePlates: normalizedPlates,
-          minimizePlateChanges: this.barbellMinimizePlateChanges,
-          barbellMinimizePlateChanges: this.barbellMinimizePlateChanges,
           bodyweight: this.bodyweight
             ? Number.parseFloat(String(this.bodyweight))
             : 0,
@@ -957,22 +950,6 @@ export default function (): CalculatorData {
         }
 
         if (
-          Object.prototype.hasOwnProperty.call(
-            settings,
-            "barbellMinimizePlateChanges",
-          )
-        ) {
-          this.barbellMinimizePlateChanges =
-            settings.barbellMinimizePlateChanges;
-        } else if (
-          Object.prototype.hasOwnProperty.call(settings, "minimizePlateChanges")
-        ) {
-          this.barbellMinimizePlateChanges = settings.minimizePlateChanges;
-        }
-
-        this.minimizePlateChanges = this.barbellMinimizePlateChanges;
-
-        if (
           Object.prototype.hasOwnProperty.call(settings, "bodyweight") &&
           settings.bodyweight > 0
         ) {
@@ -1076,13 +1053,6 @@ export default function (): CalculatorData {
           return;
         }
 
-        this.saveSettings();
-        this.debouncedCalculate?.();
-      });
-
-      // @ts-ignore
-      this.$watch("barbellMinimizePlateChanges", () => {
-        this.minimizePlateChanges = this.barbellMinimizePlateChanges;
         this.saveSettings();
         this.debouncedCalculate?.();
       });
