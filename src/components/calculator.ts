@@ -62,6 +62,7 @@ export interface CalculatorData {
   numWarmupSets: number;
   targetWeight: string | number;
   roundedTargetWeight: number;
+  topSetPlates: PlateCalculation;
   selectedFormula: string;
   warmupSets: WarmupSet[];
   showSetsSelector: boolean;
@@ -135,6 +136,11 @@ export default function (): CalculatorData {
     numWarmupSets: 6,
     targetWeight: '',
     roundedTargetWeight: 0,
+    topSetPlates: {
+      plateConfig: [],
+      remaining: 0,
+      actualWeight: 0,
+    },
     selectedFormula: 'barbellPreClimbing',
     warmupSets: [],
     showSetsSelector: true,
@@ -293,6 +299,11 @@ export default function (): CalculatorData {
       if (!this.hasJourneySelection()) {
         this.warmupSets = [];
         this.roundedTargetWeight = 0;
+        this.topSetPlates = {
+          plateConfig: [],
+          remaining: 0,
+          actualWeight: 0,
+        };
         return;
       }
 
@@ -308,6 +319,11 @@ export default function (): CalculatorData {
       ) {
         this.warmupSets = [];
         this.roundedTargetWeight = 0;
+        this.topSetPlates = {
+          plateConfig: [],
+          remaining: 0,
+          actualWeight: 0,
+        };
         return;
       }
 
@@ -339,6 +355,7 @@ export default function (): CalculatorData {
           }
         }
         this.roundedTargetWeight = roundedWeight;
+        this.topSetPlates = this.calculatePlatesNeeded(this.roundedTargetWeight);
 
         const formula = getFormula(this.selectedFormula);
         const actualTargetWeight = this.isWeightedBodyweight
@@ -409,6 +426,11 @@ export default function (): CalculatorData {
       } else {
         this.warmupSets = [];
         this.roundedTargetWeight = 0;
+        this.topSetPlates = {
+          plateConfig: [],
+          remaining: 0,
+          actualWeight: 0,
+        };
       }
     },
 

@@ -341,7 +341,7 @@ import Layout from "../layouts/Layout.astro";
               <template x-if="roundedTargetWeight > barWeight">
                 <div class="d-flex gap-2 flex-wrap">
                   <template
-                    x-for="plate in calculatePlatesNeeded(roundedTargetWeight).plateConfig"
+                    x-for="plate in topSetPlates.plateConfig"
                     :key="plate.weight"
                   >
                     <template
@@ -355,11 +355,11 @@ import Layout from "../layouts/Layout.astro";
                     </template>
                   </template>
                   <template
-                    x-if="calculatePlatesNeeded(roundedTargetWeight).remaining > 0"
+                    x-if="topSetPlates.remaining > 0"
                   >
                     <span
                       class="badge text-bg-warning fs-5"
-                      x-text="`Missing: ${calculatePlatesNeeded(roundedTargetWeight).remaining.toFixed(1)} lbs`"
+                      x-text="`Missing: ${topSetPlates.remaining.toFixed(1)} lbs`"
                     ></span>
                   </template>
                 </div>
