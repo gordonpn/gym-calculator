@@ -96,6 +96,7 @@ export interface CalculatorData {
   scheduleCalculation(): void;
   runCalculation(): void;
   calculate(): void;
+  applySetRounding(set: WarmupSet, bodyweight?: number): WarmupSet;
   calculatePlatesNeeded(
     targetWeight: number,
     options?: { minPlateWeight?: number },
@@ -259,6 +260,35 @@ export default function (): CalculatorData {
       this.scheduleCalculation();
     },
 
+    applySetRounding(set: WarmupSet, bodyweight = 0): WarmupSet {
+      if (this.isWeightedBodyweight) {
+        if (typeof set.addedWeight === "number") {
+          const roundedAdded = Math.max(0, roundToNearest5(set.addedWeight));
+          set.addedWeight = roundedAdded;
+          set.weight = Number(bodyweight) + roundedAdded;
+        } else if (typeof set.weight === "number") {
+          set.weight = Math.max(Number(bodyweight), set.weight);
+        }
+      } else if (typeof set.weight === "number") {
+        if (this.equipmentType === "dumbbell") {
+          set.weight = Math.max(0, roundToNearest5(set.weight));
+        } else if (set.weight <= this.barWeight) {
+          set.weight = this.barWeight;
+        } else {
+          const perSideLoad = (set.weight - this.barWeight) / 2;
+          const roundedPerSide = Math.round(perSideLoad / 5) * 5;
+          const roundedWeight = this.barWeight + roundedPerSide * 2;
+          set.weight = Math.max(this.barWeight, roundedWeight);
+        }
+      }
+
+      if (typeof set.idealWeight === "number") {
+        set.idealWeight = set.weight;
+      }
+
+      return set;
+    },
+
     runCalculation() {
       if (!this.hasJourneySelection()) {
         this.warmupSets = [];
@@ -337,40 +367,8 @@ export default function (): CalculatorData {
           );
         }
 
-        const applyWarmupRounding = (set: WarmupSet): WarmupSet => {
-          if (this.isWeightedBodyweight) {
-            if (typeof set.addedWeight === "number") {
-              const roundedAdded = Math.max(
-                0,
-                roundToNearest5(set.addedWeight),
-              );
-              set.addedWeight = roundedAdded;
-              set.weight = Number(bodyweight) + roundedAdded;
-            } else if (typeof set.weight === "number") {
-              set.weight = Math.max(Number(bodyweight), set.weight);
-            }
-          } else if (typeof set.weight === "number") {
-            if (this.equipmentType === "dumbbell") {
-              set.weight = Math.max(0, roundToNearest5(set.weight));
-            } else if (set.weight <= this.barWeight) {
-              set.weight = this.barWeight;
-            } else {
-              const perSideLoad = (set.weight - this.barWeight) / 2;
-              const roundedPerSide = Math.round(perSideLoad / 5) * 5;
-              const roundedWeight = this.barWeight + roundedPerSide * 2;
-              set.weight = Math.max(this.barWeight, roundedWeight);
-            }
-          }
-
-          if (typeof set.idealWeight === "number") {
-            set.idealWeight = set.weight;
-          }
-
-          return set;
-        };
-
         this.warmupSets = this.warmupSets.map((set) =>
-          applyWarmupRounding(set),
+          this.applySetRounding(set, bodyweight),
         );
 
         for (const set of this.warmupSets) {
@@ -487,30 +485,6 @@ export default function (): CalculatorData {
         backoffWeight = targetWeight * backoffPercentage;
       }
 
-      const applyRounding = (set: WarmupSet): WarmupSet => {
-        if (this.isWeightedBodyweight) {
-          if (typeof set.addedWeight === "number") {
-            const roundedAdded = Math.max(0, roundToNearest5(set.addedWeight));
-            set.addedWeight = roundedAdded;
-            set.weight = Number(bodyweight) + roundedAdded;
-          } else if (typeof set.weight === "number") {
-            set.weight = Math.max(Number(bodyweight), set.weight);
-          }
-        } else if (typeof set.weight === "number") {
-          if (this.equipmentType === "dumbbell") {
-            set.weight = Math.max(0, roundToNearest5(set.weight));
-          } else if (set.weight <= this.barWeight) {
-            set.weight = this.barWeight;
-          } else {
-            const perSideLoad = (set.weight - this.barWeight) / 2;
-            const roundedPerSide = Math.round(perSideLoad / 5) * 5;
-            const roundedWeight = this.barWeight + roundedPerSide * 2;
-            set.weight = Math.max(this.barWeight, roundedWeight);
-          }
-        }
-        return set;
-      };
-
       const backoffSet: WarmupSet = {
         percentage: Math.round(this.backoffPercentage),
         weight: backoffWeight,
@@ -521,7 +495,7 @@ export default function (): CalculatorData {
         isBackoff: true,
       };
 
-      const roundedSet = applyRounding(backoffSet);
+      const roundedSet = this.applySetRounding(backoffSet, bodyweight);
 
       if (this.isWeightedBodyweight) {
         const addedWeight = Math.max(0, roundedSet.addedWeight || 0);
