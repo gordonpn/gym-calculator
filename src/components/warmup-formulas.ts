@@ -20,7 +20,6 @@ export interface PlateCalculation {
   plateConfig: Array<{ weight: number; count: number }>;
   remaining: number;
   actualWeight: number;
-  adjustedTargetWeight?: number;
 }
 
 /**

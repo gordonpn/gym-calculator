@@ -345,15 +345,6 @@ export default function (): CalculatorData {
               minPlateWeight: 5,
             });
           }
-
-          if (!useMinimizePlateChanges && set.plates.adjustedTargetWeight) {
-            if (this.isWeightedBodyweight) {
-              set.addedWeight = set.plates.adjustedTargetWeight;
-              set.weight = Number(bodyweight) + Number(set.addedWeight);
-            } else {
-              set.weight = set.plates.adjustedTargetWeight;
-            }
-          }
         }
 
         // Add backoff sets if enabled
@@ -374,8 +365,6 @@ export default function (): CalculatorData {
       targetWeight: number,
       options: { minPlateWeight?: number } = {},
     ): PlateCalculation {
-      const useMinimizePlateChanges =
-        this.equipmentType === "barbell" && this.barbellMinimizePlateChanges;
       const { minPlateWeight = 0 } = options;
       const isForBodyweightExercise =
         this.isWeightedBodyweight && targetWeight > 0;
@@ -425,15 +414,6 @@ export default function (): CalculatorData {
       const actualWeight = isForBodyweightExercise
         ? actualPlateWeight
         : Number.parseFloat(String(this.barWeight)) + actualPlateWeight;
-
-      if (!useMinimizePlateChanges && remaining > 0) {
-        return {
-          plateConfig,
-          remaining: 0,
-          actualWeight: actualWeight,
-          adjustedTargetWeight: actualWeight,
-        };
-      }
 
       return {
         plateConfig,
@@ -490,9 +470,6 @@ export default function (): CalculatorData {
 
       const roundedSet = applyRounding(backoffSet);
 
-      const useMinimizePlateChanges =
-        this.equipmentType === "barbell" && this.barbellMinimizePlateChanges;
-
       if (this.isWeightedBodyweight) {
         const addedWeight = Math.max(0, roundedSet.addedWeight || 0);
         if (addedWeight > 0) {
@@ -516,16 +493,6 @@ export default function (): CalculatorData {
         roundedSet.plates = this.calculatePlatesNeeded(roundedSet.weight, {
           minPlateWeight: 5,
         });
-      }
-
-      if (!useMinimizePlateChanges && roundedSet.plates.adjustedTargetWeight) {
-        if (this.isWeightedBodyweight) {
-          roundedSet.addedWeight = roundedSet.plates.adjustedTargetWeight;
-          roundedSet.weight =
-            Number(bodyweight) + Number(roundedSet.addedWeight);
-        } else {
-          roundedSet.weight = roundedSet.plates.adjustedTargetWeight;
-        }
       }
 
       return roundedSet;
