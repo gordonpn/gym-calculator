@@ -1,3 +1,11 @@
+import {
+  aggregateOneRepMax,
+  estimateOneRepMax,
+  isReliableOneRepMaxReps,
+  isValidOneRepMaxSet,
+  parseSetReps,
+  parseSetWeight,
+} from './oneRepMax';
 import { roundToNearest5 } from './util';
 
 /**
@@ -174,24 +182,10 @@ export default function (): StrengthLevelCalculatorData {
     },
 
     calculateSetMax(set: StrengthSet): number {
-      const w = Number.parseFloat(String(set.weight));
-      const r = Number.parseInt(String(set.reps));
+      const w = parseSetWeight(set.weight);
+      const r = parseSetReps(set.reps);
 
-      if (Number.isNaN(w) || w <= 0 || Number.isNaN(r) || r <= 0) {
-        set.estimatedMax = 0;
-        return 0;
-      }
-
-      if (r === 1) {
-        set.estimatedMax = Math.round(w);
-      } else if (r > 30) {
-        set.estimatedMax = 0;
-        return 0;
-      } else if (r <= 10) {
-        set.estimatedMax = Math.round(w * (1 + r / 30));
-      } else {
-        set.estimatedMax = Math.round((w * 36) / (37 - r));
-      }
+      set.estimatedMax = estimateOneRepMax(w, r, { roundSingleRep: true });
 
       return set.estimatedMax;
     },
@@ -200,14 +194,14 @@ export default function (): StrengthLevelCalculatorData {
       this.errorMessage = '';
 
       const validSets = this.sets.filter((set) => {
-        const w = Number.parseFloat(String(set.weight));
-        const r = Number.parseInt(String(set.reps));
+        const w = parseSetWeight(set.weight);
+        const r = parseSetReps(set.reps);
 
-        if (Number.isNaN(w) || w <= 0 || Number.isNaN(r) || r <= 0) {
+        if (!isValidOneRepMaxSet(w, r)) {
           return false;
         }
 
-        if (r > 30) {
+        if (!isReliableOneRepMaxReps(r)) {
           if (!this.errorMessage) {
             this.errorMessage = 'Calculation is less reliable for reps > 30.';
           }
@@ -232,40 +226,18 @@ export default function (): StrengthLevelCalculatorData {
         this.calculateSetMax(set);
       }
 
-      switch (this.calculationMethod) {
-        case 'highest': {
-          this.estimatedMax = Math.max(
-            ...validSets.map((set) => set.estimatedMax)
-          );
-          break;
-        }
-        case 'lowest': {
-          this.estimatedMax = Math.min(
-            ...validSets.map((set) => set.estimatedMax)
-          );
-          break;
-        }
-        case 'weighted': {
-          let totalWeight = 0;
-          let weightedSum = 0;
-          for (const set of validSets) {
-            const weight = Number.parseFloat(String(set.weight));
-            const reps = Number.parseInt(String(set.reps));
-            const factor = weight * reps;
-            weightedSum += set.estimatedMax * factor;
-            totalWeight += factor;
-          }
-          this.estimatedMax = Math.round(weightedSum / totalWeight);
-          break;
-        }
-        default: {
-          const sumOfMaxes = validSets.reduce(
-            (sum, set) => sum + set.estimatedMax,
-            0
-          );
-          this.estimatedMax = Math.round(sumOfMaxes / validSets.length);
-        }
-      }
+      const setMaxes = validSets.map((set) => set.estimatedMax);
+      const weightedFactors = validSets.map((set) => {
+        const weight = parseSetWeight(set.weight);
+        const reps = parseSetReps(set.reps);
+        return weight * reps;
+      });
+
+      this.estimatedMax = aggregateOneRepMax(
+        setMaxes,
+        this.calculationMethod,
+        weightedFactors
+      );
 
       this.evaluateStrengthLevel();
     },

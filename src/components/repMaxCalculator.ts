@@ -1,3 +1,12 @@
+import {
+  aggregateOneRepMax,
+  estimateOneRepMax,
+  isReliableOneRepMaxReps,
+  isValidOneRepMaxSet,
+  parseSetReps,
+  parseSetWeight,
+} from './oneRepMax';
+
 /**
  * Interface for a weight/reps set in the rep max calculator
  */
@@ -72,7 +81,7 @@ export default function (): RepMaxCalculatorData {
     },
 
     getEnteredWeight(set: RepMaxSet): number {
-      return Number.parseFloat(String(set.weight));
+      return parseSetWeight(set.weight);
     },
 
     getEffectiveSetWeight(set: RepMaxSet): number {
@@ -88,21 +97,16 @@ export default function (): RepMaxCalculatorData {
 
     isValidSet(set: RepMaxSet): boolean {
       const enteredWeight = this.getEnteredWeight(set);
-      const reps = Number.parseInt(String(set.reps));
-
-      if (Number.isNaN(reps) || reps <= 0) {
-        return false;
-      }
+      const reps = parseSetReps(set.reps);
 
       if (this.parentIsWeightedBodyweight) {
         return (
           this.getBodyweightValue() > 0 &&
-          !Number.isNaN(enteredWeight) &&
-          enteredWeight >= 0
+          isValidOneRepMaxSet(enteredWeight, reps, { allowZeroWeight: true })
         );
       }
 
-      return !Number.isNaN(enteredWeight) && enteredWeight > 0;
+      return isValidOneRepMaxSet(enteredWeight, reps);
     },
 
     addSet() {
@@ -126,25 +130,9 @@ export default function (): RepMaxCalculatorData {
 
     calculateSetMax(set: RepMaxSet): number {
       const w = this.getEffectiveSetWeight(set);
-      const r = Number.parseInt(String(set.reps));
+      const r = parseSetReps(set.reps);
 
-      if (Number.isNaN(w) || w <= 0 || Number.isNaN(r) || r <= 0) {
-        set.estimatedMax = 0;
-        return 0;
-      }
-
-      if (r === 1) {
-        set.estimatedMax = w;
-      } else if (r > 30) {
-        set.estimatedMax = 0;
-        return 0;
-      } else if (r <= 10) {
-        // Epley formula for lower reps
-        set.estimatedMax = Math.round(w * (1 + r / 30));
-      } else {
-        // Brzycki formula for higher reps
-        set.estimatedMax = Math.round((w * 36) / (37 - r));
-      }
+      set.estimatedMax = estimateOneRepMax(w, r);
 
       return set.estimatedMax;
     },
@@ -153,13 +141,13 @@ export default function (): RepMaxCalculatorData {
       this.errorMessage = '';
 
       const validSets = this.sets.filter((set) => {
-        const r = Number.parseInt(String(set.reps));
+        const r = parseSetReps(set.reps);
 
         if (!this.isValidSet(set)) {
           return false;
         }
 
-        if (r > 30) {
+        if (!isReliableOneRepMaxReps(r)) {
           this.errorMessage = 'Calculation is less reliable for reps > 30.';
           return false;
         }
@@ -182,41 +170,18 @@ export default function (): RepMaxCalculatorData {
         this.calculateSetMax(set);
       }
 
-      // Calculate final 1RM based on selected method
-      switch (this.calculationMethod) {
-        case 'highest': {
-          this.estimatedMax = Math.max(
-            ...validSets.map((set) => set.estimatedMax)
-          );
-          break;
-        }
-        case 'lowest': {
-          this.estimatedMax = Math.min(
-            ...validSets.map((set) => set.estimatedMax)
-          );
-          break;
-        }
-        case 'weighted': {
-          let totalWeight = 0;
-          let weightedSum = 0;
-          for (const set of validSets) {
-            const weight = this.getEffectiveSetWeight(set);
-            const reps = Number.parseInt(String(set.reps));
-            const factor = weight * reps;
-            weightedSum += set.estimatedMax * factor;
-            totalWeight += factor;
-          }
-          this.estimatedMax = Math.round(weightedSum / totalWeight);
-          break;
-        }
-        default: {
-          const sumOfMaxes = validSets.reduce(
-            (sum, set) => sum + set.estimatedMax,
-            0
-          );
-          this.estimatedMax = Math.round(sumOfMaxes / validSets.length);
-        }
-      }
+      const setMaxes = validSets.map((set) => set.estimatedMax);
+      const weightedFactors = validSets.map((set) => {
+        const weight = this.getEffectiveSetWeight(set);
+        const reps = parseSetReps(set.reps);
+        return weight * reps;
+      });
+
+      this.estimatedMax = aggregateOneRepMax(
+        setMaxes,
+        this.calculationMethod,
+        weightedFactors
+      );
 
       // Calculate weights for rep ranges 1-15
       this.repRangeData = [];
