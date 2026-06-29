@@ -1,0 +1,26 @@
+---
+interface Props {
+  dataPath: string;
+  sizeClass?: string;
+  gap?: string;
+}
+
+const { dataPath, sizeClass = "", gap = "gap-1" } = Astro.props;
+---
+
+<div class={`d-flex ${gap} flex-wrap`}>
+  <template x-for={`plate in ${dataPath}.plateConfig`} :key="plate.weight">
+    <template x-for="i in plate.count" :key="`${plate.weight}-${i}`">
+      <span
+        class={`badge ${sizeClass}`}
+        :class="`text-bg-${getPlateColor(plate.weight)}`"
+        x-text="`${plate.weight} lbs`"></span>
+    </template>
+  </template>
+  <template x-if={`${dataPath}.remaining > 0`}>
+    <span
+      class={`badge text-bg-warning ${sizeClass}`}
+      x-text={`\`Missing: \${${dataPath}.remaining.toFixed(1)} lbs\``}
+    ></span>
+  </template>
+</div>
