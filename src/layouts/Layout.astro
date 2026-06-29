@@ -95,9 +95,9 @@ const { title = "Gym Calculator" } = Astro.props;
       </div>
     </footer>
 
-    <!-- Bootstrap JS - Load on client only -->
+    <!-- Bootstrap JS – only the components the app uses -->
     <script>
-      import("bootstrap");
+      import("bootstrap/js/dist/dropdown");
     </script>
     <script is:inline>
       if ("serviceWorker" in navigator) {
