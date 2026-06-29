@@ -1,7 +1,7 @@
 ---
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
+import "../styles/bootstrap.scss";
 import "../styles/style.css";
+import Icon from "../components/Icon.astro";
 
 interface Props {
   title?: string;
@@ -69,8 +69,8 @@ const { title = "Gym Calculator" } = Astro.props;
             x-data="themeToggle"
             @click="toggleTheme"
           >
-            <i class="bi" :class="isDarkTheme ? 'bi-sun-fill' : 'bi-moon-fill'"
-            ></i>
+            <span x-show="isDarkTheme"><Icon name="sun-fill" /></span>
+            <span x-show="!isDarkTheme"><Icon name="moon-fill" /></span>
           </button>
         </div>
       </div>
@@ -90,7 +90,7 @@ const { title = "Gym Calculator" } = Astro.props;
           target="_blank"
           class="text-decoration-none"
         >
-          <i class="bi bi-github"></i> Open Source
+          <Icon name="github" /> Open Source
         </a>
       </div>
     </footer>

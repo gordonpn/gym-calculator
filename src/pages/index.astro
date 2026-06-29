@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import PlateBadges from "../components/PlateBadges.astro";
 import RepMaxCalculatorModal from "../components/RepMaxCalculatorModal.astro";
 import StrengthLevelModal from "../components/StrengthLevelModal.astro";
+import Icon from "../components/Icon.astro";
 import PlateSettingsModal from "../components/PlateSettingsModal.astro";
 ---
 
@@ -18,7 +19,7 @@ import PlateSettingsModal from "../components/PlateSettingsModal.astro";
             data-bs-target="#plateSettingsModal"
             @click="openPlateSettingsModal()"
           >
-            <i class="bi bi-gear"></i> Warm-up options
+            <Icon name="gear" /> Warm-up options
           </button>
           <button
             type="button"
@@ -26,7 +27,7 @@ import PlateSettingsModal from "../components/PlateSettingsModal.astro";
             data-bs-toggle="modal"
             data-bs-target="#repMaxCalculatorModal"
           >
-            <i class="bi bi-calculator"></i> Rep max calculator
+            <Icon name="calculator" /> Rep max calculator
           </button>
           <button
             type="button"
@@ -34,7 +35,7 @@ import PlateSettingsModal from "../components/PlateSettingsModal.astro";
             data-bs-toggle="modal"
             data-bs-target="#strengthLevelModal"
           >
-            <i class="bi bi-bar-chart"></i> Strength level checker
+            <Icon name="bar-chart" /> Strength level checker
           </button>
         </div>
       </div>
