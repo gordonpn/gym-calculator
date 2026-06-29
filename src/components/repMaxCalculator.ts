@@ -5,7 +5,7 @@ import {
   isValidOneRepMaxSet,
   parseSetReps,
   parseSetWeight,
-} from './oneRepMax';
+} from "./oneRepMax";
 
 /**
  * Interface for a weight/reps set in the rep max calculator
@@ -33,7 +33,7 @@ export interface RepMaxCalculatorData {
   estimatedMax: number;
   repRangeData: RepRangeData[];
   errorMessage: string;
-  calculationMethod: 'average' | 'highest' | 'lowest' | 'weighted';
+  calculationMethod: "average" | "highest" | "lowest" | "weighted";
   parentIsWeightedBodyweight: boolean;
   parentBodyweight: string | number;
 
@@ -60,13 +60,13 @@ export interface RepMaxCalculatorData {
  */
 export default function (): RepMaxCalculatorData {
   return {
-    sets: [{ weight: '', reps: '', estimatedMax: 0 }],
+    sets: [{ weight: "", reps: "", estimatedMax: 0 }],
     estimatedMax: 0,
     repRangeData: [],
-    errorMessage: '',
-    calculationMethod: 'average',
+    errorMessage: "",
+    calculationMethod: "average",
     parentIsWeightedBodyweight: false,
-    parentBodyweight: '',
+    parentBodyweight: "",
 
     syncBodyweightContext(isWeightedBodyweight, bodyweight) {
       this.parentIsWeightedBodyweight = isWeightedBodyweight;
@@ -111,9 +111,9 @@ export default function (): RepMaxCalculatorData {
 
     addSet() {
       const lastSet = this.sets[this.sets.length - 1];
-      const newSet: RepMaxSet = { weight: '', reps: '', estimatedMax: 0 };
+      const newSet: RepMaxSet = { weight: "", reps: "", estimatedMax: 0 };
 
-      if (lastSet && lastSet.weight !== '' && lastSet.reps !== '') {
+      if (lastSet && lastSet.weight !== "" && lastSet.reps !== "") {
         newSet.weight = lastSet.weight;
         newSet.reps = lastSet.reps;
       }
@@ -138,7 +138,7 @@ export default function (): RepMaxCalculatorData {
     },
 
     calculateAverageMax() {
-      this.errorMessage = '';
+      this.errorMessage = "";
 
       const validSets = this.sets.filter((set) => {
         const r = parseSetReps(set.reps);
@@ -148,7 +148,7 @@ export default function (): RepMaxCalculatorData {
         }
 
         if (!isReliableOneRepMaxReps(r)) {
-          this.errorMessage = 'Calculation is less reliable for reps > 30.';
+          this.errorMessage = "Calculation is less reliable for reps > 30.";
           return false;
         }
 
@@ -160,7 +160,7 @@ export default function (): RepMaxCalculatorData {
         this.repRangeData = [];
         if (this.sets.some((set) => set.weight || set.reps)) {
           this.errorMessage =
-            'Please enter valid positive numbers for weight and reps.';
+            "Please enter valid positive numbers for weight and reps.";
         }
         return;
       }
@@ -180,7 +180,7 @@ export default function (): RepMaxCalculatorData {
       this.estimatedMax = aggregateOneRepMax(
         setMaxes,
         this.calculationMethod,
-        weightedFactors
+        weightedFactors,
       );
 
       // Calculate weights for rep ranges 1-15
@@ -192,13 +192,11 @@ export default function (): RepMaxCalculatorData {
           weightForReps = Math.round(this.estimatedMax / (1 + reps / 30));
         } else {
           // Reverse Brzycki formula
-          weightForReps = Math.round(
-            (this.estimatedMax * (37 - reps)) / 36
-          );
+          weightForReps = Math.round((this.estimatedMax * (37 - reps)) / 36);
         }
 
         const percentage = Math.round(
-          (weightForReps / this.estimatedMax) * 100
+          (weightForReps / this.estimatedMax) * 100,
         );
 
         this.repRangeData.push({
@@ -215,11 +213,11 @@ export default function (): RepMaxCalculatorData {
 
     init() {
       this.calculationMethod =
-        (localStorage.getItem('repMaxCalculationMethod') as any) || 'average';
+        (localStorage.getItem("repMaxCalculationMethod") as any) || "average";
 
-      // @ts-ignore - Alpine's $watch is added by Alpine.js
-      this.$watch('calculationMethod', (method: string) => {
-        localStorage.setItem('repMaxCalculationMethod', method);
+      // @ts-expect-error - Alpine's $watch is added by Alpine.js
+      this.$watch("calculationMethod", (method: string) => {
+        localStorage.setItem("repMaxCalculationMethod", method);
         this.calculateAverageMax();
       });
 

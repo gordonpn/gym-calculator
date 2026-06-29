@@ -1,31 +1,31 @@
-import Modal from 'bootstrap/js/dist/modal';
+import Modal from "bootstrap/js/dist/modal";
 import {
-  PLATE_PRESETS_STORAGE_KEY,
-  type PlatePreset,
   buildPlatePresetSnapshot,
   createPlatePresetPayload,
   normalizePlateCollection,
+  PLATE_PRESETS_STORAGE_KEY,
+  type PlatePreset,
   parsePlatePresetStore,
   serializePlatePresetStore,
-} from './presetStorage';
+} from "./presetStorage";
 import {
-  type Plate,
   debounce,
+  type Plate,
   roundToNearest5,
   roundToNearestAchievableWeight,
   roundToSmallestPlate,
-} from './util';
+} from "./util";
 import {
-  type PlateCalculation,
-  type WarmupSet,
   generatePossibleWeights,
   getDefaultSets,
   getFormula,
   isConfigurableFormula,
-} from './warmup-formulas';
+  type PlateCalculation,
+  type WarmupSet,
+} from "./warmup-formulas";
 
-type SessionTiming = 'pre' | 'post' | '';
-type EquipmentType = 'barbell' | 'dumbbell' | 'weightedBodyweight' | '';
+type SessionTiming = "pre" | "post" | "";
+type EquipmentType = "barbell" | "dumbbell" | "weightedBodyweight" | "";
 
 const DEFAULT_BAR_WEIGHT = 45;
 const PLATE_DEFAULT_COUNT = 10;
@@ -46,7 +46,10 @@ const DEFAULT_AVAILABLE_PLATES: Plate[] = [
 ];
 
 const makePresetId = (): string => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
 
@@ -82,7 +85,7 @@ export interface CalculatorData {
   platePresetError: string;
   platePresetStatus: string;
   presetToastMessage: string;
-  presetToastVariant: 'success' | 'danger' | 'warning';
+  presetToastVariant: "success" | "danger" | "warning";
   showPresetToast: boolean;
   isCalculating: boolean;
   calculationRequestId: number;
@@ -116,7 +119,7 @@ export interface CalculatorData {
   clearPresetStatus(): void;
   triggerPresetToast(
     message: string,
-    variant?: 'success' | 'danger' | 'warning',
+    variant?: "success" | "danger" | "warning",
   ): void;
   hydratePlatePresets(): void;
   persistPlatePresetStore(): boolean;
@@ -131,36 +134,39 @@ export interface CalculatorData {
  */
 export default function (): CalculatorData {
   return {
-    sessionTiming: '',
-    equipmentType: '',
+    sessionTiming: "",
+    equipmentType: "",
     numWarmupSets: 6,
-    targetWeight: '',
+    targetWeight: "",
     roundedTargetWeight: 0,
     topSetPlates: {
       plateConfig: [],
       remaining: 0,
       actualWeight: 0,
     },
-    selectedFormula: 'barbellPreClimbing',
+    selectedFormula: "barbellPreClimbing",
     warmupSets: [],
     showSetsSelector: true,
     isWeightedBodyweight: false,
-    bodyweight: '',
+    bodyweight: "",
     showBodyweightInput: false,
     enableBackoff: false,
     backoffPercentage: 80,
     barWeight: DEFAULT_BAR_WEIGHT,
-    barWeightOptions: Array.from({ length: 9 }, (_value, index) => 45 - index * 5),
+    barWeightOptions: Array.from(
+      { length: 9 },
+      (_value, index) => 45 - index * 5,
+    ),
     availablePlates: normalizePlateCollection(DEFAULT_AVAILABLE_PLATES),
     platePresets: [],
-    selectedPlatePresetId: '',
-    platePresetNameInput: '',
-    platePresetRenameInput: '',
-    defaultPlatePresetId: '',
-    platePresetError: '',
-    platePresetStatus: '',
-    presetToastMessage: '',
-    presetToastVariant: 'success',
+    selectedPlatePresetId: "",
+    platePresetNameInput: "",
+    platePresetRenameInput: "",
+    defaultPlatePresetId: "",
+    platePresetError: "",
+    platePresetStatus: "",
+    presetToastMessage: "",
+    presetToastVariant: "success",
     showPresetToast: false,
     isCalculating: false,
     calculationRequestId: 0,
@@ -355,7 +361,9 @@ export default function (): CalculatorData {
           }
         }
         this.roundedTargetWeight = roundedWeight;
-        this.topSetPlates = this.calculatePlatesNeeded(this.roundedTargetWeight);
+        this.topSetPlates = this.calculatePlatesNeeded(
+          this.roundedTargetWeight,
+        );
 
         const formula = getFormula(this.selectedFormula);
         const actualTargetWeight = this.isWeightedBodyweight
@@ -575,7 +583,7 @@ export default function (): CalculatorData {
     },
 
     openPlateSettingsModal() {
-      const modalElement = document.getElementById('plateSettingsModal');
+      const modalElement = document.getElementById("plateSettingsModal");
       if (!modalElement) {
         return;
       }
@@ -585,11 +593,11 @@ export default function (): CalculatorData {
     },
 
     clearPresetStatus() {
-      this.platePresetError = '';
-      this.platePresetStatus = '';
+      this.platePresetError = "";
+      this.platePresetStatus = "";
     },
 
-    triggerPresetToast(message, variant = 'success') {
+    triggerPresetToast(message, variant = "success") {
       this.presetToastMessage = message;
       this.presetToastVariant = variant;
       this.showPresetToast = true;
@@ -609,20 +617,20 @@ export default function (): CalculatorData {
       );
 
       this.platePresets = presetStore.presets;
-      this.defaultPlatePresetId = presetStore.defaultPresetId || '';
+      this.defaultPlatePresetId = presetStore.defaultPresetId || "";
 
       const hasSelected = this.platePresets.some(
         (preset) => preset.id === this.selectedPlatePresetId,
       );
 
       if (!hasSelected) {
-        this.selectedPlatePresetId = this.platePresets[0]?.id ?? '';
+        this.selectedPlatePresetId = this.platePresets[0]?.id ?? "";
       }
 
       const selectedPreset = this.platePresets.find(
         (preset) => preset.id === this.selectedPlatePresetId,
       );
-      this.platePresetRenameInput = selectedPreset ? selectedPreset.name : '';
+      this.platePresetRenameInput = selectedPreset ? selectedPreset.name : "";
     },
 
     persistPlatePresetStore() {
@@ -637,8 +645,8 @@ export default function (): CalculatorData {
         return true;
       } catch {
         this.platePresetError =
-          'Could not save presets in this browser. Please check storage availability.';
-        this.triggerPresetToast(this.platePresetError, 'danger');
+          "Could not save presets in this browser. Please check storage availability.";
+        this.triggerPresetToast(this.platePresetError, "danger");
         return false;
       }
     },
@@ -650,7 +658,7 @@ export default function (): CalculatorData {
         (preset) => preset.id === this.selectedPlatePresetId,
       );
 
-      this.platePresetRenameInput = selectedPreset ? selectedPreset.name : '';
+      this.platePresetRenameInput = selectedPreset ? selectedPreset.name : "";
 
       if (selectedPreset) {
         this.applySelectedPlatePreset();
@@ -670,7 +678,7 @@ export default function (): CalculatorData {
       try {
         const presetName = String(this.platePresetNameInput).trim();
         if (!presetName) {
-          this.platePresetError = 'Preset name is required.';
+          this.platePresetError = "Preset name is required.";
           return;
         }
 
@@ -689,8 +697,8 @@ export default function (): CalculatorData {
         );
 
         if (samePresetAlreadyExists) {
-          this.platePresetStatus = 'No changes detected for this preset name.';
-          this.triggerPresetToast(this.platePresetStatus, 'warning');
+          this.platePresetStatus = "No changes detected for this preset name.";
+          this.triggerPresetToast(this.platePresetStatus, "warning");
           return;
         }
 
@@ -709,18 +717,18 @@ export default function (): CalculatorData {
 
         this.selectedPlatePresetId = newPreset.id;
         this.platePresetRenameInput = newPreset.name;
-        this.platePresetNameInput = '';
+        this.platePresetNameInput = "";
 
         if (!this.persistPlatePresetStore()) {
           return;
         }
 
-        this.platePresetStatus = 'Preset saved.';
-        this.triggerPresetToast(this.platePresetStatus, 'success');
+        this.platePresetStatus = "Preset saved.";
+        this.triggerPresetToast(this.platePresetStatus, "success");
       } catch {
         this.platePresetError =
-          'Could not save preset. Please try again with a different name.';
-        this.triggerPresetToast(this.platePresetError, 'danger');
+          "Could not save preset. Please try again with a different name.";
+        this.triggerPresetToast(this.platePresetError, "danger");
       }
     },
 
@@ -732,16 +740,18 @@ export default function (): CalculatorData {
       );
 
       if (!selectedPreset) {
-        this.platePresetError = 'Select a preset to apply.';
+        this.platePresetError = "Select a preset to apply.";
         return;
       }
 
       this.barWeight = selectedPreset.barWeight;
-      this.availablePlates = normalizePlateCollection(selectedPreset.availablePlates);
+      this.availablePlates = normalizePlateCollection(
+        selectedPreset.availablePlates,
+      );
       this.saveSettings();
       this.calculate();
       this.platePresetStatus = `Applied preset: ${selectedPreset.name}`;
-      this.triggerPresetToast(this.platePresetStatus, 'success');
+      this.triggerPresetToast(this.platePresetStatus, "success");
     },
 
     renameSelectedPlatePreset() {
@@ -752,13 +762,13 @@ export default function (): CalculatorData {
       );
 
       if (!selectedPreset) {
-        this.platePresetError = 'Select a preset to rename.';
+        this.platePresetError = "Select a preset to rename.";
         return;
       }
 
       const renamedValue = String(this.platePresetRenameInput).trim();
       if (!renamedValue) {
-        this.platePresetError = 'Preset name is required.';
+        this.platePresetError = "Preset name is required.";
         return;
       }
 
@@ -772,7 +782,7 @@ export default function (): CalculatorData {
         return;
       }
 
-      this.platePresetStatus = 'Preset renamed.';
+      this.platePresetStatus = "Preset renamed.";
     },
 
     deleteSelectedPlatePreset() {
@@ -783,7 +793,7 @@ export default function (): CalculatorData {
       );
 
       if (!selectedPreset) {
-        this.platePresetError = 'Select a preset to delete.';
+        this.platePresetError = "Select a preset to delete.";
         return;
       }
 
@@ -796,24 +806,24 @@ export default function (): CalculatorData {
       );
 
       if (this.defaultPlatePresetId === selectedPreset.id) {
-        this.defaultPlatePresetId = '';
+        this.defaultPlatePresetId = "";
       }
 
-      this.selectedPlatePresetId = this.platePresets[0]?.id ?? '';
-      this.platePresetRenameInput = this.platePresets[0]?.name ?? '';
+      this.selectedPlatePresetId = this.platePresets[0]?.id ?? "";
+      this.platePresetRenameInput = this.platePresets[0]?.name ?? "";
 
       if (!this.persistPlatePresetStore()) {
         return;
       }
 
-      this.platePresetStatus = 'Preset deleted.';
+      this.platePresetStatus = "Preset deleted.";
     },
 
     setDefaultSelectedPlatePreset() {
       this.clearPresetStatus();
 
       if (!this.selectedPlatePresetId) {
-        this.platePresetError = 'Select a preset to set as default.';
+        this.platePresetError = "Select a preset to set as default.";
         return;
       }
 
@@ -823,18 +833,18 @@ export default function (): CalculatorData {
         return;
       }
 
-      this.platePresetStatus = 'Default preset updated.';
+      this.platePresetStatus = "Default preset updated.";
     },
 
     clearDefaultPlatePreset() {
       this.clearPresetStatus();
-      this.defaultPlatePresetId = '';
+      this.defaultPlatePresetId = "";
 
       if (!this.persistPlatePresetStore()) {
         return;
       }
 
-      this.platePresetStatus = 'Default preset cleared.';
+      this.platePresetStatus = "Default preset cleared.";
     },
 
     getPlateColor(weight: number | string): string {
@@ -919,9 +929,9 @@ export default function (): CalculatorData {
     },
 
     init() {
-      // @ts-ignore - debounce returns a function, $el will be available in Alpine context
+      // @ts-expect-error - debounce returns a function, $el will be available in Alpine context
       this.debouncedCalculate = debounce(this.calculate.bind(this), 300);
-      this.selectedFormula = 'barbellPreClimbing';
+      this.selectedFormula = "barbellPreClimbing";
       this.numWarmupSets = getDefaultSets(this.selectedFormula);
       this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
 
@@ -935,15 +945,15 @@ export default function (): CalculatorData {
           settings = {};
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, "sessionTiming")) {
+        if (Object.hasOwn(settings, "sessionTiming")) {
           this.sessionTiming = settings.sessionTiming;
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, "equipmentType")) {
+        if (Object.hasOwn(settings, "equipmentType")) {
           this.equipmentType = settings.equipmentType;
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, "barWeight")) {
+        if (Object.hasOwn(settings, "barWeight")) {
           const parsedBarWeight = Number.parseFloat(String(settings.barWeight));
           if (Number.isFinite(parsedBarWeight) && parsedBarWeight > 0) {
             const normalizedBarWeight = Math.min(
@@ -960,19 +970,16 @@ export default function (): CalculatorData {
           settings.availablePlates &&
           Array.isArray(settings.availablePlates)
         ) {
-          this.availablePlates = normalizePlateCollection(settings.availablePlates);
+          this.availablePlates = normalizePlateCollection(
+            settings.availablePlates,
+          );
         }
 
-        if (
-          Object.prototype.hasOwnProperty.call(settings, "bodyweight") &&
-          settings.bodyweight > 0
-        ) {
+        if (Object.hasOwn(settings, "bodyweight") && settings.bodyweight > 0) {
           this.bodyweight = settings.bodyweight.toString();
         }
 
-        if (
-          Object.prototype.hasOwnProperty.call(settings, "isWeightedBodyweight")
-        ) {
+        if (Object.hasOwn(settings, "isWeightedBodyweight")) {
           this.isWeightedBodyweight = settings.isWeightedBodyweight;
           this.showBodyweightInput = settings.isWeightedBodyweight;
 
@@ -981,11 +988,11 @@ export default function (): CalculatorData {
           }
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, "numWarmupSets")) {
+        if (Object.hasOwn(settings, "numWarmupSets")) {
           this.numWarmupSets = settings.numWarmupSets;
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, "selectedFormula")) {
+        if (Object.hasOwn(settings, "selectedFormula")) {
           this.selectedFormula = settings.selectedFormula;
           this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
 
@@ -1001,13 +1008,11 @@ export default function (): CalculatorData {
           }
         }
 
-        if (Object.prototype.hasOwnProperty.call(settings, "enableBackoff")) {
+        if (Object.hasOwn(settings, "enableBackoff")) {
           this.enableBackoff = settings.enableBackoff;
         }
 
-        if (
-          Object.prototype.hasOwnProperty.call(settings, "backoffPercentage")
-        ) {
+        if (Object.hasOwn(settings, "backoffPercentage")) {
           this.backoffPercentage = settings.backoffPercentage;
         }
       }
@@ -1031,26 +1036,28 @@ export default function (): CalculatorData {
 
         if (defaultPreset) {
           this.barWeight = defaultPreset.barWeight;
-          this.availablePlates = normalizePlateCollection(defaultPreset.availablePlates);
+          this.availablePlates = normalizePlateCollection(
+            defaultPreset.availablePlates,
+          );
           this.saveSettings();
         }
       }
 
       this.applyJourneySelection(false);
 
-      // @ts-ignore
+      // @ts-expect-error
       this.$watch("bodyweight", (newValue: string | number) => {
         if (newValue && Number.parseFloat(String(newValue)) > 0) {
           this.saveSettings();
         }
       });
 
-      // @ts-ignore
+      // @ts-expect-error
       this.$watch("numWarmupSets", () => {
         this.saveSettings();
       });
 
-      // @ts-ignore
+      // @ts-expect-error
       this.$watch("barWeight", (newValue: number) => {
         const parsedBarWeight = Number.parseFloat(String(newValue));
         if (!Number.isFinite(parsedBarWeight) || parsedBarWeight <= 0) {
@@ -1071,25 +1078,25 @@ export default function (): CalculatorData {
         this.debouncedCalculate?.();
       });
 
-      // @ts-ignore
+      // @ts-expect-error
       this.$watch("availablePlates", () => {
         this.saveSettings();
         this.debouncedCalculate?.();
       });
 
-      // @ts-ignore
+      // @ts-expect-error
       this.$watch("enableBackoff", () => {
         this.saveSettings();
         this.debouncedCalculate?.();
       });
 
-      // @ts-ignore
+      // @ts-expect-error
       this.$watch("backoffPercentage", () => {
         this.saveSettings();
         this.debouncedCalculate?.();
       });
 
-      // @ts-ignore - $el is available in Alpine context
+      // @ts-expect-error - $el is available in Alpine context
       this.$el.addEventListener("use-calculated-max", (e: CustomEvent) => {
         if (e.detail?.weight) {
           const calculatedWeight = Number.parseFloat(String(e.detail.weight));

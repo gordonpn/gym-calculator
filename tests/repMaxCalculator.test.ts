@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import repMaxCalculator from "../src/components/repMaxCalculator";
 import type { RepMaxSet } from "../src/components/repMaxCalculator";
-import strengthLevelCalculator from "../src/components/strengthLevelCalculator";
+import repMaxCalculator from "../src/components/repMaxCalculator";
 import type { StrengthSet } from "../src/components/strengthLevelCalculator";
+import strengthLevelCalculator from "../src/components/strengthLevelCalculator";
 
 // ---------------------------------------------------------------------------
 // repMaxCalculator

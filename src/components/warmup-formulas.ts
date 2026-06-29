@@ -1,4 +1,4 @@
-import type { Plate } from './util';
+import type { Plate } from "./util";
 
 /**
  * Interface for a single warm-up set
@@ -37,7 +37,7 @@ export type FormulaFunction = (
   availablePlates?: Plate[],
   minimizePlateChanges?: boolean,
   isWeightedBodyweight?: boolean,
-  bodyweight?: number
+  bodyweight?: number,
 ) => WarmupSet[];
 
 /**
@@ -47,7 +47,7 @@ export function generatePossibleWeights(
   barWeight: number,
   targetWeight: number,
   availablePlates: Plate[],
-  isWeightedBodyweight: boolean = false
+  isWeightedBodyweight: boolean = false,
 ): number[] {
   const availablePlateWeights = availablePlates
     .filter((p) => p.available && Number(p.count ?? 0) > 0)
@@ -68,7 +68,7 @@ export function generatePossibleWeights(
   // Generate all possible combinations up to target weight
   const generateCombinations = (
     weights: Array<{ weight: number; count: number }>,
-    maxWeight: number
+    maxWeight: number,
   ) => {
     const combos: number[] = [];
 
@@ -117,7 +117,7 @@ export function generatePossibleWeights(
  */
 function findClosestWeight(target: number, possibleWeights: number[]): number {
   return possibleWeights.reduce((closest, weight) =>
-    Math.abs(weight - target) < Math.abs(closest - target) ? weight : closest
+    Math.abs(weight - target) < Math.abs(closest - target) ? weight : closest,
   );
 }
 
@@ -127,7 +127,7 @@ function findClosestWeight(target: number, possibleWeights: number[]): number {
 function optimizePlateChanges(
   sets: WarmupSet[],
   barWeight: number,
-  availablePlates: Plate[]
+  availablePlates: Plate[],
 ): WarmupSet[] {
   if (sets.length <= 1) {
     return sets;
@@ -150,7 +150,7 @@ function optimizePlateChanges(
     barWeight,
     maxSetWeight,
     availablePlates,
-    false
+    false,
   );
 
   if (possibleWeights.length === 0) {
@@ -158,7 +158,7 @@ function optimizePlateChanges(
   }
 
   const getExactConfigForWeight = (
-    totalWeight: number
+    totalWeight: number,
   ): ExactPlateConfig | null => {
     const counts = Array.from({ length: plateOptions.length }, () => 0);
     const perSide = Math.max(0, (totalWeight - barWeight) / 2);
@@ -194,7 +194,7 @@ function optimizePlateChanges(
 
   const candidatesBySet = sets.map((set) => {
     const idealWeight =
-      typeof set.idealWeight === 'number' ? set.idealWeight : set.weight;
+      typeof set.idealWeight === "number" ? set.idealWeight : set.weight;
 
     const nearest = [...possibleWeights]
       .sort((a, b) => Math.abs(a - idealWeight) - Math.abs(b - idealWeight))
@@ -223,8 +223,11 @@ function optimizePlateChanges(
       .filter(
         (
           candidate,
-        ): candidate is { weight: number; config: number[]; deviation: number } =>
-          candidate !== null
+        ): candidate is {
+          weight: number;
+          config: number[];
+          deviation: number;
+        } => candidate !== null,
       );
   });
 
@@ -238,9 +241,11 @@ function optimizePlateChanges(
 
   for (let setIndex = 0; setIndex < candidatesBySet.length; setIndex++) {
     const candidates = candidatesBySet[setIndex];
-    dpMoves.push(Array.from({ length: candidates.length }, () => Number.POSITIVE_INFINITY));
+    dpMoves.push(
+      Array.from({ length: candidates.length }, () => Number.POSITIVE_INFINITY),
+    );
     dpDeviation.push(
-      Array.from({ length: candidates.length }, () => Number.POSITIVE_INFINITY)
+      Array.from({ length: candidates.length }, () => Number.POSITIVE_INFINITY),
     );
     prevIndex.push(Array.from({ length: candidates.length }, () => -1));
   }
@@ -261,7 +266,8 @@ function optimizePlateChanges(
           continue;
         }
 
-        const nextMoves = dpMoves[i - 1][k] + movementCost(previous.config, current.config);
+        const nextMoves =
+          dpMoves[i - 1][k] + movementCost(previous.config, current.config);
         const nextDeviation = dpDeviation[i - 1][k] + current.deviation;
 
         const isBetterMoves = nextMoves < dpMoves[i][j];
@@ -290,7 +296,10 @@ function optimizePlateChanges(
     }
   }
 
-  const chosenWeights: number[] = Array.from({ length: sets.length }, () => barWeight);
+  const chosenWeights: number[] = Array.from(
+    { length: sets.length },
+    () => barWeight,
+  );
   let cursor = bestLast;
   for (let i = sets.length - 1; i >= 0; i--) {
     chosenWeights[i] = candidatesBySet[i][cursor].weight;
@@ -301,7 +310,7 @@ function optimizePlateChanges(
     ...set,
     weight: chosenWeights[index],
     addedWeight:
-      typeof set.addedWeight === 'number'
+      typeof set.addedWeight === "number"
         ? Math.max(0, chosenWeights[index] - barWeight)
         : set.addedWeight,
   }));
@@ -317,7 +326,7 @@ export function percentageBased(
   availablePlates: Plate[] = [],
   minimizePlateChanges: boolean = false,
   isWeightedBodyweight: boolean = false,
-  bodyweight: number = 0
+  bodyweight: number = 0,
 ): WarmupSet[] {
   const effectiveTargetWeight = isWeightedBodyweight
     ? targetWeight - bodyweight
@@ -331,14 +340,14 @@ export function percentageBased(
   const idealWeights: Array<{ percentage: number; idealWeight: number }> = [];
   for (let i = 0; i < numSets; i++) {
     const percentage = Math.round(
-      minPercentage + (percentageRange * i) / (numSets - 1)
+      minPercentage + (percentageRange * i) / (numSets - 1),
     );
     let idealWeight: number;
 
     if (isWeightedBodyweight) {
       // For bodyweight exercises, lower percentages may mean negative added weight
       idealWeight = Math.round(
-        effectiveTargetWeight * (percentage / 100) + bodyweight
+        effectiveTargetWeight * (percentage / 100) + bodyweight,
       );
       // Ensure we don't go below bodyweight
       if (idealWeight < bodyweight) {
@@ -355,7 +364,7 @@ export function percentageBased(
     const possibleWeights = generatePossibleWeights(
       barWeight,
       targetWeight,
-      availablePlates
+      availablePlates,
     );
 
     for (let i = 0; i < idealWeights.length; i++) {
@@ -418,7 +427,7 @@ export function fixedIncrements(
   _availablePlates: Plate[] = [],
   _minimizePlateChanges: boolean = false,
   isWeightedBodyweight: boolean = false,
-  bodyweight: number = 0
+  bodyweight: number = 0,
 ): WarmupSet[] {
   const effectiveTargetWeight = isWeightedBodyweight
     ? targetWeight - bodyweight
@@ -427,7 +436,10 @@ export function fixedIncrements(
 
   const desiredTopPercent = 0.9;
   const originalTopRatio = numSets / (numSets + 1);
-  const topRatio = Math.min(Math.max(originalTopRatio, desiredTopPercent), 0.95);
+  const topRatio = Math.min(
+    Math.max(originalTopRatio, desiredTopPercent),
+    0.95,
+  );
 
   const topWarmupWeight = effectiveTargetWeight * topRatio;
   const increment = (topWarmupWeight - effectiveBarWeight) / numSets;
@@ -483,14 +495,16 @@ export function standardPyramid(
   _availablePlates?: Plate[],
   _minimizePlateChanges?: boolean,
   isWeightedBodyweight?: boolean,
-  bodyweight?: number
+  bodyweight?: number,
 ): WarmupSet[] {
   const sets: WarmupSet[] = [];
   const percentages = [50, 60, 70, 80];
 
   for (const percentage of percentages) {
     const weight = Math.round(targetWeight * (percentage / 100));
-    const addedWeight = isWeightedBodyweight ? weight - (bodyweight || 0) : weight;
+    const addedWeight = isWeightedBodyweight
+      ? weight - (bodyweight || 0)
+      : weight;
 
     let reps: number;
     if (percentage <= 50) reps = 10;
@@ -520,7 +534,7 @@ export function weightedBodyweight(
   availablePlates: Plate[] = [],
   _minimizePlateChanges: boolean = false,
   _isWeightedBodyweight: boolean = true,
-  bodyweight: number = 150
+  bodyweight: number = 150,
 ): WarmupSet[] {
   return percentageBased(
     targetWeight,
@@ -529,7 +543,7 @@ export function weightedBodyweight(
     availablePlates,
     false,
     true,
-    bodyweight
+    bodyweight,
   );
 }
 
@@ -544,7 +558,7 @@ export function weightedBodyweightPreClimbing(
   _availablePlates: Plate[] = [],
   _minimizePlateChanges: boolean = false,
   _isWeightedBodyweight: boolean = true,
-  bodyweight: number = 150
+  bodyweight: number = 150,
 ): WarmupSet[] {
   const workingWeight = Math.round(targetWeight);
   const addedWeight = Math.max(0, workingWeight - bodyweight);
@@ -558,7 +572,9 @@ export function weightedBodyweightPreClimbing(
       addedWeight: 0,
     },
     {
-      percentage: Math.round((halfAddedWeight / Math.max(workingWeight, 1)) * 100),
+      percentage: Math.round(
+        (halfAddedWeight / Math.max(workingWeight, 1)) * 100,
+      ),
       weight: halfAddedWeight,
       reps: 3,
       addedWeight: Math.max(0, halfAddedWeight - bodyweight),
@@ -583,7 +599,7 @@ export function weightedBodyweightPostClimbing(
   _availablePlates: Plate[] = [],
   _minimizePlateChanges: boolean = false,
   _isWeightedBodyweight: boolean = true,
-  bodyweight: number = 150
+  bodyweight: number = 150,
 ): WarmupSet[] {
   const workingWeight = Math.round(targetWeight);
   const addedWeight = Math.max(0, workingWeight - bodyweight);
@@ -614,7 +630,7 @@ export function dumbbellPreClimbing(
   _availablePlates?: Plate[],
   _minimizePlateChanges?: boolean,
   _isWeightedBodyweight?: boolean,
-  _bodyweight?: number
+  _bodyweight?: number,
 ): WarmupSet[] {
   return [
     {
@@ -645,7 +661,7 @@ export function dumbbellPostClimbing(
   _availablePlates?: Plate[],
   _minimizePlateChanges?: boolean,
   _isWeightedBodyweight?: boolean,
-  _bodyweight?: number
+  _bodyweight?: number,
 ): WarmupSet[] {
   return [
     {
@@ -672,14 +688,16 @@ export function barbellPreClimbing(
   _availablePlates?: Plate[],
   _minimizePlateChanges?: boolean,
   _isWeightedBodyweight?: boolean,
-  _bodyweight?: number
+  _bodyweight?: number,
 ): WarmupSet[] {
   const workingWeight = Math.round(targetWeight);
   const emptyBarWeight = Math.round(barWeight);
 
   return [
     {
-      percentage: Math.round((emptyBarWeight / Math.max(workingWeight, 1)) * 100),
+      percentage: Math.round(
+        (emptyBarWeight / Math.max(workingWeight, 1)) * 100,
+      ),
       weight: emptyBarWeight,
       reps: 15,
     },
@@ -712,14 +730,16 @@ export function barbellPostClimbing(
   _availablePlates?: Plate[],
   _minimizePlateChanges?: boolean,
   _isWeightedBodyweight?: boolean,
-  _bodyweight?: number
+  _bodyweight?: number,
 ): WarmupSet[] {
   const workingWeight = Math.round(targetWeight);
   const emptyBarWeight = Math.round(barWeight);
 
   return [
     {
-      percentage: Math.round((emptyBarWeight / Math.max(workingWeight, 1)) * 100),
+      percentage: Math.round(
+        (emptyBarWeight / Math.max(workingWeight, 1)) * 100,
+      ),
       weight: emptyBarWeight,
       reps: 10,
     },
@@ -750,7 +770,7 @@ const formulas: Record<string, FormulaFunction> = {
   barbellPostClimbing,
 };
 
-const configurableFormulas = new Set(['percentageBased', 'fixedIncrements']);
+const configurableFormulas = new Set(["percentageBased", "fixedIncrements"]);
 
 /**
  * Get formula by ID
@@ -771,23 +791,23 @@ export function isConfigurableFormula(formulaId: string): boolean {
  */
 export function getDefaultSets(formulaId: string): number {
   switch (formulaId) {
-    case 'weightedBodyweightPreClimbing':
+    case "weightedBodyweightPreClimbing":
       return 3;
-    case 'weightedBodyweightPostClimbing':
+    case "weightedBodyweightPostClimbing":
       return 2;
-    case 'barbellPreClimbing':
+    case "barbellPreClimbing":
       return 4;
-    case 'barbellPostClimbing':
+    case "barbellPostClimbing":
       return 3;
-    case 'dumbbellPreClimbing':
+    case "dumbbellPreClimbing":
       return 3;
-    case 'dumbbellPostClimbing':
+    case "dumbbellPostClimbing":
       return 2;
-    case 'fixedIncrements':
+    case "fixedIncrements":
       return 5;
-    case 'standardPyramid':
+    case "standardPyramid":
       return 4;
-    case 'weightedBodyweight':
+    case "weightedBodyweight":
       return 3;
     default:
       return 6;

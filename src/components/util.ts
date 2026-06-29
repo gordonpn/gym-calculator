@@ -12,7 +12,7 @@ const getPlateCount = (plate: Plate): number => {
     return 0;
   }
 
-  if (typeof plate.count === 'number' && Number.isFinite(plate.count)) {
+  if (typeof plate.count === "number" && Number.isFinite(plate.count)) {
     return Math.max(0, Math.floor(plate.count));
   }
 
@@ -25,7 +25,7 @@ const getPlateCount = (plate: Plate): number => {
  */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout>;
   return function (this: any, ...args: Parameters<T>) {
@@ -46,7 +46,7 @@ export function roundToNearest5(num: number): number {
  */
 export function roundToSmallestPlate(
   num: number,
-  availablePlates: Plate[]
+  availablePlates: Plate[],
 ): number {
   // Find the smallest available plate
   const smallestPlate = availablePlates
@@ -70,7 +70,7 @@ export function roundToNearestAchievableWeight(
   targetWeight: number,
   barWeight: number,
   availablePlates: Plate[],
-  isWeightedBodyweight: boolean = false
+  isWeightedBodyweight: boolean = false,
 ): number {
   // Validate inputs
   const weight = Number(targetWeight);

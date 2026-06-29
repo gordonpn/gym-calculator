@@ -1,114 +1,91 @@
 # Gym Calculator
 
-A web app for planning warm-up sets, estimating rep maxes, and checking strength level standards.
+A PWA for planning warm-up sets, estimating rep maxes, and checking strength level standards.
 
 ## Features
 
 ### Warm-up calculator
 
-Journey-based warm-up routines are selected from:
-
-- **Barbell (pre-climbing / cold):** empty bar × 15, 50% × 5, 75% × 3, top set
-- **Barbell (post-climbing / warm):** empty bar × 10, 60% × 4, top set
-- **Dumbbell (pre-climbing / Rule of 3):** 50% × 12, 75% × 6, top set
-- **Dumbbell (post-climbing / Energy Saver):** 50% × 8, top set
-- **Weighted bodyweight (pre-climbing):** bodyweight × 8, ~50% added load × 3, top set
-- **Weighted bodyweight (post-climbing):** bodyweight × 5, top set
-
-Warm-up settings include:
-
-- Bar weight selection (`0` to `45` lbs in 5-lb steps)
-- Available plate toggles (`55`, `45`, `35`, `25`, `15`, `10`, `5`, `2.5`, `1`, `0.75`, `0.5`, `0.25`)
-- Automatic plate-change minimization (barbell mode)
-- Optional backoff set with configurable percentage
-- Increment/decrement controls for target weight
+Journey-based warm-up routines selected from six formulas across three equipment types (barbell, dumbbell, weighted bodyweight) and two session timings (fresh / warmed up). Includes configurable plate presets, automatic plate-change minimization, optional backoff sets, and increment/decrement controls.
 
 ### Rep max calculator
 
-- Enter one or more weight/reps sets
-- Automatic formula selection per set:
-  - **Epley** for reps `<= 10`
-  - **Brzycki** for reps `11-30`
-- 1RM combination modes: `average`, `highest`, `lowest`, `weighted` (weighted by `weight × reps`)
-- Rep-range projection for reps `1-15`
-- Apply a projected RM value directly to warm-up target weight
+Enter one or more weight/reps sets. Combines estimates via average, highest, lowest, or weighted aggregation. Projects weights for rep ranges 1–15 and can apply any RM value directly to the warm-up target.
 
 ### Strength level checker
 
-- Estimates 1RM from one or more sets using the same Epley/Brzycki logic and combination modes
-- Compares against bodyweight-relative standards for:
-  - Back Squat
-  - Bench Press
-  - Bent Over Barbell Row
-  - Deadlift
-  - Overhead Press
-  - Barbell Lunge
-  - Dip
-  - Romanian Deadlift
-- Shows current level (`Untrained` → `Elite`) and next target milestone
-
-## Data persistence (localStorage)
-
-The app stores user preferences locally in the browser:
-
-- `plateSettings`: warm-up settings (session timing, equipment type, bar weight, plate availability, plate-change optimization, bodyweight, backoff options)
-- `repMaxCalculationMethod`: selected 1RM aggregation method in Rep Max Calculator
-- `strengthLevelSettings`: bodyweight, selected lift, and calculation method in Strength Level Checker
-- `theme`: light/dark selection
-
-No backend storage is used.
+Compares estimated 1RM against bodyweight-relative standards for eight lifts (Back Squat, Bench Press, Bent Over Row, Deadlift, Overhead Press, Barbell Lunge, Dip, Romanian Deadlift). Shows current level and the next milestone target.
 
 ## Tech stack
 
-- **Astro**
-- **Alpine.js**
-- **Bootstrap 5** + **Bootstrap Icons**
-- **TypeScript**
-- **Biome**
-- **Lefthook**
-- **pnpm**
-
-## PWA / offline
-
-- Includes `manifest.webmanifest`
-- Registers a service worker (`public/sw.js`)
-- Caches core app shell assets and serves cached fallback when offline
+- **Astro 7** — static site generation
+- **Alpine.js 3** — client-side reactivity
+- **Bootstrap 5** — tree-shaken SCSS (only components used)
+- **Inline SVGs** — 9 icons, no icon font
+- **TypeScript** — strict mode
+- **Biome 2** — linting and formatting
+- **Vitest 4** — unit testing
+- **Lefthook 2** — git hooks
 
 ## Development
 
 ### Prerequisites
 
-- Node.js `>= 23.11.0`
-- pnpm `>= 8.7.1`
+- Node.js `>= 22.0.0`
+- pnpm `>= 9.0.0`
 
 ### Commands
 
 ```bash
 pnpm install
-pnpm run dev
-pnpm run build
-pnpm run preview
-pnpm run check
+pnpm run dev      # start dev server
+pnpm run build    # production build
+pnpm run preview  # preview built output
+pnpm run check    # biome lint + format
+pnpm test         # run unit tests
 ```
 
 ## Project structure
 
 ```text
 src/
-├── alpine.ts
+├── alpine.ts                      # Alpine.js plugin init + theme toggle
 ├── components/
-│   ├── calculator.ts
-│   ├── repMaxCalculator.ts
-│   ├── strengthLevelCalculator.ts
-│   ├── util.ts
-│   └── warmup-formulas.ts
+│   ├── calculator.ts              # Warm-up calculator Alpine component
+│   ├── oneRepMax.ts               # Epley/Brzycki 1RM formulas
+│   ├── presetStorage.ts           # Plate preset localStorage persistence
+│   ├── repMaxCalculator.ts        # Rep max calculator Alpine component
+│   ├── strengthLevelCalculator.ts # Strength level checker Alpine component
+│   ├── util.ts                    # Shared utilities (debounce, rounding)
+│   ├── warmup-formulas.ts         # All 10 formula functions + plate optimizer
+│   ├── Icon.astro                 # Inline SVG icon component
+│   ├── PlateBadges.astro          # Shared plate badge rendering
+│   ├── PlateSettingsModal.astro   # Warm-up settings modal
+│   ├── RepMaxCalculatorModal.astro
+│   └── StrengthLevelModal.astro
 ├── layouts/
 │   └── Layout.astro
 ├── pages/
 │   └── index.astro
 └── styles/
-    └── style.css
+    ├── bootstrap.scss             # Tree-shaken Bootstrap SCSS
+    └── style.css                  # Custom styles
+tests/
+├── calculator.test.ts
+├── oneRepMax.test.ts
+├── presetStorage.test.ts
+├── repMaxCalculator.test.ts
+├── util.test.ts
+└── warmup-formulas.test.ts
 ```
+
+## Data persistence
+
+All user preferences are stored in `localStorage`. No backend or network calls.
+
+## PWA
+
+Includes a service worker with cache-first strategy for static assets and network-first fallback for navigation requests, making the app available offline after first visit.
 
 ## License
 

@@ -1,14 +1,14 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import Icon from "../components/Icon.astro";
 import PlateBadges from "../components/PlateBadges.astro";
+import PlateSettingsModal from "../components/PlateSettingsModal.astro";
 import RepMaxCalculatorModal from "../components/RepMaxCalculatorModal.astro";
 import StrengthLevelModal from "../components/StrengthLevelModal.astro";
-import Icon from "../components/Icon.astro";
-import PlateSettingsModal from "../components/PlateSettingsModal.astro";
+import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Gym Calculator">
-  <div class="container-fluid pt-5 mt-4">
+  <main class="container-fluid pt-5 mt-4">
     <div x-data="calculator" x-init="init">
       <div class="d-flex justify-content-between mb-3">
         <div class="d-flex flex-column gap-2 align-items-stretch w-100">
@@ -401,5 +401,5 @@ import PlateSettingsModal from "../components/PlateSettingsModal.astro";
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </Layout>

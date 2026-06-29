@@ -5,8 +5,8 @@ import {
   isValidOneRepMaxSet,
   parseSetReps,
   parseSetWeight,
-} from './oneRepMax';
-import { roundToNearest5 } from './util';
+} from "./oneRepMax";
+import { roundToNearest5 } from "./util";
 
 /**
  * Interface for strength standard
@@ -61,7 +61,7 @@ export interface StrengthLevelCalculatorData {
   sets: StrengthSet[];
   bodyweight: string | number;
   selectedLift: string;
-  calculationMethod: 'average' | 'highest' | 'lowest' | 'weighted';
+  calculationMethod: "average" | "highest" | "lowest" | "weighted";
   estimatedMax: number;
   strengthResult: StrengthResult | null;
   errorMessage: string;
@@ -81,60 +81,60 @@ export interface StrengthLevelCalculatorData {
  */
 const strengthStandards: StrengthStandardsMap = {
   squat: [
-    { level: 'Untrained', multiple: 0.75 },
-    { level: 'Novice', multiple: 1.25 },
-    { level: 'Intermediate', multiple: 1.75 },
-    { level: 'Advanced', multiple: 2.25 },
-    { level: 'Elite', multiple: 2.75 },
+    { level: "Untrained", multiple: 0.75 },
+    { level: "Novice", multiple: 1.25 },
+    { level: "Intermediate", multiple: 1.75 },
+    { level: "Advanced", multiple: 2.25 },
+    { level: "Elite", multiple: 2.75 },
   ],
   benchPress: [
-    { level: 'Untrained', multiple: 0.5 },
-    { level: 'Novice', multiple: 0.75 },
-    { level: 'Intermediate', multiple: 1.25 },
-    { level: 'Advanced', multiple: 1.75 },
-    { level: 'Elite', multiple: 2.25 },
+    { level: "Untrained", multiple: 0.5 },
+    { level: "Novice", multiple: 0.75 },
+    { level: "Intermediate", multiple: 1.25 },
+    { level: "Advanced", multiple: 1.75 },
+    { level: "Elite", multiple: 2.25 },
   ],
   bentOverRow: [
-    { level: 'Untrained', multiple: 0.5 },
-    { level: 'Novice', multiple: 0.75 },
-    { level: 'Intermediate', multiple: 1.25 },
-    { level: 'Advanced', multiple: 1.75 },
-    { level: 'Elite', multiple: 2.25 },
+    { level: "Untrained", multiple: 0.5 },
+    { level: "Novice", multiple: 0.75 },
+    { level: "Intermediate", multiple: 1.25 },
+    { level: "Advanced", multiple: 1.75 },
+    { level: "Elite", multiple: 2.25 },
   ],
   deadlift: [
-    { level: 'Untrained', multiple: 1.0 },
-    { level: 'Novice', multiple: 1.5 },
-    { level: 'Intermediate', multiple: 2.25 },
-    { level: 'Advanced', multiple: 3.0 },
-    { level: 'Elite', multiple: 3.75 },
+    { level: "Untrained", multiple: 1.0 },
+    { level: "Novice", multiple: 1.5 },
+    { level: "Intermediate", multiple: 2.25 },
+    { level: "Advanced", multiple: 3.0 },
+    { level: "Elite", multiple: 3.75 },
   ],
   overheadPress: [
-    { level: 'Untrained', multiple: 0.35 },
-    { level: 'Novice', multiple: 0.5 },
-    { level: 'Intermediate', multiple: 0.75 },
-    { level: 'Advanced', multiple: 1.1 },
-    { level: 'Elite', multiple: 1.5 },
+    { level: "Untrained", multiple: 0.35 },
+    { level: "Novice", multiple: 0.5 },
+    { level: "Intermediate", multiple: 0.75 },
+    { level: "Advanced", multiple: 1.1 },
+    { level: "Elite", multiple: 1.5 },
   ],
   barbellLunge: [
-    { level: 'Untrained', multiple: 0.4 },
-    { level: 'Novice', multiple: 0.6 },
-    { level: 'Intermediate', multiple: 1.0 },
-    { level: 'Advanced', multiple: 1.4 },
-    { level: 'Elite', multiple: 1.8 },
+    { level: "Untrained", multiple: 0.4 },
+    { level: "Novice", multiple: 0.6 },
+    { level: "Intermediate", multiple: 1.0 },
+    { level: "Advanced", multiple: 1.4 },
+    { level: "Elite", multiple: 1.8 },
   ],
   dip: [
-    { level: 'Untrained', multiple: 0.25 },
-    { level: 'Novice', multiple: 0.5 },
-    { level: 'Intermediate', multiple: 1.0 },
-    { level: 'Advanced', multiple: 1.5 },
-    { level: 'Elite', multiple: 2.0 },
+    { level: "Untrained", multiple: 0.25 },
+    { level: "Novice", multiple: 0.5 },
+    { level: "Intermediate", multiple: 1.0 },
+    { level: "Advanced", multiple: 1.5 },
+    { level: "Elite", multiple: 2.0 },
   ],
   romanianDeadlift: [
-    { level: 'Untrained', multiple: 0.75 },
-    { level: 'Novice', multiple: 1.25 },
-    { level: 'Intermediate', multiple: 1.75 },
-    { level: 'Advanced', multiple: 2.25 },
-    { level: 'Elite', multiple: 2.75 },
+    { level: "Untrained", multiple: 0.75 },
+    { level: "Novice", multiple: 1.25 },
+    { level: "Intermediate", multiple: 1.75 },
+    { level: "Advanced", multiple: 2.25 },
+    { level: "Elite", multiple: 2.75 },
   ],
 };
 
@@ -144,29 +144,29 @@ const strengthStandards: StrengthStandardsMap = {
 export default function (): StrengthLevelCalculatorData {
   return {
     lifts: [
-      { id: 'squat', name: 'Back Squat' },
-      { id: 'benchPress', name: 'Bench Press' },
-      { id: 'bentOverRow', name: 'Bent Over Barbell Row' },
-      { id: 'deadlift', name: 'Deadlift' },
-      { id: 'overheadPress', name: 'Overhead Press' },
-      { id: 'barbellLunge', name: 'Barbell Lunge' },
-      { id: 'dip', name: 'Dip' },
-      { id: 'romanianDeadlift', name: 'Romanian Deadlift' },
+      { id: "squat", name: "Back Squat" },
+      { id: "benchPress", name: "Bench Press" },
+      { id: "bentOverRow", name: "Bent Over Barbell Row" },
+      { id: "deadlift", name: "Deadlift" },
+      { id: "overheadPress", name: "Overhead Press" },
+      { id: "barbellLunge", name: "Barbell Lunge" },
+      { id: "dip", name: "Dip" },
+      { id: "romanianDeadlift", name: "Romanian Deadlift" },
     ],
     standards: strengthStandards,
-    sets: [{ weight: '', reps: '', estimatedMax: 0 }],
-    bodyweight: '',
-    selectedLift: 'squat',
-    calculationMethod: 'average',
+    sets: [{ weight: "", reps: "", estimatedMax: 0 }],
+    bodyweight: "",
+    selectedLift: "squat",
+    calculationMethod: "average",
     estimatedMax: 0,
     strengthResult: null,
-    errorMessage: '',
+    errorMessage: "",
 
     addSet() {
       const lastSet = this.sets[this.sets.length - 1];
-      const newSet: StrengthSet = { weight: '', reps: '', estimatedMax: 0 };
+      const newSet: StrengthSet = { weight: "", reps: "", estimatedMax: 0 };
 
-      if (lastSet && lastSet.weight !== '' && lastSet.reps !== '') {
+      if (lastSet && lastSet.weight !== "" && lastSet.reps !== "") {
         newSet.weight = lastSet.weight;
         newSet.reps = lastSet.reps;
       }
@@ -191,7 +191,7 @@ export default function (): StrengthLevelCalculatorData {
     },
 
     calculateStrength() {
-      this.errorMessage = '';
+      this.errorMessage = "";
 
       const validSets = this.sets.filter((set) => {
         const w = parseSetWeight(set.weight);
@@ -203,7 +203,7 @@ export default function (): StrengthLevelCalculatorData {
 
         if (!isReliableOneRepMaxReps(r)) {
           if (!this.errorMessage) {
-            this.errorMessage = 'Calculation is less reliable for reps > 30.';
+            this.errorMessage = "Calculation is less reliable for reps > 30.";
           }
           return false;
         }
@@ -216,7 +216,8 @@ export default function (): StrengthLevelCalculatorData {
         this.strengthResult = null;
         if (this.sets.some((set) => set.weight || set.reps)) {
           if (!this.errorMessage) {
-            this.errorMessage = 'Enter positive weight and reps to calculate a 1RM.';
+            this.errorMessage =
+              "Enter positive weight and reps to calculate a 1RM.";
           }
         }
         return;
@@ -236,7 +237,7 @@ export default function (): StrengthLevelCalculatorData {
       this.estimatedMax = aggregateOneRepMax(
         setMaxes,
         this.calculationMethod,
-        weightedFactors
+        weightedFactors,
       );
 
       this.evaluateStrengthLevel();
@@ -245,14 +246,11 @@ export default function (): StrengthLevelCalculatorData {
     evaluateStrengthLevel() {
       const bw = Number.parseFloat(String(this.bodyweight));
 
-      if (
-        Number.isNaN(bw) ||
-        bw <= 0 ||
-        this.estimatedMax <= 0
-      ) {
+      if (Number.isNaN(bw) || bw <= 0 || this.estimatedMax <= 0) {
         this.strengthResult = null;
         if (this.estimatedMax > 0 && !this.errorMessage) {
-          this.errorMessage = 'Enter a valid bodyweight to see your strength level.';
+          this.errorMessage =
+            "Enter a valid bodyweight to see your strength level.";
         }
         return;
       }
@@ -261,7 +259,7 @@ export default function (): StrengthLevelCalculatorData {
       const ratio = this.estimatedMax / bw;
 
       let currentLevel: StrengthStandard = {
-        level: 'Below untrained',
+        level: "Below untrained",
         multiple: 0,
       };
 
@@ -272,7 +270,7 @@ export default function (): StrengthLevelCalculatorData {
       }
 
       const nextLevel = standardsForLift.find(
-        (standard) => standard.multiple > ratio
+        (standard) => standard.multiple > ratio,
       );
 
       this.strengthResult = {
@@ -291,17 +289,17 @@ export default function (): StrengthLevelCalculatorData {
 
     saveSettings() {
       localStorage.setItem(
-        'strengthLevelSettings',
+        "strengthLevelSettings",
         JSON.stringify({
           bodyweight: this.bodyweight,
           selectedLift: this.selectedLift,
           calculationMethod: this.calculationMethod,
-        })
+        }),
       );
     },
 
     init() {
-      const saved = localStorage.getItem('strengthLevelSettings');
+      const saved = localStorage.getItem("strengthLevelSettings");
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -315,16 +313,16 @@ export default function (): StrengthLevelCalculatorData {
             this.calculationMethod = parsed.calculationMethod;
           }
         } catch (err) {
-          console.error('Could not parse strength level settings', err);
+          console.error("Could not parse strength level settings", err);
         }
       }
 
-      // @ts-ignore - Alpine's $watch is added by Alpine.js
-      this.$watch('bodyweight', () => this.saveSettings());
-      // @ts-ignore
-      this.$watch('selectedLift', () => this.saveSettings());
-      // @ts-ignore
-      this.$watch('calculationMethod', () => this.saveSettings());
+      // @ts-expect-error - Alpine's $watch is added by Alpine.js
+      this.$watch("bodyweight", () => this.saveSettings());
+      // @ts-expect-error
+      this.$watch("selectedLift", () => this.saveSettings());
+      // @ts-expect-error
+      this.$watch("calculationMethod", () => this.saveSettings());
 
       this.calculateStrength();
     },

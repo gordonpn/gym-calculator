@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
+import type { Plate } from "../src/components/util";
 import {
   debounce,
   roundToNearest5,
   roundToNearestAchievableWeight,
   roundToSmallestPlate,
 } from "../src/components/util";
-import type { Plate } from "../src/components/util";
 
 describe("roundToNearest5", () => {
   it("rounds down when below the midpoint of 5", () => {

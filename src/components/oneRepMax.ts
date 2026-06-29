@@ -1,4 +1,4 @@
-export type OneRepMaxMethod = 'average' | 'highest' | 'lowest' | 'weighted';
+export type OneRepMaxMethod = "average" | "highest" | "lowest" | "weighted";
 
 export const MAX_RELIABLE_REPS_FOR_1RM = 30;
 
@@ -12,7 +12,7 @@ export function parseSetReps(reps: string | number): number {
 
 export function isReliableOneRepMaxReps(
   reps: number,
-  maxReliableRepsFor1RM: number = MAX_RELIABLE_REPS_FOR_1RM
+  maxReliableRepsFor1RM: number = MAX_RELIABLE_REPS_FOR_1RM,
 ): boolean {
   return Number.isInteger(reps) && reps > 0 && reps <= maxReliableRepsFor1RM;
 }
@@ -20,7 +20,7 @@ export function isReliableOneRepMaxReps(
 export function isValidOneRepMaxSet(
   weight: number,
   reps: number,
-  options: { allowZeroWeight?: boolean } = {}
+  options: { allowZeroWeight?: boolean } = {},
 ): boolean {
   if (Number.isNaN(reps) || reps <= 0 || Number.isNaN(weight)) {
     return false;
@@ -32,7 +32,7 @@ export function isValidOneRepMaxSet(
 export function estimateOneRepMax(
   weight: number,
   reps: number,
-  options: { roundSingleRep?: boolean } = {}
+  options: { roundSingleRep?: boolean } = {},
 ): number {
   if (!isValidOneRepMaxSet(weight, reps)) {
     return 0;
@@ -56,20 +56,20 @@ export function estimateOneRepMax(
 export function aggregateOneRepMax(
   estimates: number[],
   method: OneRepMaxMethod,
-  factors: number[] = []
+  factors: number[] = [],
 ): number {
   if (estimates.length === 0) {
     return 0;
   }
 
   switch (method) {
-    case 'highest': {
+    case "highest": {
       return Math.max(...estimates);
     }
-    case 'lowest': {
+    case "lowest": {
       return Math.min(...estimates);
     }
-    case 'weighted': {
+    case "weighted": {
       let totalFactor = 0;
       let weightedSum = 0;
 
