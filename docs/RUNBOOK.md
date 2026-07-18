@@ -61,21 +61,14 @@ export CLOUDFLARE_API_TOKEN="your_cloudflare_api_token"
 
 ---
 
-## 3. GitHub Actions CI/CD Pipeline
+## 3. GitHub Actions CI Pipeline
 
-A unified GitHub Actions workflow ([.github/workflows/ci-cd.yml](file:///Users/gordonpn/workspace/gym-calculator/.github/workflows/ci-cd.yml)) is set up to automate checks and deployments on changes:
+A automated GitHub Actions workflow ([.github/workflows/ci-cd.yml](file:///Users/gordonpn/workspace/gym-calculator/.github/workflows/ci-cd.yml)) is set up to validate changes:
 
 ### Workflow Schema
-- **On Pull Request (to `main`):** Runs syntax and validation checks (Biome checks, Vitest tests, `tofu validate`).
-- **On Push (to `main`):** Performs all verification checks first, then runs `tofu apply -auto-approve` to synchronize changes with Cloudflare.
+- **On Pull Request & Push (to `main`):** Runs syntax and validation checks (Biome checks, Vitest tests, `tofu validate` with dummy credentials).
 
-### Required Secrets
-To make the pipeline work, the following secrets must be added to the GitHub repository (**Settings > Secrets and variables > Actions**):
-
-| Secret Name | Description | Example / Format |
-| :--- | :--- | :--- |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare target account ID | Hexadecimal string (e.g., `75520e73...`) |
-| `CLOUDFLARE_API_TOKEN` | API token with Cloudflare Pages editing permissions | Secret token string |
+Since Cloudflare Pages natively pulls the repository and builds the website, running `tofu apply` in a CI/CD job would require complex remote state sharing (due to state files being local by default). Therefore, platform infrastructure settings in `main.tf` should be updated locally via `tofu apply` when modified.
 
 ---
 
