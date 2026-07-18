@@ -124,6 +124,8 @@ export interface CalculatorData {
   hydratePlatePresets(): void;
   persistPlatePresetStore(): boolean;
   isSelectedPlatePresetDefault(): boolean;
+  updateActivePresetSelection(): void;
+  getActivePresetName(): string;
   getPlateColor(weight: number | string): string;
   incrementWeight(direction: 1 | -1): void;
   init(): void;
@@ -583,6 +585,7 @@ export default function (): CalculatorData {
     },
 
     openPlateSettingsModal() {
+      this.updateActivePresetSelection();
       const modalElement = document.getElementById("plateSettingsModal");
       if (!modalElement) {
         return;
@@ -609,6 +612,39 @@ export default function (): CalculatorData {
       this.presetToastTimeoutId = setTimeout(() => {
         this.showPresetToast = false;
       }, 2800);
+    },
+
+    updateActivePresetSelection() {
+      const currentSnapshot = buildPlatePresetSnapshot(
+        this.barWeight,
+        this.availablePlates,
+      );
+      const matchingPreset = this.platePresets.find(
+        (preset) =>
+          buildPlatePresetSnapshot(preset.barWeight, preset.availablePlates) ===
+          currentSnapshot,
+      );
+
+      if (matchingPreset) {
+        this.selectedPlatePresetId = matchingPreset.id;
+        this.platePresetRenameInput = matchingPreset.name;
+      } else {
+        this.selectedPlatePresetId = "";
+        this.platePresetRenameInput = "";
+      }
+    },
+
+    getActivePresetName() {
+      const currentSnapshot = buildPlatePresetSnapshot(
+        this.barWeight,
+        this.availablePlates,
+      );
+      const matchingPreset = this.platePresets.find(
+        (preset) =>
+          buildPlatePresetSnapshot(preset.barWeight, preset.availablePlates) ===
+          currentSnapshot,
+      );
+      return matchingPreset ? matchingPreset.name : "Custom / None";
     },
 
     hydratePlatePresets() {
@@ -1127,6 +1163,9 @@ export default function (): CalculatorData {
 
       const plateModal = document.getElementById("plateSettingsModal");
       if (plateModal) {
+        plateModal.addEventListener("show.bs.modal", () => {
+          this.updateActivePresetSelection();
+        });
         plateModal.addEventListener("hidden.bs.modal", () => {
           this.calculate();
         });
