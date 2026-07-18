@@ -19,7 +19,8 @@
     "lefthook": "^2.1.9",
     "sass": "^1.101.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.0",
+    "wrangler": "^4.112.0"
   },
   "dependencies": {
     "@astrojs/alpinejs": "^1.0.0",

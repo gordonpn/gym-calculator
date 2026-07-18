@@ -929,7 +929,6 @@ export default function (): CalculatorData {
     },
 
     init() {
-      // @ts-expect-error - debounce returns a function, $el will be available in Alpine context
       this.debouncedCalculate = debounce(this.calculate.bind(this), 300);
       this.selectedFormula = "barbellPreClimbing";
       this.numWarmupSets = getDefaultSets(this.selectedFormula);
