@@ -9,3 +9,13 @@ pre-commit:
 
     - name: build
       run: pnpm run build
+
+    - name: tofu-apply
+      glob: "*.tf"
+      run: |
+        if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$TF_VAR_cloudflare_account_id" ]; then
+          echo "WARNING: Cloudflare credentials (CLOUDFLARE_API_TOKEN or TF_VAR_cloudflare_account_id) are not set. Skipping tofu apply."
+          exit 0
+        fi
+        echo "Modifications to OpenTofu files detected. Running auto-apply..."
+        tofu apply -auto-approve

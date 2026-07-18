@@ -59,6 +59,9 @@ export CLOUDFLARE_API_TOKEN="your_cloudflare_api_token"
    tofu apply
    ```
 
+### Automatic Apply (Git Hook)
+A Lefthook pre-commit hook is configured to automatically run `tofu apply -auto-approve` whenever `.tf` files (like `main.tf` or `variables.tf`) are modified and staged, provided that `CLOUDFLARE_API_TOKEN` and `TF_VAR_cloudflare_account_id` are set in the active terminal session. If credentials are not present, it prints a warning and skips the auto-apply to avoid blocking your commit.
+
 ---
 
 ## 3. GitHub Actions CI Pipeline
