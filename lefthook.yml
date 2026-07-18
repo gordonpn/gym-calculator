@@ -10,6 +10,9 @@ pre-commit:
     - name: build
       run: pnpm run build
 
+pre-push:
+  parallel: false
+  jobs:
     - name: tofu-apply
       glob: "*.tf"
       run: |
