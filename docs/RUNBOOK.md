@@ -87,3 +87,19 @@ To make the pipeline work, the following secrets must be added to the GitHub rep
   ```bash
   pnpm exec wrangler pages dev ./dist
   ```
+
+---
+
+## 5. Troubleshooting & Existing Projects
+
+### Importing an Existing Cloudflare Pages Project
+If you have already configured the Pages project manually on the Cloudflare dashboard, running `tofu apply` may error with a message indicating the project already exists. 
+
+To bring the existing project under OpenTofu's state management, import it:
+
+```bash
+tofu import cloudflare_pages_project.gym_calculator 75520e73ba21df12b124d81e80ad29c1/gym-calculator
+```
+
+### State Lock / Remote State
+By default, this local setup uses local state file (`terraform.tfstate`). For production or multi-developer pipelines, it is highly recommended to configure a remote backend (such as Cloudflare R2, AWS S3, or Terraform Cloud) to store the state file securely.
