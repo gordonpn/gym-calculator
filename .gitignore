@@ -2,7 +2,7 @@ node_modules
 .idea
 dist
 repomix-output.xml
-.astro/dev.json
+.astro/
 .claude/
 
 # OpenTofu / Terraform
