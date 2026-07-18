@@ -11,11 +11,6 @@ provider "cloudflare" {
   # Configuration options are supplied via environment variables like CLOUDFLARE_API_TOKEN
 }
 
-variable "cloudflare_account_id" {
-  type        = string
-  description = "The Cloudflare Account ID"
-}
-
 resource "cloudflare_pages_project" "gym_calculator" {
   account_id        = var.cloudflare_account_id
   name              = "gym-calculator"
