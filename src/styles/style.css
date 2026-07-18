@@ -12,7 +12,7 @@ body {
 input,
 select,
 textarea {
-  font-size: 16px !important;
+  font-size: 16px;
 }
 
 button,
@@ -86,23 +86,23 @@ input[type="reset"] {
 
 /* Colors for weight plates */
 .text-bg-purple {
-  background-color: #6f42c1 !important;
-  color: white !important;
+  background-color: #6f42c1;
+  color: white;
 }
 
 .text-bg-burgundy {
-  background-color: #800020 !important;
-  color: white !important;
+  background-color: #800020;
+  color: white;
 }
 
 .text-bg-teal {
-  background-color: #20c997 !important;
-  color: white !important;
+  background-color: #20c997;
+  color: white;
 }
 
 .text-bg-orange {
-  background-color: #fd7e14 !important;
-  color: white !important;
+  background-color: #fd7e14;
+  color: white;
 }
 
 .preset-list {
