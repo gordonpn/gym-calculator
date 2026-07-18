@@ -4,3 +4,9 @@ dist
 repomix-output.xml
 .astro/dev.json
 .claude/
+
+# OpenTofu / Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
