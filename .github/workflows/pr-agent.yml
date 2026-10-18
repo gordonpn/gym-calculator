@@ -1,0 +1,42 @@
+name: PR-Agent
+
+on:
+  pull_request:
+    types: [ready_for_review]
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  pr_agent:
+    name: runner / pr-agent
+    if: |
+      github.event.sender.type != 'Bot' &&
+      github.actor != 'dependabot[bot]' &&
+      ((github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+        (github.event_name == 'issue_comment' &&
+         github.event.issue.pull_request &&
+         contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)))
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+    steps:
+      - name: PR Agent Action
+        if: env.DEEPSEEK_API_KEY != ''
+        uses: docker://pragent/pr-agent:github_action@sha256:31b9aac6ab067bada9a0c1b001d30ebc500ea4487e00a93c18c59b9ef5fa66db
+        env:
+          CONFIG.MODEL: "deepseek/deepseek-v4-flash"
+          CONFIG.FALLBACK_MODELS: '["deepseek/deepseek-v4-pro"]'
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI.KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI.API_BASE: "https://api.deepseek.com"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
