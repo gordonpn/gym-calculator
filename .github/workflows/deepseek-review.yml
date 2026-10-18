@@ -2,7 +2,7 @@ name: DeepSeek Review
 
 on:
   pull_request:
-    types: [ready_for_review]
+    types: [opened, reopened, ready_for_review]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -17,7 +17,11 @@ jobs:
     name: runner / deepseek-review
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.sender.type != 'Bot' && github.actor != 'dependabot[bot]'
+    if: |
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.sender.type != 'Bot' &&
+      github.actor != 'dependabot[bot]'
     env:
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
     steps:
