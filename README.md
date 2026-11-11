@@ -45,6 +45,23 @@ pnpm run check    # biome lint + format
 pnpm test         # run unit tests
 ```
 
+### Task runner
+
+Install [just](https://just.systems/man/en/packages.html) to use the optional recipe shortcuts. Run `pnpm install` first, then `just --list` to see all recipes.
+
+| Recipe | Purpose |
+| --- | --- |
+| `just dev` | Start the development server |
+| `just build` / `just preview` | Build / preview the production site |
+| `just lint` | Check lint rules |
+| `just format` / `just check-format` | Write formatting / check formatting |
+| `just test` | Run unit tests |
+| `just typecheck` | Check TypeScript types |
+| `just check` | Check lint, formatting, and imports without changing files |
+| `just verify` | Run checks, typecheck, tests, and build |
+
+`just check` is read-only. The existing `pnpm run check` script applies Biome fixes, including unsafe fixes.
+
 ## Project structure
 
 ```text
