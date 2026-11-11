@@ -5,6 +5,7 @@ pre-commit:
       run: pnpm exec tsc --noEmit
 
     - name: lint
+      stage_fixed: true
       run: pnpm biome check --write
 
     - name: build
