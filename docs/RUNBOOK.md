@@ -35,7 +35,7 @@ CLOUDFLARE_API_TOKEN="<your_cloudflare_api_token>"
 TF_VAR_cloudflare_account_id="<your_cloudflare_account_id>"
 ```
 
-`.env` and other local `.env*` files are ignored by Git; only the empty `.env.example` template is tracked. For manual OpenTofu commands, export the variables from your trusted local file in a Bash session:
+`.env` and other local `.env*` files are ignored by Git; only the empty `.env.example` template is tracked. For manual OpenTofu commands and before pushing infrastructure changes, export the variables from your trusted local file in a Bash session:
 
 ```bash
 set -a
@@ -71,7 +71,7 @@ set +a
    ```
 
 ### Automatic Apply (Git Hook)
-A Lefthook pre-push hook is configured to automatically run `tofu apply -auto-approve` whenever `.tf` files (like `main.tf` or `variables.tf`) are modified and pushed, provided that `CLOUDFLARE_API_TOKEN` and `TF_VAR_cloudflare_account_id` are available in `.env` (which the hook sources) or the active terminal session. If credentials are not present, it prints a warning and skips the auto-apply to avoid blocking your push.
+A Lefthook pre-push hook is configured to automatically run `tofu apply -auto-approve` whenever `.tf` files (like `main.tf` or `variables.tf`) are modified and pushed, provided that `CLOUDFLARE_API_TOKEN` and `TF_VAR_cloudflare_account_id` are exported in the active terminal session using the commands above. The hook also sources `.env`, but bare assignments are not exported to the OpenTofu child process automatically. Its `source` command requires a compatible shell such as Bash. If credentials are not present, it prints a warning and skips the auto-apply to avoid blocking your push.
 
 ---
 

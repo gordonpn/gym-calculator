@@ -93,7 +93,7 @@ Cloudflare Pages builds and hosts the static site from the linked GitHub reposit
 
 For infrastructure administration, install OpenTofu and copy [`.env.example`](.env.example) to `.env`, then fill in your Cloudflare API token and account ID. Local `.env` files contain secrets and must remain untracked.
 
-The Lefthook pre-push hook sources `.env` and automatically runs `tofu apply -auto-approve` when pushing `.tf` changes if both credentials are available. With missing credentials it warns and skips the apply. Review infrastructure plans before pushing these changes.
+Before pushing infrastructure changes, export the credentials in a Bash session using the runbook’s `set -a`, `source .env`, and `set +a` commands. The Lefthook pre-push hook also sources `.env`, but plain assignments in that file are not exported to its OpenTofu child process automatically. The hook uses shell-specific `source` syntax, so it requires a compatible shell. It automatically runs `tofu apply -auto-approve` when pushing `.tf` changes if both credentials are available; otherwise it warns and skips the apply. Review infrastructure plans before pushing these changes.
 
 See the [operations runbook](docs/RUNBOOK.md) for setup, validation, planning, applying, imports, and local state management.
 
