@@ -11,3 +11,6 @@ repomix-output.xml
 *.tfstate.backup
 .terraform.lock.hcl
 .env*
+
+# Test coverage
+coverage/

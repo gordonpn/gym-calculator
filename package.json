@@ -7,28 +7,29 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "biome check --verbose --write --unsafe .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": "gordonpn",
   "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
-    "@types/alpinejs": "^3.13.11",
-    "@types/bootstrap": "^5.2.10",
-    "lefthook": "^2.1.9",
-    "sass": "^1.101.0",
+    "@types/alpinejs": "^3.17.0",
+    "@types/bootstrap": "^5.2.11",
+    "@vitest/coverage-v8": "^4.1.12",
+    "lefthook": "^2.2.2",
+    "sass": "^1.108.2",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.11",
-    "wrangler": "^4.112.0"
+    "vitest": "^4.1.12",
+    "wrangler": "^4.160.1"
   },
   "dependencies": {
     "@astrojs/alpinejs": "^1.0.0",
     "@popperjs/core": "^2.11.8",
-    "alpinejs": "^3.14.8",
-    "astro": "^7.3.3",
-    "bootstrap": "^5.3.3",
-    "bootstrap-icons": "^1.11.3"
+    "alpinejs": "^3.17.5",
+    "astro": "^7.4.11",
+    "bootstrap": "^5.3.9"
   },
   "engines": {
     "node": ">=22.0.0",

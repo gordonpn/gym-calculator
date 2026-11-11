@@ -43,7 +43,10 @@ pnpm run build    # production build
 pnpm run preview  # preview built output
 pnpm run check    # biome lint + format
 pnpm test         # run unit tests
+pnpm run test:coverage # generate console, LCOV, and JSON coverage reports
 ```
+
+Coverage reports and Codecov integration setup are documented in [docs/COVERAGE.md](docs/COVERAGE.md).
 
 ## Project structure
 
