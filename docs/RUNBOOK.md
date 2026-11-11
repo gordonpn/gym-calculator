@@ -22,14 +22,25 @@ All local platform-level commands should be run using OpenTofu (`tofu`).
 - **pnpm & Node.js** (Active workspace setup)
 
 ### Environment Variable Setup
-Plaintext credentials or Cloudflare account IDs must **never** be hardcoded. Inject them into your terminal session before operating:
+Credentials and Cloudflare account IDs must **never** be hardcoded in tracked configuration. Create a local environment file:
 
 ```bash
-# Set your target Cloudflare Account ID
-export TF_VAR_cloudflare_account_id="75520e73ba21df12b124d81e80ad29c1"
+cp .env.example .env
+```
 
-# Set your Cloudflare API Token (requires Pages:Edit permissions)
-export CLOUDFLARE_API_TOKEN="your_cloudflare_api_token"
+Edit `.env` with your own values (the API token requires Pages:Edit permissions):
+
+```dotenv
+CLOUDFLARE_API_TOKEN="<your_cloudflare_api_token>"
+TF_VAR_cloudflare_account_id="<your_cloudflare_account_id>"
+```
+
+`.env` and other local `.env*` files are ignored by Git; only the empty `.env.example` template is tracked. For manual OpenTofu commands, export the variables from your trusted local file in a Bash session:
+
+```bash
+set -a
+source .env
+set +a
 ```
 
 ### Running IaC Commands
@@ -60,13 +71,13 @@ export CLOUDFLARE_API_TOKEN="your_cloudflare_api_token"
    ```
 
 ### Automatic Apply (Git Hook)
-A Lefthook pre-push hook is configured to automatically run `tofu apply -auto-approve` whenever `.tf` files (like `main.tf` or `variables.tf`) are modified and pushed, provided that `CLOUDFLARE_API_TOKEN` and `TF_VAR_cloudflare_account_id` are set in the active terminal session. If credentials are not present, it prints a warning and skips the auto-apply to avoid blocking your push.
+A Lefthook pre-push hook is configured to automatically run `tofu apply -auto-approve` whenever `.tf` files (like `main.tf` or `variables.tf`) are modified and pushed, provided that `CLOUDFLARE_API_TOKEN` and `TF_VAR_cloudflare_account_id` are available in `.env` (which the hook sources) or the active terminal session. If credentials are not present, it prints a warning and skips the auto-apply to avoid blocking your push.
 
 ---
 
 ## 3. GitHub Actions CI Pipeline
 
-A automated GitHub Actions workflow ([.github/workflows/ci-cd.yml](file:///Users/gordonpn/workspace/gym-calculator/.github/workflows/ci-cd.yml)) is set up to validate changes:
+An automated GitHub Actions workflow ([.github/workflows/ci-cd.yml](../.github/workflows/ci-cd.yml)) is set up to validate changes:
 
 ### Workflow Schema
 - **On Pull Request & Push (to `main`):** Runs syntax and validation checks (Biome checks, Vitest tests, `tofu validate` with dummy credentials).
@@ -94,7 +105,7 @@ If you have already configured the Pages project manually on the Cloudflare dash
 To bring the existing project under OpenTofu's state management, import it:
 
 ```bash
-tofu import cloudflare_pages_project.gym_calculator 75520e73ba21df12b124d81e80ad29c1/gym-calculator
+tofu import cloudflare_pages_project.gym_calculator "${TF_VAR_cloudflare_account_id}/gym-calculator"
 ```
 
 ### State Lock / Remote State
