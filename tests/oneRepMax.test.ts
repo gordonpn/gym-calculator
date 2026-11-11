@@ -19,6 +19,19 @@ describe("oneRepMax parsing", () => {
 });
 
 describe("oneRepMax set validation", () => {
+  it.each([
+    Infinity,
+    -Infinity,
+    Number.NaN,
+  ])("rejects non-finite input %s", (value) => {
+    expect(isValidOneRepMaxSet(value, 5)).toBe(false);
+    expect(isValidOneRepMaxSet(100, value)).toBe(false);
+    expect(isValidOneRepMaxSet(value, 5, { allowZeroWeight: true })).toBe(
+      false,
+    );
+    expect(estimateOneRepMax(value, 1)).toBe(0);
+  });
+
   it("requires positive weight by default", () => {
     expect(isValidOneRepMaxSet(100, 5)).toBe(true);
     expect(isValidOneRepMaxSet(0, 5)).toBe(false);

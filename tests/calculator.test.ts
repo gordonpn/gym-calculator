@@ -268,16 +268,6 @@ describe("calculatePlatesNeeded", () => {
     expect(result.plateConfig).toHaveLength(1);
     expect(result.plateConfig[0].weight).toBe(45);
   });
-
-  it("returns skeleton for weighted bodyweight with non-positive target", () => {
-    const cmp = makeCalculator({ isWeightedBodyweight: true });
-    // targetWeight=0 means isForBodyweightExercise is false (targetWeight must be > 0)
-    // Falls through to barbell path with effectiveBarWeight=45, and 0 <= 45 triggers early return
-    const result = cmp.calculatePlatesNeeded(0);
-    expect(result.plateConfig).toEqual([]);
-    expect(result.remaining).toBe(0);
-    expect(result.actualWeight).toBe(45);
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -478,5 +468,44 @@ describe("incrementWeight", () => {
     // Should wrap to the minimum (or at least be a valid number)
     expect(cmp.targetWeight).not.toBe("999");
     expect(Number.isNaN(Number.parseFloat(cmp.targetWeight))).toBe(false);
+  });
+});
+
+describe("finite calculator inputs", () => {
+  it.each([
+    Infinity,
+    -Infinity,
+  ])("rejects non-finite target weight %s", (targetWeight) => {
+    const cmp = makeCalculator({ targetWeight, sessionTiming: "pre" });
+    expect(cmp.hasCalculableWeight()).toBe(false);
+    cmp.runCalculation();
+    expect(cmp.warmupSets).toEqual([]);
+    expect(cmp.roundedTargetWeight).toBe(0);
+    cmp.incrementWeight(1);
+    expect(cmp.targetWeight).toBe(targetWeight);
+  });
+
+  it("rejects infinite bodyweight", () => {
+    const cmp = makeCalculator({
+      isWeightedBodyweight: true,
+      equipmentType: "weightedBodyweight",
+      sessionTiming: "pre",
+      bodyweight: Infinity,
+      targetWeight: 10,
+    });
+    cmp.runCalculation();
+    expect(cmp.warmupSets).toEqual([]);
+    expect(cmp.roundedTargetWeight).toBe(0);
+  });
+});
+
+describe("zero added bodyweight load", () => {
+  it("uses no bar or plates for zero added weight", () => {
+    const cmp = makeCalculator({ isWeightedBodyweight: true });
+    expect(cmp.calculatePlatesNeeded(0)).toEqual({
+      plateConfig: [],
+      remaining: 0,
+      actualWeight: 0,
+    });
   });
 });

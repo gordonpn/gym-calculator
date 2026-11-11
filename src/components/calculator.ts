@@ -227,7 +227,7 @@ export default function (): CalculatorData {
 
     hasCalculableWeight() {
       const weight = Number.parseFloat(String(this.targetWeight));
-      return !Number.isNaN(weight);
+      return Number.isFinite(weight);
     },
 
     scheduleCalculation() {
@@ -323,7 +323,7 @@ export default function (): CalculatorData {
       // For weighted bodyweight, validate that bodyweight is entered
       if (
         this.isWeightedBodyweight &&
-        (!bodyweight || Number.isNaN(bodyweight) || bodyweight <= 0)
+        (!bodyweight || !Number.isFinite(bodyweight) || bodyweight <= 0)
       ) {
         this.warmupSets = [];
         this.roundedTargetWeight = 0;
@@ -338,8 +338,8 @@ export default function (): CalculatorData {
       // For weighted bodyweight, we work with added weight, so it can be zero
       // For regular exercises, weight must be positive
       const validWeight = this.isWeightedBodyweight
-        ? !Number.isNaN(weight)
-        : !Number.isNaN(weight) && weight > 0;
+        ? Number.isFinite(weight)
+        : Number.isFinite(weight) && weight > 0;
 
       if (validWeight) {
         const useMinimizePlateChanges = this.equipmentType === "barbell";
@@ -449,8 +449,7 @@ export default function (): CalculatorData {
       options: { minPlateWeight?: number } = {},
     ): PlateCalculation {
       const { minPlateWeight = 0 } = options;
-      const isForBodyweightExercise =
-        this.isWeightedBodyweight && targetWeight > 0;
+      const isForBodyweightExercise = this.isWeightedBodyweight;
       const effectiveBarWeight = isForBodyweightExercise ? 0 : this.barWeight;
 
       if (targetWeight <= effectiveBarWeight) {
@@ -922,7 +921,7 @@ export default function (): CalculatorData {
 
       const currentWeight = Number.parseFloat(String(this.targetWeight));
 
-      if (Number.isNaN(currentWeight)) {
+      if (!Number.isFinite(currentWeight)) {
         return;
       }
 

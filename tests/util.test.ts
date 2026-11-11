@@ -87,6 +87,16 @@ describe("roundToNearestAchievableWeight", () => {
     { weight: 2.5, available: true, count: 2 },
   ];
 
+  it("aggregates counts of duplicate plate sizes", () => {
+    const plates: Plate[] = [
+      { weight: 10, available: true, count: 1 },
+      { weight: 10, available: true, count: 3 },
+      { weight: 10, available: false, count: 10 },
+    ];
+    expect(roundToNearestAchievableWeight(40, 0, plates, true)).toBe(40);
+    expect(roundToNearestAchievableWeight(125, 45, plates)).toBe(125);
+  });
+
   it("returns exact weight when achievable with available plates", () => {
     // 135 = bar(45) + 45*2 per side (one 45lb plate each side)
     expect(roundToNearestAchievableWeight(135, 45, standardPlates)).toBe(135);
@@ -114,6 +124,15 @@ describe("roundToNearestAchievableWeight", () => {
 
   it("returns bar weight when target is below bar weight", () => {
     expect(roundToNearestAchievableWeight(30, 45, standardPlates)).toBe(45);
+  });
+
+  it("returns the target unchanged for a non-finite bar weight", () => {
+    expect(roundToNearestAchievableWeight(100, Infinity, standardPlates)).toBe(
+      100,
+    );
+    expect(roundToNearestAchievableWeight(100, -Infinity, standardPlates)).toBe(
+      100,
+    );
   });
 
   it("returns NaN inputs unchanged", () => {
