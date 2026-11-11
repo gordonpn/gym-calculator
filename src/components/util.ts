@@ -23,12 +23,12 @@ const getPlateCount = (plate: Plate): number => {
 /**
  * Debounce function to delay execution
  */
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
+export function debounce<Args extends unknown[], Context>(
+  func: (this: Context, ...args: Args) => unknown,
   wait: number,
-): (...args: Parameters<T>) => void {
+): (this: Context, ...args: Args) => void {
   let timeout: ReturnType<typeof setTimeout>;
-  return function (this: any, ...args: Parameters<T>) {
+  return function (this: Context, ...args: Args) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(this, args), wait);
   };

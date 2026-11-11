@@ -43,9 +43,11 @@ const { title = "Gym Calculator" } = Astro.props;
     <script is:inline>
       // Initialize theme before rendering to prevent flash
       const getPreferredTheme = () => {
-        const storedTheme = localStorage.getItem("theme");
-        if (storedTheme) {
-          return storedTheme;
+        try {
+          const storedTheme = localStorage.getItem("theme");
+          if (storedTheme === "light" || storedTheme === "dark") return storedTheme;
+        } catch {
+          // Storage is optional in privacy modes.
         }
         return window.matchMedia("(prefers-color-scheme: dark)").matches
           ? "dark"

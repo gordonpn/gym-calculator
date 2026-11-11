@@ -1,4 +1,10 @@
 import {
+  isCalculationMethod,
+  isPositiveNumber,
+  readSettings,
+  writeStorage,
+} from "../storage";
+import {
   aggregateOneRepMax,
   estimateOneRepMax,
   isReliableOneRepMaxReps,
@@ -288,7 +294,7 @@ export default function (): StrengthLevelCalculatorData {
     },
 
     saveSettings() {
-      localStorage.setItem(
+      writeStorage(
         "strengthLevelSettings",
         JSON.stringify({
           bodyweight: this.bodyweight,
@@ -299,23 +305,16 @@ export default function (): StrengthLevelCalculatorData {
     },
 
     init() {
-      const saved = localStorage.getItem("strengthLevelSettings");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.bodyweight) {
-            this.bodyweight = String(parsed.bodyweight);
-          }
-          if (parsed.selectedLift) {
-            this.selectedLift = parsed.selectedLift;
-          }
-          if (parsed.calculationMethod) {
-            this.calculationMethod = parsed.calculationMethod;
-          }
-        } catch (err) {
-          console.error("Could not parse strength level settings", err);
-        }
-      }
+      const parsed = readSettings("strengthLevelSettings");
+      if (isPositiveNumber(parsed.bodyweight))
+        this.bodyweight = String(parsed.bodyweight);
+      if (
+        typeof parsed.selectedLift === "string" &&
+        Object.hasOwn(this.standards, parsed.selectedLift)
+      )
+        this.selectedLift = parsed.selectedLift;
+      if (isCalculationMethod(parsed.calculationMethod))
+        this.calculationMethod = parsed.calculationMethod;
 
       // @ts-expect-error - Alpine's $watch is added by Alpine.js
       this.$watch("bodyweight", () => this.saveSettings());

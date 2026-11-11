@@ -1,3 +1,4 @@
+import { isCalculationMethod, readStorage, writeStorage } from "../storage";
 import {
   aggregateOneRepMax,
   estimateOneRepMax,
@@ -212,12 +213,12 @@ export default function (): RepMaxCalculatorData {
     },
 
     init() {
-      this.calculationMethod =
-        (localStorage.getItem("repMaxCalculationMethod") as any) || "average";
+      const method = readStorage("repMaxCalculationMethod");
+      this.calculationMethod = isCalculationMethod(method) ? method : "average";
 
       // @ts-expect-error - Alpine's $watch is added by Alpine.js
       this.$watch("calculationMethod", (method: string) => {
-        localStorage.setItem("repMaxCalculationMethod", method);
+        writeStorage("repMaxCalculationMethod", method);
         this.calculateAverageMax();
       });
 
