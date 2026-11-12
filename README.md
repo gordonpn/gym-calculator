@@ -31,7 +31,7 @@ Compares estimated 1RM against bodyweight-relative standards for eight lifts (Ba
 
 ### Prerequisites
 
-- Node.js `>= 22.0.0`
+- Node.js `^22.23.4 || >=24.0.0`
 - pnpm `>= 9.0.0`
 
 ### Commands
