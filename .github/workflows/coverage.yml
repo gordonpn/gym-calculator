@@ -33,13 +33,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Run tests with coverage
+        id: coverage_tests
         run: pnpm run test:coverage
       - name: Retain coverage report
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage
           path: coverage/
-          if-no-files-found: error
+          if-no-files-found: ${{ steps.coverage_tests.outcome == 'success' && 'error' || 'warn' }}
       - name: Upload to Codecov
         uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
         with:
