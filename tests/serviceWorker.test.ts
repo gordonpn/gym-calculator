@@ -8,6 +8,10 @@ it("keeps installation alive until skipWaiting and shell caching complete", asyn
   const skipWaiting = new Promise<void>((resolve) => {
     finishSkipWaiting = resolve;
   });
+  let finishCaching = () => {};
+  const caching = new Promise<void>((resolve) => {
+    finishCaching = resolve;
+  });
   const lifetimes: Promise<unknown>[] = [];
   let install: (event: {
     waitUntil: (task: Promise<unknown>) => void;
@@ -28,6 +32,7 @@ it("keeps installation alive until skipWaiting and shell caching complete", asyn
         open: async () => ({
           add: async (url: string) => {
             precached.push(url);
+            await caching;
           },
         }),
       },
@@ -42,6 +47,9 @@ it("keeps installation alive until skipWaiting and shell caching complete", asyn
   expect(precached).toEqual(["/", "/manifest.webmanifest", "/favicon.svg"]);
   expect(completed).toBe(false);
   finishSkipWaiting();
+  await setImmediate();
+  expect(completed).toBe(false);
+  finishCaching();
   await installation;
   expect(completed).toBe(true);
 });
