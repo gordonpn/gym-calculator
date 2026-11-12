@@ -1,6 +1,7 @@
 node_modules
 .idea
 dist
+coverage/
 repomix-output.xml
 .astro/
 .claude/
@@ -11,6 +12,3 @@ repomix-output.xml
 *.tfstate.backup
 .terraform.lock.hcl
 .env*
-
-# Test coverage
-coverage/

@@ -24,7 +24,7 @@ Compares estimated 1RM against bodyweight-relative standards for eight lifts (Ba
 - **Inline SVGs** — 9 icons, no icon font
 - **TypeScript** — strict mode
 - **Biome 2** — linting and formatting
-- **Vitest 4** — unit testing
+- **Vitest 4** — unit testing and [coverage reporting](docs/COVERAGE.md)
 - **Lefthook 2** — git hooks
 
 ## Development
@@ -42,11 +42,9 @@ pnpm run dev      # start dev server
 pnpm run build    # production build
 pnpm run preview  # preview built output
 pnpm run check    # biome lint + format
-pnpm test         # run unit tests
 pnpm run test:coverage # generate console, LCOV, and JSON coverage reports
+pnpm test         # run unit tests
 ```
-
-Coverage reports and Codecov integration setup are documented in [docs/COVERAGE.md](docs/COVERAGE.md).
 
 ## Project structure
 
