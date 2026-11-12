@@ -477,6 +477,8 @@ describe("finite calculator inputs", () => {
     -Infinity,
   ])("rejects non-finite target weight %s", (targetWeight) => {
     const cmp = makeCalculator({ targetWeight, sessionTiming: "pre" });
+    cmp.warmupSets = [{ percentage: 50, weight: 100, reps: 5 }];
+    cmp.roundedTargetWeight = 200;
     expect(cmp.hasCalculableWeight()).toBe(false);
     cmp.runCalculation();
     expect(cmp.warmupSets).toEqual([]);
@@ -493,6 +495,8 @@ describe("finite calculator inputs", () => {
       bodyweight: Infinity,
       targetWeight: 10,
     });
+    cmp.warmupSets = [{ percentage: 50, weight: 100, reps: 5 }];
+    cmp.roundedTargetWeight = 200;
     cmp.runCalculation();
     expect(cmp.warmupSets).toEqual([]);
     expect(cmp.roundedTargetWeight).toBe(0);
