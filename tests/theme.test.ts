@@ -30,9 +30,25 @@ it("follows OS changes until an explicit toggle and writes only that choice", ()
   expect(values.size).toBe(0);
   media.dispatchEvent(Object.assign(new Event("change"), { matches: false }));
   expect(theme).toBe("light");
+  expect(values.size).toBe(0);
   doc.dispatchEvent(new Event("toggle-theme"));
   expect(values.get("theme")).toBe("dark");
   media.dispatchEvent(Object.assign(new Event("change"), { matches: false }));
+  expect(theme).toBe("dark");
+
+  values.set("theme", "light");
+  win.dispatchEvent(Object.assign(new Event("storage"), { key: "unrelated" }));
+  expect(theme).toBe("dark");
+  win.dispatchEvent(Object.assign(new Event("storage"), { key: "theme" }));
+  expect(theme).toBe("light");
+  media.dispatchEvent(Object.assign(new Event("change"), { matches: true }));
+  expect(theme).toBe("light");
+
+  values.delete("theme");
+  media.matches = false;
+  win.dispatchEvent(Object.assign(new Event("storage"), { key: "theme" }));
+  expect(theme).toBe("light");
+  media.dispatchEvent(Object.assign(new Event("change"), { matches: true }));
   expect(theme).toBe("dark");
 });
 

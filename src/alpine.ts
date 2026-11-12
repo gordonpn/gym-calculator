@@ -42,6 +42,14 @@ export default function (Alpine: Alpine) {
       }
     });
 
+  window.addEventListener("storage", (event) => {
+    if (event.key !== "theme" && event.key !== null) return;
+    const storedTheme = readStorage("theme");
+    explicitTheme =
+      storedTheme === "light" || storedTheme === "dark" ? storedTheme : null;
+    setTheme(getPreferredTheme());
+  });
+
   // Listen for toggle-theme events
   document.addEventListener("toggle-theme", () => {
     const currentTheme = document.documentElement.getAttribute("data-bs-theme");
