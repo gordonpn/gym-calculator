@@ -76,10 +76,12 @@ export const normalizePlateCollection = (source: unknown): Plate[] => {
     }
 
     const available = Boolean(castPlate.available);
+    const previous = sourceMap.get(weight);
     sourceMap.set(weight, {
       weight,
-      available,
-      count: sanitizePlateCount(castPlate.count, available),
+      available: available || Boolean(previous?.available),
+      count:
+        (previous?.count ?? 0) + sanitizePlateCount(castPlate.count, available),
     });
   }
 
