@@ -73,6 +73,11 @@ set +a
 ### Automatic Apply (Git Hook)
 A Lefthook pre-push hook is configured to automatically run `tofu apply -auto-approve` whenever `.tf` files (like `main.tf` or `variables.tf`) are modified and pushed, provided that `CLOUDFLARE_API_TOKEN` and `TF_VAR_cloudflare_account_id` are exported in the active terminal session using the commands above. The hook also sources `.env`, but bare assignments are not exported to the OpenTofu child process automatically. Its `source` command requires a compatible shell such as Bash. If credentials are not present, it prints a warning and skips the auto-apply to avoid blocking your push.
 
+The current local state supports only one canonical checkout and operator. Do not
+run concurrent applies or enable multi-developer auto-apply until a shared backend
+with locking is configured and all applies are serialized against the same state.
+Separate checkouts do not coordinate their local state or locks.
+
 ---
 
 ## 3. GitHub Actions CI Pipeline
@@ -109,4 +114,4 @@ tofu import cloudflare_pages_project.gym_calculator "${TF_VAR_cloudflare_account
 ```
 
 ### State Lock / Remote State
-By default, this local setup uses local state file (`terraform.tfstate`). For production or multi-developer pipelines, it is highly recommended to configure a remote backend (such as Cloudflare R2, AWS S3, or Terraform Cloud) to store the state file securely.
+By default, this local setup uses local state file (`terraform.tfstate`). A shared remote backend with locking is required before multiple operators or pipelines manage the same infrastructure. Protect the state and serialize applies against the same configuration.
