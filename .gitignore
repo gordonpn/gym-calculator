@@ -9,5 +9,6 @@ repomix-output.xml
 .terraform/
 *.tfstate*
 *.tfvars
+*.tfvars.json
 crash.log
 .env*
