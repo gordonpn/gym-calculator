@@ -30,9 +30,10 @@ check-format:
 test:
     pnpm test
 
-# Check TypeScript types.
+# Check TypeScript and Astro component types.
 typecheck:
     pnpm exec tsc --noEmit
+    pnpm exec astro check
 
 # Run lint, formatting, and import checks without changing files.
 check:

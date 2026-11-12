@@ -56,7 +56,7 @@ Install [just](https://just.systems/man/en/packages.html) to use the optional re
 | `just lint` | Check lint rules |
 | `just format` / `just check-format` | Write formatting / check formatting |
 | `just test` | Run unit tests |
-| `just typecheck` | Check TypeScript types |
+| `just typecheck` | Check TypeScript and Astro component types |
 | `just check` | Check lint, formatting, and imports without changing files |
 | `just verify` | Run checks, typecheck, tests, and build |
 
