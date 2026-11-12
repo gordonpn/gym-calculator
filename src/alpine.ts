@@ -4,6 +4,12 @@ import repMaxCalculator from "./components/repMaxCalculator";
 import strengthLevelCalculator from "./components/strengthLevelCalculator";
 import { readStorage, writeStorage } from "./storage";
 
+declare global {
+  interface WindowEventMap {
+    "theme-changed": CustomEvent<{ theme: string }>;
+  }
+}
+
 const getPreferredTheme = () => {
   const storedTheme = readStorage("theme");
   if (storedTheme === "light" || storedTheme === "dark") {
@@ -50,7 +56,7 @@ export default function (Alpine: Alpine) {
     isDarkTheme: getPreferredTheme() === "dark",
 
     init() {
-      window.addEventListener("theme-changed", (e: Event) => {
+      window.addEventListener("theme-changed", (e) => {
         if (e instanceof CustomEvent) {
           const detail: unknown = e.detail;
           if (detail && typeof detail === "object" && "theme" in detail) {
