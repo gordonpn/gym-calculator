@@ -3,7 +3,10 @@ import { setImmediate } from "node:timers/promises";
 import { runInNewContext } from "node:vm";
 import { expect, it } from "vitest";
 
-it("keeps installation alive until skipWaiting and shell caching complete", async () => {
+it.each([
+  "skipWaiting",
+  "caching",
+])("keeps installation alive when %s completes first", async (first) => {
   let finishSkipWaiting = () => {};
   const skipWaiting = new Promise<void>((resolve) => {
     finishSkipWaiting = resolve;
@@ -46,10 +49,14 @@ it("keeps installation alive until skipWaiting and shell caching complete", asyn
   await setImmediate();
   expect(precached).toEqual(["/", "/manifest.webmanifest", "/favicon.svg"]);
   expect(completed).toBe(false);
-  finishSkipWaiting();
+  const finishFirst =
+    first === "skipWaiting" ? finishSkipWaiting : finishCaching;
+  const finishLast =
+    first === "skipWaiting" ? finishCaching : finishSkipWaiting;
+  finishFirst();
   await setImmediate();
   expect(completed).toBe(false);
-  finishCaching();
+  finishLast();
   await installation;
   expect(completed).toBe(true);
 });
