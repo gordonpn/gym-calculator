@@ -91,6 +91,7 @@ export function roundToNearestAchievableWeight(
   // Combine inventories of the same size before consuming each plate count.
   const plateCounts = new Map<number, number>();
   for (const plate of availablePlates) {
+    if (!plate) continue;
     const count = getPlateCount(plate);
     if (count > 0) {
       plateCounts.set(

@@ -87,6 +87,11 @@ describe("roundToNearestAchievableWeight", () => {
     { weight: 2.5, available: true, count: 2 },
   ];
 
+  it("ignores null entries in malformed saved plate inventories", () => {
+    const plates = [null, { weight: 10, available: true, count: 2 }] as Plate[];
+    expect(roundToNearestAchievableWeight(20, 0, plates, true)).toBe(20);
+  });
+
   it("aggregates counts of duplicate plate sizes", () => {
     const plates: Plate[] = [
       { weight: 10, available: true, count: 1 },
