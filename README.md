@@ -87,6 +87,20 @@ All user preferences are stored in `localStorage`. No backend or network calls.
 
 Includes a service worker with cache-first strategy for static assets and network-first fallback for navigation requests, making the app available offline after first visit.
 
+## Infrastructure & Deployment
+
+Cloudflare Pages builds and hosts the static site from the linked GitHub repository (`main` is production), running `pnpm run build` and publishing `dist/`. OpenTofu manages the Pages project and repository linkage through `main.tf` and `variables.tf`.
+
+For infrastructure administration, install OpenTofu and copy [`.env.example`](.env.example) to `.env`, then fill in your Cloudflare API token and account ID. Local `.env` files contain secrets and must remain untracked.
+
+Before pushing infrastructure changes, export the credentials in a Bash session using the runbook’s `set -a`, `source .env`, and `set +a` commands. The Lefthook pre-push hook also sources `.env`, but plain assignments in that file are not exported to its OpenTofu child process automatically. The hook uses shell-specific `source` syntax, so it requires a compatible shell. It automatically runs `tofu apply -auto-approve` when pushing `.tf` changes if both credentials are available; otherwise it warns and skips the apply. Review infrastructure plans before pushing these changes.
+
+The current local state is for a single canonical checkout and operator. A shared
+backend with locking and serialized applies is required before multiple operators
+or pipelines manage the same infrastructure.
+
+See the [operations runbook](docs/RUNBOOK.md) for setup, validation, planning, applying, imports, and local state management.
+
 ## License
 
 MIT — see [LICENSE.md](LICENSE.md)
