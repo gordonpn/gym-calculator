@@ -5,7 +5,8 @@ pre-commit:
       run: pnpm exec tsc --noEmit
 
     - name: lint
-      run: pnpm biome check --write
+      stage_fixed: true
+      run: pnpm biome check --write --no-errors-on-unmatched {staged_files}
 
     - name: build
       run: pnpm run build
