@@ -84,7 +84,7 @@ import Icon from "./Icon.astro";
                   class="form-control form-control-sm"
                   :id="`weight-input-${index}`"
                   x-model="set.weight"
-                  :aria-label="`Set ${index + 1} weight (lbs)`"
+                  :aria-label="`Set ${index + 1} ${isWeightedBodyweight ? 'added weight' : 'weight'} (lbs)`"
                   min="0"
                   step="any"
                   @input="handleSetInput()"
