@@ -1,5 +1,11 @@
 import Modal from "bootstrap/js/dist/modal";
 import {
+  isPositiveNumber,
+  readSettings,
+  readStorage,
+  writeStorage,
+} from "../storage";
+import {
   buildPlatePresetSnapshot,
   createPlatePresetPayload,
   normalizePlateCollection,
@@ -559,7 +565,7 @@ export default function (): CalculatorData {
     saveSettings() {
       const normalizedPlates = normalizePlateCollection(this.availablePlates);
 
-      localStorage.setItem(
+      writeStorage(
         "plateSettings",
         JSON.stringify({
           sessionTiming: this.sessionTiming,
@@ -648,7 +654,7 @@ export default function (): CalculatorData {
 
     hydratePlatePresets() {
       const presetStore = parsePlatePresetStore(
-        localStorage.getItem(PLATE_PRESETS_STORAGE_KEY),
+        readStorage(PLATE_PRESETS_STORAGE_KEY),
       );
 
       this.platePresets = presetStore.presets;
@@ -670,13 +676,14 @@ export default function (): CalculatorData {
 
     persistPlatePresetStore() {
       try {
-        localStorage.setItem(
+        const saved = writeStorage(
           PLATE_PRESETS_STORAGE_KEY,
           serializePlatePresetStore({
             defaultPresetId: this.defaultPlatePresetId || null,
             presets: this.platePresets,
           }),
         );
+        if (!saved) throw new Error("Storage unavailable");
         return true;
       } catch {
         this.platePresetError =
@@ -969,86 +976,106 @@ export default function (): CalculatorData {
       this.numWarmupSets = getDefaultSets(this.selectedFormula);
       this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
 
-      const savedSettings = localStorage.getItem("plateSettings");
-      if (savedSettings) {
-        let settings: Record<string, any> = {};
+      const settings = readSettings("plateSettings");
+      if (
+        settings.sessionTiming === "pre" ||
+        settings.sessionTiming === "post"
+      ) {
+        this.sessionTiming = settings.sessionTiming;
+      }
 
-        try {
-          settings = JSON.parse(savedSettings);
-        } catch {
-          settings = {};
-        }
+      if (
+        settings.equipmentType === "barbell" ||
+        settings.equipmentType === "dumbbell" ||
+        settings.equipmentType === "weightedBodyweight"
+      ) {
+        this.equipmentType = settings.equipmentType;
+      }
 
-        if (Object.hasOwn(settings, "sessionTiming")) {
-          this.sessionTiming = settings.sessionTiming;
-        }
-
-        if (Object.hasOwn(settings, "equipmentType")) {
-          this.equipmentType = settings.equipmentType;
-        }
-
-        if (Object.hasOwn(settings, "barWeight")) {
-          const parsedBarWeight = Number.parseFloat(String(settings.barWeight));
-          if (Number.isFinite(parsedBarWeight) && parsedBarWeight > 0) {
-            const normalizedBarWeight = Math.min(
-              45,
-              Math.max(5, Math.round(parsedBarWeight / 5) * 5),
-            );
-            this.barWeight = normalizedBarWeight;
-          } else {
-            this.barWeight = DEFAULT_BAR_WEIGHT;
-          }
-        }
-
-        if (
-          settings.availablePlates &&
-          Array.isArray(settings.availablePlates)
-        ) {
-          this.availablePlates = normalizePlateCollection(
-            settings.availablePlates,
+      if (Object.hasOwn(settings, "barWeight")) {
+        const parsedBarWeight = isPositiveNumber(settings.barWeight)
+          ? Number(settings.barWeight)
+          : Number.NaN;
+        if (Number.isFinite(parsedBarWeight) && parsedBarWeight > 0) {
+          const normalizedBarWeight = Math.min(
+            45,
+            Math.max(5, Math.round(parsedBarWeight / 5) * 5),
           );
+          this.barWeight = normalizedBarWeight;
+        } else {
+          this.barWeight = DEFAULT_BAR_WEIGHT;
+        }
+      }
+
+      if (settings.availablePlates && Array.isArray(settings.availablePlates)) {
+        this.availablePlates = normalizePlateCollection(
+          settings.availablePlates,
+        );
+      }
+
+      if (isPositiveNumber(settings.bodyweight)) {
+        this.bodyweight = settings.bodyweight.toString();
+      }
+
+      if (typeof settings.isWeightedBodyweight === "boolean") {
+        this.isWeightedBodyweight = settings.isWeightedBodyweight;
+        this.showBodyweightInput = settings.isWeightedBodyweight;
+
+        if (!this.equipmentType && this.isWeightedBodyweight) {
+          this.equipmentType = "weightedBodyweight";
+        }
+      }
+
+      if (
+        typeof settings.numWarmupSets === "number" &&
+        Number.isInteger(settings.numWarmupSets) &&
+        settings.numWarmupSets >= 1 &&
+        settings.numWarmupSets <= 10
+      ) {
+        this.numWarmupSets = settings.numWarmupSets;
+      }
+
+      if (
+        typeof settings.selectedFormula === "string" &&
+        [
+          "percentageBased",
+          "fixedIncrements",
+          "standardPyramid",
+          "weightedBodyweightPreClimbing",
+          "barbellPreClimbing",
+          "barbellPostClimbing",
+          "dumbbellPreClimbing",
+          "dumbbellPostClimbing",
+          "weightedBodyweight",
+          "weightedBodyweightPostClimbing",
+        ].includes(settings.selectedFormula)
+      ) {
+        this.selectedFormula = settings.selectedFormula;
+        this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
+
+        if (!this.equipmentType) {
+          this.equipmentType =
+            this.selectedFormula === "weightedBodyweight"
+              ? "weightedBodyweight"
+              : "barbell";
         }
 
-        if (Object.hasOwn(settings, "bodyweight") && settings.bodyweight > 0) {
-          this.bodyweight = settings.bodyweight.toString();
+        if (!this.sessionTiming) {
+          this.sessionTiming = "pre";
         }
+      }
 
-        if (Object.hasOwn(settings, "isWeightedBodyweight")) {
-          this.isWeightedBodyweight = settings.isWeightedBodyweight;
-          this.showBodyweightInput = settings.isWeightedBodyweight;
+      if (typeof settings.enableBackoff === "boolean") {
+        this.enableBackoff = settings.enableBackoff;
+      }
 
-          if (!this.equipmentType && this.isWeightedBodyweight) {
-            this.equipmentType = "weightedBodyweight";
-          }
-        }
-
-        if (Object.hasOwn(settings, "numWarmupSets")) {
-          this.numWarmupSets = settings.numWarmupSets;
-        }
-
-        if (Object.hasOwn(settings, "selectedFormula")) {
-          this.selectedFormula = settings.selectedFormula;
-          this.showSetsSelector = isConfigurableFormula(this.selectedFormula);
-
-          if (!this.equipmentType) {
-            this.equipmentType =
-              this.selectedFormula === "weightedBodyweight"
-                ? "weightedBodyweight"
-                : "barbell";
-          }
-
-          if (!this.sessionTiming) {
-            this.sessionTiming = "pre";
-          }
-        }
-
-        if (Object.hasOwn(settings, "enableBackoff")) {
-          this.enableBackoff = settings.enableBackoff;
-        }
-
-        if (Object.hasOwn(settings, "backoffPercentage")) {
-          this.backoffPercentage = settings.backoffPercentage;
-        }
+      if (
+        typeof settings.backoffPercentage === "number" &&
+        Number.isFinite(settings.backoffPercentage) &&
+        settings.backoffPercentage > 0 &&
+        settings.backoffPercentage <= 100
+      ) {
+        this.backoffPercentage = settings.backoffPercentage;
       }
 
       if (!this.sessionTiming) {
