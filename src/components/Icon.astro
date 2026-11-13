@@ -28,7 +28,9 @@ const {
   "aria-label": ariaLabel,
   ...attributes
 } = Astro.props;
-const isNamed = Boolean(title || ariaLabel);
+const isNamed = Boolean(
+  title?.trim() || ariaLabel?.trim() || attributes["aria-labelledby"]?.trim(),
+);
 ---
 
 {
