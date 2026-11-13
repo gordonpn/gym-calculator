@@ -48,4 +48,5 @@ jobs:
           use_oidc: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
           files: coverage/lcov.info
           disable_search: true
-          fail_ci_if_error: true
+          # Forks cannot use OIDC; optional tokenless uploads must not block tests.
+          fail_ci_if_error: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}

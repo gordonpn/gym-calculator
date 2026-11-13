@@ -17,7 +17,8 @@ The coverage job has `contents: read` and `id-token: write` so it can request th
 short-lived identity token required by Codecov, including for protected branches.
 Fork pull requests use Codecov's supported tokenless uploads for public
 repositories; enable that option in Codecov to report those runs. Upload failures
-are surfaced by the workflow, while the report remains available as an artifact.
+fail trusted runs. Fork uploads are best-effort so external authentication
+settings cannot block fork test checks; their reports remain available as artifacts.
 PR comment permissions belong to the Codecov App rather than the workflow token.
 
 Remote Codecov uploads and comments require validation on a real pull request once
