@@ -16,7 +16,7 @@ const { title = "Gym Calculator" } = Astro.props;
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0"
     />
     <meta
       name="theme-color"
@@ -66,11 +66,14 @@ const { title = "Gym Calculator" } = Astro.props;
         <div class="ms-auto">
           <button
             class="btn theme-toggle"
+            type="button"
+            aria-label="Toggle color theme"
+            :aria-pressed="isDarkTheme"
             x-data="themeToggle"
             @click="toggleTheme"
           >
-            <span x-show="isDarkTheme"><Icon name="sun-fill" /></span>
-            <span x-show="!isDarkTheme"><Icon name="moon-fill" /></span>
+            <span x-cloak x-show="isDarkTheme"><Icon name="sun-fill" /></span>
+            <span x-cloak x-show="!isDarkTheme"><Icon name="moon-fill" /></span>
           </button>
         </div>
       </div>
@@ -108,3 +111,9 @@ const { title = "Gym Calculator" } = Astro.props;
     </script>
   </body>
 </html>
+
+<style is:global>
+  [x-cloak] {
+    display: none !important;
+  }
+</style>
