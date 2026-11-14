@@ -22,14 +22,25 @@ All local platform-level commands should be run using OpenTofu (`tofu`).
 - **pnpm & Node.js** (Active workspace setup)
 
 ### Environment Variable Setup
-Plaintext credentials or Cloudflare account IDs must **never** be hardcoded. Inject them into your terminal session before operating:
+Credentials and Cloudflare account IDs must **never** be hardcoded in tracked configuration. Create a local environment file:
 
 ```bash
-# Set your target Cloudflare Account ID
-export TF_VAR_cloudflare_account_id="75520e73ba21df12b124d81e80ad29c1"
+cp .env.example .env
+```
 
-# Set your Cloudflare API Token (requires Pages:Edit permissions)
-export CLOUDFLARE_API_TOKEN="your_cloudflare_api_token"
+Edit `.env` with your own values (the API token requires Pages:Edit permissions):
+
+```dotenv
+CLOUDFLARE_API_TOKEN="<your_cloudflare_api_token>"
+TF_VAR_cloudflare_account_id="<your_cloudflare_account_id>"
+```
+
+`.env` and other local `.env*` files are ignored by Git; only the empty `.env.example` template is tracked. For manual OpenTofu commands and before pushing infrastructure changes, export the variables from your trusted local file in a Bash session:
+
+```bash
+set -a
+source .env
+set +a
 ```
 
 ### Running IaC Commands
@@ -60,13 +71,18 @@ export CLOUDFLARE_API_TOKEN="your_cloudflare_api_token"
    ```
 
 ### Automatic Apply (Git Hook)
-A Lefthook pre-push hook is configured to automatically run `tofu apply -auto-approve` whenever `.tf` files (like `main.tf` or `variables.tf`) are modified and pushed, provided that `CLOUDFLARE_API_TOKEN` and `TF_VAR_cloudflare_account_id` are set in the active terminal session. If credentials are not present, it prints a warning and skips the auto-apply to avoid blocking your push.
+A Lefthook pre-push hook is configured to automatically run `tofu apply -auto-approve` whenever `.tf` files (like `main.tf` or `variables.tf`) are modified and pushed, provided that `CLOUDFLARE_API_TOKEN` and `TF_VAR_cloudflare_account_id` are exported in the active terminal session using the commands above. The hook also sources `.env`, but bare assignments are not exported to the OpenTofu child process automatically. Its `source` command requires a compatible shell such as Bash. If credentials are not present, it prints a warning and skips the auto-apply to avoid blocking your push.
+
+The current local state supports only one canonical checkout and operator. Do not
+run concurrent applies or enable multi-developer auto-apply until a shared backend
+with locking is configured and all applies are serialized against the same state.
+Separate checkouts do not coordinate their local state or locks.
 
 ---
 
 ## 3. GitHub Actions CI Pipeline
 
-A automated GitHub Actions workflow ([.github/workflows/ci-cd.yml](file:///Users/gordonpn/workspace/gym-calculator/.github/workflows/ci-cd.yml)) is set up to validate changes:
+An automated GitHub Actions workflow ([.github/workflows/ci-cd.yml](../.github/workflows/ci-cd.yml)) is set up to validate changes:
 
 ### Workflow Schema
 - **On Pull Request & Push (to `main`):** Runs syntax and validation checks (Biome checks, Vitest tests, `tofu validate` with dummy credentials).
@@ -94,8 +110,8 @@ If you have already configured the Pages project manually on the Cloudflare dash
 To bring the existing project under OpenTofu's state management, import it:
 
 ```bash
-tofu import cloudflare_pages_project.gym_calculator 75520e73ba21df12b124d81e80ad29c1/gym-calculator
+tofu import cloudflare_pages_project.gym_calculator "${TF_VAR_cloudflare_account_id}/gym-calculator"
 ```
 
 ### State Lock / Remote State
-By default, this local setup uses local state file (`terraform.tfstate`). For production or multi-developer pipelines, it is highly recommended to configure a remote backend (such as Cloudflare R2, AWS S3, or Terraform Cloud) to store the state file securely.
+By default, this local setup uses local state file (`terraform.tfstate`). A shared remote backend with locking is required before multiple operators or pipelines manage the same infrastructure. Protect the state and serialize applies against the same configuration.

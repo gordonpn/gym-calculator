@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildPlatePresetSnapshot,
   createPlatePresetPayload,
+  normalizePlateCollection,
   parsePlatePresetStore,
   serializePlatePresetStore,
 } from "../src/components/presetStorage";
@@ -74,6 +75,33 @@ describe("plate preset storage serialization", () => {
     const decoded = parsePlatePresetStore(encoded);
 
     expect(decoded.defaultPresetId).toBeNull();
+  });
+});
+
+describe("plate inventory normalization", () => {
+  it("combines available duplicate plate counts regardless of order", () => {
+    const entries = [
+      { weight: 45, available: true, count: 2 },
+      { weight: 45, available: false, count: 9 },
+      { weight: 45, available: true, count: 3 },
+    ];
+
+    expect(
+      normalizePlateCollection(entries).find((plate) => plate.weight === 45),
+    ).toEqual({
+      weight: 45,
+      available: true,
+      count: 5,
+    });
+    expect(
+      normalizePlateCollection([...entries].reverse()).find(
+        (plate) => plate.weight === 45,
+      ),
+    ).toEqual({
+      weight: 45,
+      available: true,
+      count: 5,
+    });
   });
 });
 

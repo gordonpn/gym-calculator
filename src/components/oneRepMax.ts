@@ -22,7 +22,7 @@ export function isValidOneRepMaxSet(
   reps: number,
   options: { allowZeroWeight?: boolean } = {},
 ): boolean {
-  if (Number.isNaN(reps) || reps <= 0 || Number.isNaN(weight)) {
+  if (!Number.isFinite(reps) || reps <= 0 || !Number.isFinite(weight)) {
     return false;
   }
 

@@ -76,7 +76,7 @@ export function roundToNearestAchievableWeight(
   const weight = Number(targetWeight);
   const bar = Number(barWeight);
 
-  if (Number.isNaN(weight) || Number.isNaN(bar)) {
+  if (!Number.isFinite(weight) || !Number.isFinite(bar)) {
     return Number(targetWeight);
   }
 
@@ -88,11 +88,19 @@ export function roundToNearestAchievableWeight(
     return effectiveBarWeight;
   }
 
-  // Get available plates sorted by weight (largest first for greedy algorithm)
-  const availablePlateWeights = availablePlates
-    .filter((plate) => plate && getPlateCount(plate) > 0)
-    .map((plate) => Number(plate.weight))
-    .sort((a, b) => b - a);
+  // Combine inventories of the same size before consuming each plate count.
+  const plateCounts = new Map<number, number>();
+  for (const plate of availablePlates) {
+    if (!plate) continue;
+    const count = getPlateCount(plate);
+    if (count > 0) {
+      plateCounts.set(
+        plate.weight,
+        (plateCounts.get(plate.weight) ?? 0) + count,
+      );
+    }
+  }
+  const availablePlateWeights = [...plateCounts.keys()].sort((a, b) => b - a);
 
   if (availablePlateWeights.length === 0) {
     // No plates available, return original weight
@@ -110,8 +118,7 @@ export function roundToNearestAchievableWeight(
   let totalAdded = 0;
 
   for (const plate of availablePlateWeights) {
-    const sourcePlate = availablePlates.find((p) => p.weight === plate);
-    const maxCount = sourcePlate ? getPlateCount(sourcePlate) : 0;
+    const maxCount = plateCounts.get(plate) ?? 0;
     const count = Math.min(Math.floor(remaining / plate), maxCount);
     totalAdded += count * plate;
     remaining = remaining - count * plate;

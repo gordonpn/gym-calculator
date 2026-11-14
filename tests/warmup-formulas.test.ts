@@ -11,6 +11,7 @@ import {
   getDefaultSets,
   getFormula,
   isConfigurableFormula,
+  optimizePlateChanges,
   percentageBased,
   standardPyramid,
   weightedBodyweight,
@@ -568,4 +569,54 @@ describe("percentageBased minimizePlateChanges behavior", () => {
       expect(set.weight).toBe(barWeight);
     }
   });
+});
+
+describe("warmup edge cases", () => {
+  it.each([-1, 0, 1])("returns a working set for numSets=%i", (numSets) => {
+    expect(percentageBased(200, numSets)).toEqual([
+      { percentage: 100, weight: 200, reps: 0, addedWeight: 200 },
+    ]);
+  });
+
+  it("returns the added working weight for a single bodyweight set", () => {
+    expect(weightedBodyweight(200, 1, 0, [], true, true, 150)).toEqual([
+      { percentage: 100, weight: 200, reps: 0, addedWeight: 50 },
+    ]);
+  });
+
+  it("falls back to base sets when DP states have no predecessor", () => {
+    const plates: Plate[] = [{ weight: 5, available: true, count: 100 }];
+    const baseSets = [
+      { percentage: 90, weight: 900, reps: 2 },
+      { percentage: 40, weight: 100, reps: 10 },
+    ];
+    expect(optimizePlateChanges(baseSets, 0, plates)).toEqual(baseSets);
+  });
+
+  it.each([
+    percentageBased,
+    weightedBodyweight,
+  ])("optimizes single-sided bodyweight loads without counting bodyweight as plates", (formula) => {
+    const plates: Plate[] = [{ weight: 25, available: true, count: 1 }];
+    const sets = formula(200, 3, 45, plates, true, true, 150);
+    for (const set of sets) {
+      expect([150, 175]).toContain(set.weight);
+      expect(set.addedWeight).toBe(set.weight - 150);
+    }
+  });
+});
+
+it("retains achievable odd plate counts in single-sided optimization", () => {
+  const plates: Plate[] = [{ weight: 25, available: true, count: 10 }];
+  const sets = optimizePlateChanges(
+    [
+      { percentage: 90, weight: 375, reps: 2, addedWeight: 225 },
+      { percentage: 100, weight: 400, reps: 0, addedWeight: 250 },
+    ],
+    150,
+    plates,
+    true,
+  );
+  expect(sets.map((set) => set.weight)).toEqual([225, 225]);
+  expect(sets.map((set) => set.addedWeight)).toEqual([75, 75]);
 });

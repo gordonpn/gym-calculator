@@ -16,7 +16,7 @@ self.addEventListener("install", (event) => {
       ),
     ),
   );
-  self.skipWaiting();
+  event.waitUntil(self.skipWaiting());
 });
 
 // Activate: remove old caches, then take control of all clients
