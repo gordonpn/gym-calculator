@@ -124,10 +124,11 @@ function findClosestWeight(target: number, possibleWeights: number[]): number {
 /**
  * Optimize plate changes between sets
  */
-function optimizePlateChanges(
+export function optimizePlateChanges(
   sets: WarmupSet[],
   barWeight: number,
   availablePlates: Plate[],
+  isWeightedBodyweight: boolean = false,
 ): WarmupSet[] {
   if (sets.length <= 1) {
     return sets;
@@ -150,7 +151,7 @@ function optimizePlateChanges(
     barWeight,
     maxSetWeight,
     availablePlates,
-    false,
+    isWeightedBodyweight,
   );
 
   if (possibleWeights.length === 0) {
@@ -161,7 +162,10 @@ function optimizePlateChanges(
     totalWeight: number,
   ): ExactPlateConfig | null => {
     const counts = Array.from({ length: plateOptions.length }, () => 0);
-    const perSide = Math.max(0, (totalWeight - barWeight) / 2);
+    const perSide = Math.max(
+      0,
+      (totalWeight - barWeight) / (isWeightedBodyweight ? 1 : 2),
+    );
     let remaining = perSide;
 
     for (let i = 0; i < plateOptions.length; i++) {
@@ -302,6 +306,9 @@ function optimizePlateChanges(
   );
   let cursor = bestLast;
   for (let i = sets.length - 1; i >= 0; i--) {
+    if (cursor === -1) {
+      return sets;
+    }
     chosenWeights[i] = candidatesBySet[i][cursor].weight;
     cursor = prevIndex[i][cursor];
   }
@@ -328,9 +335,24 @@ export function percentageBased(
   isWeightedBodyweight: boolean = false,
   bodyweight: number = 0,
 ): WarmupSet[] {
+  if (numSets <= 1) {
+    return [
+      {
+        percentage: 100,
+        weight: targetWeight,
+        reps: 0,
+        addedWeight: isWeightedBodyweight
+          ? Math.max(0, targetWeight - bodyweight)
+          : targetWeight,
+      },
+    ];
+  }
+
   const effectiveTargetWeight = isWeightedBodyweight
     ? targetWeight - bodyweight
     : targetWeight;
+  // Candidate weights include bodyweight, but only added weight needs plates.
+  const loadBaseWeight = isWeightedBodyweight ? bodyweight : barWeight;
 
   const sets: WarmupSet[] = [];
   const minPercentage = 40;
@@ -362,9 +384,10 @@ export function percentageBased(
 
   if (minimizePlateChanges) {
     const possibleWeights = generatePossibleWeights(
-      barWeight,
+      loadBaseWeight,
       targetWeight,
       availablePlates,
+      isWeightedBodyweight,
     );
 
     for (let i = 0; i < idealWeights.length; i++) {
@@ -390,7 +413,12 @@ export function percentageBased(
       });
     }
 
-    return optimizePlateChanges(sets, barWeight, availablePlates);
+    return optimizePlateChanges(
+      sets,
+      loadBaseWeight,
+      availablePlates,
+      isWeightedBodyweight,
+    );
   }
 
   for (let i = 0; i < numSets; i++) {
@@ -532,7 +560,7 @@ export function weightedBodyweight(
   numSets: number = 3,
   _barWeight: number = 0,
   availablePlates: Plate[] = [],
-  _minimizePlateChanges: boolean = false,
+  minimizePlateChanges: boolean = false,
   _isWeightedBodyweight: boolean = true,
   bodyweight: number = 150,
 ): WarmupSet[] {
@@ -541,7 +569,7 @@ export function weightedBodyweight(
     numSets,
     0,
     availablePlates,
-    false,
+    minimizePlateChanges,
     true,
     bodyweight,
   );
