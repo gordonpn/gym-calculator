@@ -141,6 +141,7 @@ export default function (): RepMaxCalculatorData {
       this.errorMessage = "";
 
       const validSets = this.sets.filter((set) => {
+        set.estimatedMax = 0;
         const r = parseSetReps(set.reps);
 
         if (!this.isValidSet(set)) {

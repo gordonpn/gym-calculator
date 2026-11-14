@@ -194,6 +194,7 @@ export default function (): StrengthLevelCalculatorData {
       this.errorMessage = "";
 
       const validSets = this.sets.filter((set) => {
+        set.estimatedMax = 0;
         const w = parseSetWeight(set.weight);
         const r = parseSetReps(set.reps);
 
