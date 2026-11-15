@@ -1,12 +1,11 @@
-html,
-body {
+html {
   height: 100%;
 }
 
 body {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 input,
@@ -46,7 +45,7 @@ input[type="reset"] {
   background-color: rgba(var(--bs-primary-rgb), 0.1);
 }
 
-.theme-toggle:focus {
+.theme-toggle:focus-visible {
   box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
 }
 
@@ -97,12 +96,12 @@ input[type="reset"] {
 
 .text-bg-teal {
   background-color: #20c997;
-  color: white;
+  color: #212529;
 }
 
 .text-bg-orange {
   background-color: #fd7e14;
-  color: white;
+  color: #212529;
 }
 
 .preset-list {
