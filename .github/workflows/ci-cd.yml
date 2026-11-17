@@ -8,19 +8,28 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  # Initial runs share the branch group; reruns cannot replace its pending check.
+  group: ${{ github.workflow }}-${{ github.ref }}${{ github.run_attempt > 1 && format('-rerun-{0}', github.run_id) || '' }}
+  cancel-in-progress: true
+
 jobs:
   validate-and-test:
     name: Validate and Test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install pnpm
         uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4.0.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # Node 24 runtime; issue #17 pin
         with:
           node-version: 22
           cache: pnpm
